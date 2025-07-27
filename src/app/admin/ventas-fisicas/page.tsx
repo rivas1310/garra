@@ -11,7 +11,7 @@ import {
   ArrowLeft,
   Eye
 } from 'lucide-react'
-import VentaFisicaModal from '@/components/VentaFisicaModal'
+import VentaFisicaDetailsModal from '@/components/VentaFisicaDetailsModal'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -345,7 +345,7 @@ export default function VentasFisicasPage() {
       </div>
       
       {/* Modal de detalles */}
-      <VentaFisicaModal 
+      <VentaFisicaDetailsModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         ventaId={selectedVentaId}
