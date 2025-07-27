@@ -101,10 +101,13 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
           cleaned: cleanCode,
           originalLength: decodedText.length,
           cleanedLength: cleanCode.length,
-          hasSpecialChars: /[\r\n\t\s]/.test(decodedText)
+          hasSpecialChars: /[\r\n\t\s]/.test(decodedText),
+          originalBytes: Array.from(decodedText).map(c => c.charCodeAt(0)),
+          cleanedBytes: Array.from(cleanCode).map(c => c.charCodeAt(0))
         })
 
         if (cleanCode.length >= 3) {
+          console.log('✅ Enviando código limpio al callback:', cleanCode)
           onScan(cleanCode)
         } else {
           console.log('⚠️ Código demasiado corto después de limpiar:', cleanCode)

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Códigos de Barras de Prueba</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .barcode-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .barcode-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .barcode-code {
+            font-family: monospace;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .barcode-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196f3;
+        }
+        .print-button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .print-button:hover {
+            background: #1976d2;
+        }
+        @media print {
+            body { background: white; }
+            .container { box-shadow: none; }
+            .print-button { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Códigos de Barras de Prueba</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <ol>
+                <li>Imprime esta página</li>
+                <li>Escanea los códigos con la aplicación</li>
+                <li>Revisa la consola del navegador (F12) para ver los logs</li>
+                <li>Compara el código escaneado con el esperado</li>
+            </ol>
+        </div>
+
+        <button class="print-button" onclick="window.print()">🖨️ Imprimir Códigos</button>
+
+        <div class="barcode-section">
+            <div class="barcode-title">1. Chaleco Polar</div>
+            <div class="barcode-code">Código: PRD840241851676</div>
+            <div class="barcode-container">
+                <svg id="barcode1"></svg>
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <div class="barcode-title">2. Refresco</div>
+            <div class="barcode-code">Código: PRD823584359480</div>
+            <div class="barcode-container">
+                <svg id="barcode2"></svg>
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <div class="barcode-title">3. Código Simple (sin PRD)</div>
+            <div class="barcode-code">Código: 840241851676</div>
+            <div class="barcode-container">
+                <svg id="barcode3"></svg>
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <div class="barcode-title">4. Código Corto</div>
+            <div class="barcode-code">Código: 123456789</div>
+            <div class="barcode-container">
+                <svg id="barcode4"></svg>
+            </div>
+        </div>
+
+        <div class="barcode-section">
+            <div class="barcode-title">5. Código con Letras</div>
+            <div class="barcode-code">Código: ABC123DEF456</div>
+            <div class="barcode-container">
+                <svg id="barcode5"></svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generar códigos de barras
+        JsBarcode("#barcode1", "PRD840241851676", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10
+        });
+
+        JsBarcode("#barcode2", "PRD823584359480", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10
+        });
+
+        JsBarcode("#barcode3", "840241851676", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10
+        });
+
+        JsBarcode("#barcode4", "123456789", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10
+        });
+
+        JsBarcode("#barcode5", "ABC123DEF456", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true,
+            fontSize: 16,
+            margin: 10
+        });
+
+        console.log('🧪 Códigos de barras de prueba generados:');
+        console.log('1. PRD840241851676 - Chaleco Polar');
+        console.log('2. PRD823584359480 - Refresco');
+        console.log('3. 840241851676 - Código Simple');
+        console.log('4. 123456789 - Código Corto');
+        console.log('5. ABC123DEF456 - Código con Letras');
+    </script>
+</body>
+</html> 

@@ -172,6 +172,13 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
 
   // Manejar escaneo de código de barras
   const handleBarcodeScan = (barcode: string) => {
+    console.log('🎯 Modal recibió código del escáner:', {
+      barcode,
+      length: barcode.length,
+      type: typeof barcode,
+      bytes: Array.from(barcode).map(c => c.charCodeAt(0))
+    })
+    
     setShowScanner(false)
     searchProductByBarcode(barcode)
   }
