@@ -2,8 +2,9 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Eye, Edit, Truck, Trash2, User, Calendar, DollarSign, Package } from "lucide-react";
+import { ArrowLeft, Eye, Edit, Truck, Trash2, User, Calendar, DollarSign, Package, FileText } from "lucide-react";
 import toast from "react-hot-toast";
+import ShippingLabelModal from "@/components/ShippingLabelModal";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800",
@@ -29,6 +30,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -212,6 +214,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <p className="text-sm text-neutral-500">
                         Cantidad: {item.quantity} × ${item.price}
                       </p>
+                      {(item.variant?.size || item.variant?.color) && (
+                        <p className="text-xs text-neutral-500 mt-1">
+                          {item.variant?.size && <span className="mr-2">Talla: {item.variant.size}</span>}
+                          {item.variant?.color && <span>Color: {item.variant.color}</span>}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-neutral-700">
@@ -314,15 +322,45 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   <Edit className="h-4 w-4" />
                   Editar Pedido
                 </Link>
-                <button className="w-full btn-primary flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => setIsShippingModalOpen(true)}
+                  className="w-full btn-primary flex items-center justify-center gap-2"
+                >
                   <Truck className="h-4 w-4" />
                   Generar Etiqueta
                 </button>
+                {/* Botón para descargar la guía PDF si existe */}
+                {order.shippingLabelUrl && (
+                  <a 
+                    href={order.shippingLabelUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    title="Descargar Guía PDF"
+                    className="block"
+                  >
+                    <button className="w-full btn-success flex items-center justify-center gap-2 mt-2 p-3">
+                      <FileText className="h-5 w-5" />
+                      Descargar Guía (PDF)
+                    </button>
+                  </a>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Modal para generar etiqueta de envío */}
+      <ShippingLabelModal 
+        isOpen={isShippingModalOpen} 
+        onClose={() => {
+          setIsShippingModalOpen(false);
+          // Recargar el pedido para mostrar la etiqueta si se generó
+          fetchOrder();
+        }} 
+        orderId={id}
+        orderData={order}
+      />
     </div>
   );
-} 
+}

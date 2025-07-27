@@ -134,6 +134,7 @@ export default function Header() {
   const router = useRouter()
   const [searchValue, setSearchValue] = useState("")
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar el menú si se hace clic fuera
@@ -150,6 +151,41 @@ export default function Header() {
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showProfileMenu]);
+
+  // Cargar perfil del usuario cuando la sesión esté disponible
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetchUserProfile();
+    }
+  }, [session]);
+
+  // Escuchar cambios en el perfil (para actualizar cuando se cambie la imagen)
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      if (session?.user?.email) {
+        fetchUserProfile();
+      }
+    };
+
+    // Escuchar eventos de actualización de perfil
+    window.addEventListener('profile-updated', handleProfileUpdate);
+    
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate);
+    };
+  }, [session]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
 
   const handleProfileClick = () => {
     if (session) {
@@ -199,9 +235,25 @@ export default function Header() {
               {session && showProfileMenu && (
                 <div ref={profileMenuRef} className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
                   <div className="flex items-center gap-3 p-4 border-b border-gray-200">
-                    <img src={session.user?.image || '/avatar.png'} alt="avatar" className="w-12 h-12 rounded-full border" />
+                    <div className="w-12 h-12 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
+                      {userProfile?.avatar ? (
+                        <img 
+                          src={userProfile.avatar} 
+                          alt="avatar" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Si la imagen falla, mostrar el fallback
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full flex items-center justify-center text-gray-500 ${userProfile?.avatar ? 'hidden' : ''}`}>
+                        <User size={20} />
+                      </div>
+                    </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{session.user?.name}</div>
+                      <div className="font-semibold text-gray-900">{userProfile?.name || session.user?.name || 'Usuario'}</div>
                       <div className="text-sm text-gray-600 truncate">{session.user?.email}</div>
                     </div>
                   </div>
@@ -218,6 +270,9 @@ export default function Header() {
                 </div>
               )}
             </button>
+            <Link href="/favoritos" className="p-2 text-gray-700 hover:text-red-500 transition-colors group">
+              <Heart size={20} className="group-hover:scale-110 transition-transform" />
+            </Link>
             <Link href="/carrito" className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors group">
               <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
               <CartBadge />

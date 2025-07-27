@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { updateProductStock, isProductAvailable } from '@/lib/productUtils';
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
@@ -19,20 +19,30 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     // Verificar si el producto está disponible
     const isAvailable = await isProductAvailable(id);
     
+    // Calcular el stock total correctamente
+    let totalStock;
+    if (product.variants && product.variants.length > 0) {
+      // Si el producto tiene variantes, usar solo el stock de las variantes
+      totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+    } else {
+      // Si no tiene variantes, usar el stock principal
+      totalStock = product.stock;
+    }
+    
     return NextResponse.json({ 
       ...product, 
       isAvailable,
       // Incluir información de stock total
-      totalStock: product.stock + product.variants.reduce((sum, v) => sum + v.stock, 0)
+      totalStock
     });
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener el producto', detalle: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PUT(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
     const data = await req.json();
     console.log('PUT /api/productos/[id] recibido:', { id, data });
     const {
@@ -44,6 +54,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       originalPrice,
       images,
       stock,
+      barcode,
       isActive,
       isNew,
       isOnSale,
@@ -53,7 +64,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     // Obtener el producto actual para verificar si el nombre cambió
     const currentProduct = await prisma.product.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        variants: true
+      }
     });
 
     if (!currentProduct) {
@@ -83,6 +97,25 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     // Usar la función de utilidad para actualizar el stock y estado activo
     const updated = await updateProductStock(id, stockValue);
 
+    // Primero, eliminar todas las variantes existentes
+    await prisma.productVariant.deleteMany({
+      where: { productId: id }
+    });
+
+    // Luego, crear las nuevas variantes
+    if (variants && variants.length > 0) {
+      console.log('Creando variantes:', variants);
+      await prisma.productVariant.createMany({
+        data: variants.map((variant: any) => ({
+          productId: id,
+          size: variant.size,
+          color: variant.color,
+          stock: parseInt(variant.stock),
+          price: variant.price ? parseFloat(variant.price) : null,
+        })),
+      });
+    }
+
     // Actualizar el resto de los campos
     const finalUpdated = await prisma.product.update({
       where: { id },
@@ -95,6 +128,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         price: parseFloat(price),
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         images,
+        // barcode: barcode || null, // Incluir código de barras - Temporalmente comentado hasta regenerar Prisma client
         isNew,
         isOnSale,
         isSecondHand: !!isSecondHand,
@@ -106,6 +140,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       },
     });
 
+    // Si se proporcionó un código de barras, actualizarlo usando SQL directo
+    if (barcode) {
+      try {
+        await prisma.$executeRaw`UPDATE "Product" SET barcode = ${barcode} WHERE id = ${id}`;
+        console.log(`Código de barras ${barcode} actualizado para el producto ${id}`);
+      } catch (error) {
+        console.error('Error al actualizar código de barras:', error);
+        // No fallar la actualización del producto si el código de barras falla
+      }
+    }
+
     return NextResponse.json({ 
       ok: true, 
       product: finalUpdated,
@@ -115,4 +160,4 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     console.error('Error en PUT /api/productos/[id]:', error);
     return NextResponse.json({ error: 'Error al actualizar el producto', detalle: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
-} 
+}

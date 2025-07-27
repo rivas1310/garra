@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  BarChart3
+  BarChart3,
+  ShoppingBag
 } from "lucide-react";
 import toast from "react-hot-toast";
 import ReportExporter from "@/components/ReportExporter";
@@ -24,6 +25,14 @@ interface ReportsData {
       amount: number;
       count: number;
       growth: number;
+    };
+    salesFisicasToday?: {
+      amount: number;
+      count: number;
+    };
+    salesOnlineToday?: {
+      amount: number;
+      count: number;
     };
     ordersToday: {
       count: number;
@@ -61,6 +70,11 @@ interface ReportsData {
   };
   ordersByStatus: Array<{
     status: string;
+    count: number;
+    total: number;
+  }>;
+  ordersByType?: Array<{
+    type: string;
     count: number;
     total: number;
   }>;
@@ -183,20 +197,20 @@ export default function ReportesAdminPage() {
     );
   }
 
-  const { summary, periods, ordersByStatus, topProducts, totals } = reportsData;
+  const { summary, periods, ordersByStatus, topProducts, totals, ordersByType } = reportsData;
 
   return (
     <div className="min-h-screen bg-gradient-elegant">
       <div className="bg-white shadow-elegant border-b border-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-neutral-700">Reportes y Estadísticas</h1>
-              <p className="text-neutral-600">Visualiza el resumen y análisis de tu tienda</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-neutral-700">Reportes y Estadísticas</h1>
+              <p className="text-sm sm:text-base text-neutral-600">Visualiza el resumen y análisis de tu tienda</p>
             </div>
             <button 
               onClick={fetchReports}
-              className="btn-secondary inline-flex items-center"
+              className="btn-secondary inline-flex items-center self-start sm:self-auto"
               disabled={loading}
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -206,9 +220,9 @@ export default function ReportesAdminPage() {
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Tarjetas de resumen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
             <div className="flex items-center justify-between mb-4">
               <div className="p-3 rounded-full bg-green-50 text-green-600">
@@ -216,7 +230,7 @@ export default function ReportesAdminPage() {
               </div>
               {formatGrowth(summary.salesToday.growth)}
             </div>
-            <p className="text-sm text-neutral-500">Ventas Hoy</p>
+            <p className="text-sm text-neutral-500">Ventas Totales Hoy</p>
             <p className="text-2xl font-bold text-neutral-700">
               {formatCurrency(summary.salesToday.amount)}
             </p>
@@ -280,15 +294,48 @@ export default function ReportesAdminPage() {
             </p>
           </div>
         </div>
+        
+        {/* Tarjetas de ventas por tipo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-indigo-50 text-indigo-600">
+                <ShoppingBag className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="text-sm text-neutral-500">Ventas Físicas Hoy</p>
+            <p className="text-2xl font-bold text-neutral-700">
+              {formatCurrency(summary.salesFisicasToday?.amount || 0)}
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              {summary.salesFisicasToday?.count || 0} ventas físicas
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 rounded-full bg-cyan-50 text-cyan-600">
+                <ShoppingCart className="h-6 w-6" />
+              </div>
+            </div>
+            <p className="text-sm text-neutral-500">Ventas Online Hoy</p>
+            <p className="text-2xl font-bold text-neutral-700">
+              {formatCurrency(summary.salesOnlineToday?.amount || 0)}
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              {summary.salesOnlineToday?.count || 0} ventas online
+            </p>
+          </div>
+        </div>
 
         {/* Filtros y Exportación */}
-        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="flex gap-2 w-full lg:w-auto">
+        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-2 w-full sm:w-auto">
               <select
                 value={periodFilter}
                 onChange={(e) => setPeriodFilter(e.target.value)}
-                className="px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent w-full sm:w-auto"
               >
                 <option value="today">Hoy</option>
                 <option value="yesterday">Ayer</option>
@@ -303,7 +350,7 @@ export default function ReportesAdminPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
           {/* Pedidos por Estado */}
           <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6">
             <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
@@ -323,6 +370,31 @@ export default function ReportesAdminPage() {
                   </div>
                   <span className="font-semibold text-neutral-900">
                     {formatCurrency(orderStatus.total)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Pedidos por Tipo */}
+          <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Ventas por Tipo
+            </h3>
+            <div className="space-y-3">
+              {ordersByType && ordersByType.map((orderType) => (
+                <div key={orderType.type} className="flex items-center justify-between p-3 border border-neutral-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${orderType.type === 'FISICA' ? 'bg-indigo-100 text-indigo-800' : 'bg-cyan-100 text-cyan-800'}`}>
+                      {orderType.type === 'FISICA' ? 'FÍSICA' : 'ONLINE'}
+                    </span>
+                    <span className="text-sm text-neutral-600">
+                      {orderType.count} ventas
+                    </span>
+                  </div>
+                  <span className="font-semibold text-neutral-900">
+                    {formatCurrency(orderType.total)}
                   </span>
                 </div>
               ))}
@@ -363,9 +435,9 @@ export default function ReportesAdminPage() {
         </div>
 
         {/* Resumen por Períodos */}
-        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6">
+        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-neutral-900 mb-4">Resumen por Períodos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 border border-neutral-200 rounded-lg">
               <p className="text-sm text-neutral-500">Hoy</p>
               <p className="text-xl font-bold text-neutral-900">{formatCurrency(periods.today.sales)}</p>
@@ -391,4 +463,4 @@ export default function ReportesAdminPage() {
       </div>
     </div>
   );
-} 
+}

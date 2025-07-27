@@ -24,6 +24,12 @@ export async function GET(
                 images: true,
                 price: true
               }
+            },
+            variant: {
+              select: {
+                size: true,
+                color: true
+              }
             }
           }
         }
@@ -50,7 +56,14 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body = await request.json()
-    const { status, notes } = body
+    const { 
+      status, 
+      notes, 
+      trackingNumber, 
+      shippingProvider, 
+      shippingCost,
+      shippingData 
+    } = body
 
     // Validar que el pedido existe
     const existingOrder = await prisma.order.findUnique({
@@ -61,14 +74,25 @@ export async function PATCH(
       return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
     }
 
+    // Preparar datos para actualizar
+    const updateData: any = {
+      updatedAt: new Date()
+    }
+
+    // Solo actualizar campos que se proporcionaron
+    if (status !== undefined) updateData.status = status
+    if (notes !== undefined) updateData.notes = notes
+    if (trackingNumber !== undefined) updateData.trackingNumber = trackingNumber
+    if (shippingProvider !== undefined) updateData.shippingProvider = shippingProvider
+    if (shippingCost !== undefined) updateData.shippingCost = shippingCost
+    if (shippingData !== undefined) updateData.shippingData = shippingData
+
+    console.log(`Actualizando pedido ${id} con datos:`, updateData)
+
     // Actualizar el pedido
     const updatedOrder = await prisma.order.update({
       where: { id },
-      data: {
-        status: status || existingOrder.status,
-        notes: notes !== undefined ? notes : existingOrder.notes,
-        updatedAt: new Date()
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -84,17 +108,26 @@ export async function PATCH(
                 images: true,
                 price: true
               }
+            },
+            variant: {
+              select: {
+                size: true,
+                color: true
+              }
             }
           }
         }
       }
     })
 
+    console.log(`Pedido ${id} actualizado exitosamente`)
+
     return NextResponse.json({ 
       success: true, 
       order: updatedOrder 
     })
   } catch (error) {
+    console.error(`Error al actualizar pedido ${await (await params).id}:`, error)
     return NextResponse.json({ 
       error: 'Error al actualizar pedido', 
       detalle: String(error) 
@@ -137,4 +170,4 @@ export async function DELETE(
       detalle: String(error) 
     }, { status: 500 })
   }
-} 
+}

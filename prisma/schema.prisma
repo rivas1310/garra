@@ -8,19 +8,20 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  name           String?
-  phone          String?
-  avatar         String?
-  role           Role      @default(USER)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  hashedPassword String?
-  orders         Order[]
-  reviews        Review[]
-  favorites      Product[] @relation("UserFavorites")
-  addresses      Address[]
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String?
+  phone              String?
+  avatar             String?
+  role               Role                 @default(USER)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  hashedPassword     String?
+  orders             Order[]
+  reviews            Review[]
+  favorites          Product[]            @relation("UserFavorites")
+  addresses          Address[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Category {
@@ -53,6 +54,7 @@ model Product {
   updatedAt     DateTime         @updatedAt
   subcategoria  String?
   isSecondHand  Boolean          @default(false)
+  barcode       String?          @unique // Código de barras único para cada producto
   orderItems    OrderItem[]
   category      Category         @relation(fields: [categoryId], references: [id])
   variants      ProductVariant[]
@@ -81,16 +83,27 @@ model Order {
   subtotal          Float
   tax               Float         @default(0)
   shipping          Float         @default(0)
+  discount          Float         @default(0)
+  couponCode        String?       // Código del cupón aplicado
+  couponDiscount    Float         @default(0) // Monto del descuento aplicado por el cupón
+  discountCouponId  String?
   shippingAddressId String?
   billingAddressId  String?
   paymentMethod     String?
   paymentStatus     PaymentStatus @default(PENDING)
+  orderType         OrderType     @default(ONLINE) // Tipo de orden: física o en línea
   notes             String?
+  trackingNumber    String?
+  shippingProvider  String?
+  shippingCost      Float?
+  shippingData      Json?
+  shippingLabelUrl  String?       // URL de la etiqueta de envío generada
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   billingAddress    Address?      @relation("BillingAddress", fields: [billingAddressId], references: [id])
   shippingAddress   Address?      @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
   user              User          @relation(fields: [userId], references: [id])
+  discountCoupon    DiscountCoupon? @relation("OrderDiscount", fields: [discountCouponId], references: [id])
   items             OrderItem[]
 }
 
@@ -158,4 +171,40 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+model DiscountCoupon {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  description     String?
+  discountType    DiscountType
+  discountValue   Float
+  minOrderValue   Float?    @default(0)
+  maxUses         Int?      @default(1)
+  usedCount       Int       @default(0)
+  isActive        Boolean   @default(true)
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  orders          Order[]   @relation("OrderDiscount")
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum OrderType {
+  ONLINE
+  FISICA
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expires   DateTime
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

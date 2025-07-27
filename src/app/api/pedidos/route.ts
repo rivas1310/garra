@@ -19,6 +19,12 @@ export async function GET() {
                 name: true,
                 images: true
               }
+            },
+            variant: {
+              select: {
+                size: true,
+                color: true
+              }
             }
           }
         }
@@ -40,7 +46,8 @@ export async function POST(req: Request) {
       stripeSessionId,
       items,
       customer,
-      totals
+      totals,
+      coupon
     } = data
 
     // Validaciones
@@ -83,6 +90,9 @@ export async function POST(req: Request) {
         subtotal: totals.subtotal,
         tax: totals.tax,
         shipping: totals.shipping,
+        discount: totals.discount || 0,
+        couponCode: coupon?.code || null,
+        couponDiscount: coupon?.discountAmount || 0,
         paymentMethod: stripeSessionId, // Usar el session ID como referencia
         paymentStatus: 'PAID',
         notes: `Compra realizada por ${customer.nombre}. Dirección: ${customer.direccion}, ${customer.ciudad}, ${customer.estado}, ${customer.codigoPostal}, ${customer.pais}. Teléfono: ${customer.telefono}`,
@@ -91,6 +101,7 @@ export async function POST(req: Request) {
             productId: item.productId || 'unknown',
             quantity: item.quantity,
             price: item.price,
+            variantId: item.variantId || null,
           }))
         }
       },
@@ -110,4 +121,4 @@ export async function POST(req: Request) {
       detalle: error instanceof Error ? error.message : String(error) 
     }, { status: 500 })
   }
-} 
+}

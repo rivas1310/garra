@@ -11,11 +11,22 @@ export interface CartItem {
   color?: string
   stock?: number
   maxStock?: number
+  variantId?: string
+}
+
+export interface Coupon {
+  id: string
+  code: string
+  discountType: 'PERCENTAGE' | 'FIXED'
+  discountValue: number
+  discountAmount: number
+  minOrderValue?: number
 }
 
 interface CartStore {
   cartItems: CartItem[]
   isHydrated: boolean
+  coupon: Coupon | null
   addToCart: (item: Omit<CartItem, 'quantity'> & { stock?: number }) => { success: boolean; message: string }
   removeFromCart: (id: string) => void
   updateQuantity: (id: string, quantity: number) => { success: boolean; message: string }
@@ -25,6 +36,8 @@ interface CartStore {
   setHydrated: () => void
   getItemQuantity: (id: string) => number
   canAddMore: (id: string, stock: number) => boolean
+  applyCoupon: (code: string, subtotal: number) => Promise<{ success: boolean; message: string }>
+  removeCoupon: () => void
 }
 
 export const useCart = create<CartStore>()(
@@ -32,6 +45,7 @@ export const useCart = create<CartStore>()(
     (set, get) => ({
       cartItems: [],
       isHydrated: false,
+      coupon: null,
       
       setHydrated: () => {
         set({ isHydrated: true })
@@ -130,7 +144,7 @@ export const useCart = create<CartStore>()(
       },
       
       clearCart: () => {
-        set({ cartItems: [] })
+        set({ cartItems: [], coupon: null })
       },
       
       getTotal: () => {
@@ -142,6 +156,34 @@ export const useCart = create<CartStore>()(
         const { cartItems } = get()
         return cartItems.reduce((count, item) => count + item.quantity, 0)
       },
+      
+      applyCoupon: async (code: string, subtotal: number) => {
+        try {
+          const response = await fetch('/api/cupones/validar', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code, subtotal }),
+          })
+          
+          const data = await response.json()
+          
+          if (response.ok && data.success) {
+            set({ coupon: data.coupon })
+            return { success: true, message: data.message || 'Cupón aplicado correctamente' }
+          } else {
+            return { success: false, message: data.message || 'Cupón inválido' }
+          }
+        } catch (error) {
+          console.error('Error al aplicar cupón:', error)
+          return { success: false, message: 'Error al procesar el cupón' }
+        }
+      },
+      
+      removeCoupon: () => {
+        set({ coupon: null })
+      },
     }),
     {
       name: 'cart-storage',
@@ -152,4 +194,4 @@ export const useCart = create<CartStore>()(
       },
     }
   )
-) 
+)

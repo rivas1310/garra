@@ -1,131 +1,66 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Heart, ShoppingCart, Star, Eye } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import toast from 'react-hot-toast'
-
-const featuredProducts = [
-  {
-    id: '1',
-    name: 'Vestido Floral de Verano',
-    price: 89.99,
-    originalPrice: 120.00,
-    image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2028&q=80',
-    rating: 4.8,
-    reviews: 124,
-    category: 'Mujer',
-    isNew: true,
-    isOnSale: true
-  },
-  {
-    id: '2',
-    name: 'Camisa de Lino Clásica',
-    price: 65.00,
-    originalPrice: 85.00,
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80',
-    rating: 4.6,
-    reviews: 89,
-    category: 'Hombre',
-    isNew: false,
-    isOnSale: true
-  },
-  {
-    id: '3',
-    name: 'Jeans Slim Fit Premium',
-    price: 95.00,
-    originalPrice: 95.00,
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2026&q=80',
-    rating: 4.9,
-    reviews: 203,
-    category: 'Hombre',
-    isNew: true,
-    isOnSale: false
-  },
-  {
-    id: '4',
-    name: 'Blazer Elegante Negro',
-    price: 145.00,
-    originalPrice: 180.00,
-    image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    rating: 4.7,
-    reviews: 156,
-    category: 'Mujer',
-    isNew: false,
-    isOnSale: true
-  },
-  {
-    id: '5',
-    name: 'Sneakers Urbanos',
-    price: 75.00,
-    originalPrice: 95.00,
-    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2012&q=80',
-    rating: 4.5,
-    reviews: 98,
-    category: 'Calzado',
-    isNew: false,
-    isOnSale: true
-  },
-  {
-    id: '6',
-    name: 'Bolso Tote Minimalista',
-    price: 55.00,
-    originalPrice: 55.00,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    rating: 4.4,
-    reviews: 67,
-    category: 'Accesorios',
-    isNew: true,
-    isOnSale: false
-  },
-  {
-    id: '7',
-    name: 'Reloj Elegante Dorado',
-    price: 120.00,
-    originalPrice: 150.00,
-    image: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2080&q=80',
-    rating: 4.8,
-    reviews: 134,
-    category: 'Accesorios',
-    isNew: false,
-    isOnSale: true
-  },
-  {
-    id: '8',
-    name: 'Chaqueta Deportiva',
-    price: 85.00,
-    originalPrice: 110.00,
-    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
-    rating: 4.6,
-    reviews: 87,
-    category: 'Deportes',
-    isNew: false,
-    isOnSale: true
-  }
-]
+import ProductCard from './ProductCard'
 
 export default function FeaturedProducts() {
-  const { addToCart } = useCart()
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [favorites, setFavorites] = useState<string[]>([])
-
-  const handleAddToCart = (product: any) => {
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-    })
-    toast.success('Producto agregado al carrito')
-  }
+  const { addToCart } = useCart();
 
   const toggleFavorite = (productId: string) => {
-    setFavorites(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
+    setFavorites((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
         : [...prev, productId]
-    )
-  }
+    );
+  };
+
+  const handleAddToCart = (product: any) => {
+    addToCart(product);
+    toast.success('Producto agregado al carrito');
+  };
+
+  useEffect(() => {
+    // Obtener productos destacados de la API
+    fetch('/api/productos')
+      .then(res => res.json())
+      .then(data => {
+        // Mapear los productos para el formato que necesita ProductCard
+        const mappedProducts = Array.isArray(data) ? data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          originalPrice: p.originalPrice,
+          image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/img/placeholder.png',
+          rating: p.rating ?? 0,
+          reviewCount: p.reviewCount ?? 0,
+          category: p.category?.name ?? '',
+          isNew: p.isNew,
+          isSale: p.isOnSale,
+          isSecondHand: p.isSecondHand,
+          stock: p.stock ?? 0,
+          isActive: p.isActive ?? true,
+          isAvailable: p.isAvailable ?? true,
+          totalStock: p.totalStock ?? p.stock ?? 0,
+          variants: p.variants ?? [], // Incluir las variantes del producto
+        })) : [];
+        
+        // Filtrar solo productos destacados (por ejemplo, los que están en oferta o son nuevos)
+        const featured = mappedProducts.filter(p => p.isNew || p.isSale).slice(0, 8);
+        setProducts(featured);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error al cargar productos destacados:', error);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <section className="py-16">
@@ -145,7 +80,7 @@ export default function FeaturedProducts() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
+          {products.map((product) => (
             <div key={product.id} className="group card overflow-hidden">
               {/* Product Image */}
               <div className="relative h-64 overflow-hidden">
@@ -251,4 +186,4 @@ export default function FeaturedProducts() {
       </div>
     </section>
   )
-} 
+}

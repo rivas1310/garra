@@ -4,7 +4,24 @@ import prisma from '@/lib/prisma'
 
 export async function POST(req: Request) {
   try {
-    const { nombre, email, password } = await req.json()
+    // Log the raw request for debugging
+    const body = await req.text()
+    console.log('Raw request body:', body)
+    
+    // Parse JSON manually with better error handling
+    let parsedBody
+    try {
+      parsedBody = JSON.parse(body)
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      console.error('Body that failed to parse:', body)
+      return NextResponse.json(
+        { error: 'Invalid JSON format in request body' },
+        { status: 400 }
+      )
+    }
+    
+    const { nombre, email, password } = parsedBody
     
     // Validaciones
     if (!nombre || !email || !password) {

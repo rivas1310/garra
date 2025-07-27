@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useState, useEffect, useRef } from 'react'
 import { FaUser, FaShoppingBag, FaMapMarkerAlt, FaCog, FaSignOutAlt, FaEdit, FaSave, FaTimes, FaPlus, FaTrash, FaCamera, FaPhone, FaEnvelope, FaCalendar, FaHeart, FaGift, FaShieldAlt, FaLock, FaBell, FaChevronRight, FaHistory, FaTag, FaUserShield, FaDownload } from 'react-icons/fa'
 import { toast } from 'react-hot-toast'
+import ChangePasswordModal from '@/components/ChangePasswordModal'
 
 interface Order {
   id: string
@@ -37,10 +38,12 @@ export default function PerfilPage() {
   const [tab, setTab] = useState<'perfil' | 'compras' | 'direcciones' | 'configuracion'>('perfil')
   const [orders, setOrders] = useState<Order[]>([])
   const [addresses, setAddresses] = useState<Address[]>([])
+  const [favoritesCount, setFavoritesCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [editingProfile, setEditingProfile] = useState(false)
   const [editingAddress, setEditingAddress] = useState<string | null>(null)
   const [showAddAddress, setShowAddAddress] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -49,7 +52,7 @@ export default function PerfilPage() {
     name: session?.user?.name || '',
     email: session?.user?.email || '',
     phone: '',
-    avatar: session?.user?.image || ''
+    avatar: ''
   })
   
   // Estado para nueva dirección
@@ -66,8 +69,10 @@ export default function PerfilPage() {
   // Cargar datos del usuario
   useEffect(() => {
     if (session?.user) {
+      fetchUserProfile()
       fetchOrders()
       fetchAddresses()
+      fetchFavoritesCount()
     }
   }, [session])
   
@@ -77,11 +82,29 @@ export default function PerfilPage() {
         name: session.user.name || '',
         email: session.user.email || '',
         phone: '',
-        avatar: session.user.image || ''
+        avatar: ''
       })
     }
   }, [session])
   
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/profile')
+      if (response.ok) {
+        const data = await response.json()
+        console.log('📥 Datos del perfil cargados:', data)
+        setProfileData({
+          name: data.name || session?.user?.name || '',
+          email: data.email || session?.user?.email || '',
+          phone: data.phone || '',
+          avatar: data.avatar || ''
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    }
+  }
+
   const fetchOrders = async () => {
     try {
       const response = await fetch('/api/orders')
@@ -105,6 +128,18 @@ export default function PerfilPage() {
       console.error('Error fetching addresses:', error)
     }
   }
+
+  const fetchFavoritesCount = async () => {
+    try {
+      const response = await fetch('/api/favoritos')
+      if (response.ok) {
+        const data = await response.json()
+        setFavoritesCount(data.length || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching favorites count:', error)
+    }
+  }
   
   const updateProfile = async () => {
     setLoading(true)
@@ -118,6 +153,8 @@ export default function PerfilPage() {
       if (response.ok) {
         toast.success('Perfil actualizado correctamente')
         setEditingProfile(false)
+        // Disparar evento para actualizar el header
+        window.dispatchEvent(new Event('profile-updated'))
       } else {
         toast.error('Error al actualizar el perfil')
       }
@@ -140,21 +177,45 @@ export default function PerfilPage() {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('upload_preset', 'profile_images')
 
-      const response = await fetch('https://api.cloudinary.com/v1_1/your-cloud-name/image/upload', {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       })
 
       if (response.ok) {
         const data = await response.json()
-        setProfileData({ ...profileData, avatar: data.secure_url })
-        toast.success('Imagen subida correctamente')
+        console.log('✅ Imagen subida a Cloudinary:', data.url)
+        
+        const newProfileData = { ...profileData, avatar: data.url }
+        setProfileData(newProfileData)
+        
+        // Guardar automáticamente la imagen en el perfil
+        console.log('🔄 Guardando avatar en perfil:', newProfileData)
+        const saveResponse = await fetch('/api/profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProfileData)
+        })
+        
+        if (saveResponse.ok) {
+          const savedData = await saveResponse.json()
+          console.log('✅ Avatar guardado en perfil:', savedData)
+          toast.success('Imagen subida y guardada correctamente')
+          // Recargar el perfil para actualizar el header
+          fetchUserProfile()
+          // Disparar evento para actualizar el header
+          window.dispatchEvent(new Event('profile-updated'))
+        } else {
+          const errorData = await saveResponse.json()
+          console.error('❌ Error al guardar avatar:', errorData)
+          toast.error('Error al guardar la imagen en el perfil')
+        }
       } else {
         toast.error('Error al subir imagen')
       }
     } catch (error) {
+      console.error('Error:', error)
       toast.error('Error al subir imagen')
     }
     setUploadingImage(false)
@@ -443,7 +504,7 @@ export default function PerfilPage() {
                     <div className="space-y-3 text-sm">
                       <div><span className="font-medium text-neutral-600">Pedidos totales:</span> <span className="text-neutral-800">{orders.length}</span></div>
                       <div><span className="font-medium text-neutral-600">Direcciones:</span> <span className="text-neutral-800">{addresses.length}</span></div>
-                      <div><span className="font-medium text-neutral-600">Favoritos:</span> <span className="text-neutral-800">0</span></div>
+                      <div><span className="font-medium text-neutral-600">Favoritos:</span> <span className="text-neutral-800">{favoritesCount}</span></div>
                     </div>
                   </div>
                 </div>
@@ -685,7 +746,10 @@ export default function PerfilPage() {
                     </div>
                   </div>
                   <div className="space-y-4">
-                    <button className="flex items-center justify-between w-full p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 group">
+                                         <button 
+                       onClick={() => setShowChangePassword(true)}
+                       className="flex items-center justify-between w-full p-4 bg-neutral-50 rounded-lg hover:bg-neutral-100 transition-all duration-200 group"
+                     >
                        <div className="flex items-center gap-3">
                          <FaLock className="text-neutral-600 group-hover:text-primary-600 transition-colors" />
                          <div className="text-left">
@@ -812,6 +876,12 @@ export default function PerfilPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal de cambio de contraseña */}
+      <ChangePasswordModal 
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </main>
   )
 }

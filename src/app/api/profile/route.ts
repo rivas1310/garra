@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { authOptions } from '@/utils/authOptions';
+import prisma from '@/lib/prisma';
 
 export async function GET(request: Request) {
   try {
@@ -23,6 +23,8 @@ export async function GET(request: Request) {
       }
     })
 
+    console.log('📤 Usuario encontrado en BD:', user)
+
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
@@ -43,6 +45,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const { name, email, phone, avatar } = await request.json();
+    console.log('📝 Datos recibidos en PUT /api/profile:', { name, email, phone, avatar });
 
     if (!name || !email) {
       return NextResponse.json({ error: 'Nombre y email son requeridos' }, { status: 400 });
@@ -62,6 +65,8 @@ export async function PUT(request: NextRequest) {
     const updateData: any = { name, email };
     if (phone !== undefined) updateData.phone = phone;
     if (avatar !== undefined) updateData.avatar = avatar;
+    
+    console.log('🔄 Datos a actualizar en BD:', updateData);
 
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
@@ -77,6 +82,7 @@ export async function PUT(request: NextRequest) {
       }
     });
 
+    console.log('✅ Usuario actualizado en BD:', updatedUser);
     return NextResponse.json(updatedUser);
   } catch (error) {
     console.error('Error al actualizar perfil:', error);

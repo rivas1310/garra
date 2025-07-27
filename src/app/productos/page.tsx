@@ -52,6 +52,7 @@ export default function ProductosPage() {
     isActive: p.isActive ?? true,
     isAvailable: p.isAvailable ?? true,
     totalStock: p.totalStock ?? p.stock ?? 0,
+    variants: p.variants ?? [], // Incluir las variantes del producto
   })) : [];
 
   const filteredProducts = mappedProducts.filter(product => {
@@ -213,4 +214,4 @@ export default function ProductosPage() {
       </div>
     </div>
   )
-} 
+}

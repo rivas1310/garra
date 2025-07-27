@@ -7,11 +7,28 @@ export async function updateProductStock(productId: string, newStock: number) {
   try {
     console.log(`Actualizando stock del producto ${productId} a ${newStock}`);
     
+    // Obtener las variantes del producto para calcular el stock total
+    const productWithVariants = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { variants: true },
+    });
+    
+    if (!productWithVariants) {
+      throw new Error('Producto no encontrado');
+    }
+    
+    // Calcular el stock total (stock principal + stock de variantes)
+    const variantStock = productWithVariants.variants.reduce((sum, v) => sum + v.stock, 0);
+    const totalStock = newStock + variantStock;
+    const shouldBeActive = totalStock > 0;
+    
+    console.log(`Stock principal: ${newStock}, Stock variantes: ${variantStock}, Total: ${totalStock}, Activo: ${shouldBeActive}`);
+    
     const product = await prisma.product.update({
       where: { id: productId },
       data: {
         stock: newStock,
-        isActive: newStock > 0, // Desactiva automáticamente si stock es 0
+        isActive: shouldBeActive, // Activar/desactivar basado en stock total
       },
     });
 

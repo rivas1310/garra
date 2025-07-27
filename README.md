@@ -10,10 +10,12 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
 - **Autenticación**: Sistema de usuarios con NextAuth.js
 - **Pagos**: Integración con Stripe
 - **Productos**: Gestión completa de productos, categorías y variantes
+- **Cupones**: Sistema de descuentos con validación de fechas y límites de uso
 - **Reseñas**: Sistema de calificaciones y comentarios
 - **Favoritos**: Lista de productos favoritos
 - **Newsletter**: Suscripción a newsletter
 - **Responsive**: Diseño adaptativo para móviles y desktop
+- **Seguridad**: Generación de contraseñas seguras y normalización de datos
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -68,12 +70,18 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
    npx prisma db push
    ```
 
-5. **Ejecutar el servidor de desarrollo**
+5. **Crear usuario administrador**
+   ```bash
+   node scripts/create-admin.js
+   ```
+   > **Importante**: Este script generará una contraseña segura aleatoria. Guarde esta información en un lugar seguro, ya que no podrá recuperarla después. Consulte `SECURITY_README.md` para más información.
+
+6. **Ejecutar el servidor de desarrollo**
    ```bash
    npm run dev
    ```
 
-6. **Abrir en el navegador**
+7. **Abrir en el navegador**
    ```
    http://localhost:3000
    ```
@@ -86,8 +94,34 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
 - **Product**: Productos con variantes
 - **Category**: Categorías de productos
 - **Order**: Pedidos con items
+- **DiscountCoupon**: Cupones de descuento
 - **Review**: Reseñas de productos
 - **Address**: Direcciones de envío/facturación
+
+## 🔒 Seguridad
+
+El proyecto implementa varias medidas de seguridad:
+
+- **Contraseñas**: Generación automática de contraseñas seguras para administradores
+- **Hashing**: Almacenamiento seguro de contraseñas con bcryptjs
+- **Validación**: Verificación de datos en todos los formularios
+- **Normalización**: Estandarización de datos para prevenir duplicados y errores
+- **Fechas**: Manejo seguro de fechas para cupones y otras entidades
+- **Scripts de verificación de seguridad**: Conjunto de herramientas para verificar y mantener la seguridad del sistema:
+  - `check-password-security.js`: Verifica la seguridad de las contraseñas de usuarios.
+  - `reset-admin-password.js`: Permite resetear la contraseña de un administrador de forma segura.
+  - `verify-coupon-security.js`: Verifica y normaliza la seguridad de los cupones.
+  - `verify-system-security.js`: Realiza una verificación completa de la seguridad del sistema.
+  - `backup-database.js`: Realiza una copia de seguridad completa de la base de datos.
+  - `schedule-backups.js`: Programa copias de seguridad automáticas a intervalos regulares.
+
+Consulte `SECURITY_README.md` para obtener información detallada sobre las prácticas de seguridad implementadas.
+
+## 📚 Documentación Adicional
+
+- **SECURITY_README.md**: Guía de seguridad y recomendaciones
+- **CUPONES_README.md**: Documentación sobre el sistema de cupones
+- **CODE_QUALITY_RECOMMENDATIONS.md**: Recomendaciones para mantener la calidad del código
 
 ## 🎨 Características del Diseño
 
@@ -147,4 +181,4 @@ Si tienes alguna pregunta o necesitas ayuda, no dudes en abrir un issue en el re
 
 ---
 
-¡Disfruta construyendo tu ecommerce de moda! 🛍️ 
+¡Disfruta construyendo tu ecommerce de moda! 🛍️

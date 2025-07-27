@@ -13,7 +13,7 @@ export async function GET() {
     const lastMonth = new Date(today);
     lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-    // Estadísticas de ventas
+    // Estadísticas de ventas (todas)
     const salesToday = await prisma.order.aggregate({
       where: {
         createdAt: {
@@ -22,6 +22,40 @@ export async function GET() {
         status: {
           not: 'CANCELLED',
         },
+      },
+      _sum: {
+        total: true,
+      },
+      _count: true,
+    });
+    
+    // Estadísticas de ventas físicas
+    const salesFisicasToday = await prisma.order.aggregate({
+      where: {
+        createdAt: {
+          gte: today,
+        },
+        status: {
+          not: 'CANCELLED',
+        },
+        orderType: 'FISICA',
+      },
+      _sum: {
+        total: true,
+      },
+      _count: true,
+    });
+    
+    // Estadísticas de ventas en línea
+    const salesOnlineToday = await prisma.order.aggregate({
+      where: {
+        createdAt: {
+          gte: today,
+        },
+        status: {
+          not: 'CANCELLED',
+        },
+        orderType: 'ONLINE',
       },
       _sum: {
         total: true,
@@ -133,6 +167,17 @@ export async function GET() {
         total: true,
       },
     });
+    
+    // Estadísticas de pedidos por tipo (físico/online)
+    const ordersByType = await prisma.order.groupBy({
+      by: ['orderType'],
+      _count: {
+        orderType: true,
+      },
+      _sum: {
+        total: true,
+      },
+    });
 
     // Productos más vendidos (últimos 30 días)
     const topProducts = await prisma.orderItem.groupBy({
@@ -199,6 +244,14 @@ export async function GET() {
           count: salesToday._count || 0,
           growth: salesGrowth,
         },
+        salesFisicasToday: {
+          amount: salesFisicasToday._sum.total || 0,
+          count: salesFisicasToday._count || 0,
+        },
+        salesOnlineToday: {
+          amount: salesOnlineToday._sum.total || 0,
+          count: salesOnlineToday._count || 0,
+        },
         ordersToday: {
           count: salesToday._count || 0,
           growth: ordersGrowth,
@@ -238,6 +291,11 @@ export async function GET() {
         count: item._count.status,
         total: item._sum.total || 0,
       })),
+      ordersByType: ordersByType.map(item => ({
+        type: item.orderType,
+        count: item._count.orderType,
+        total: item._sum.total || 0,
+      })),
       topProducts: topProductsWithNames,
       totals: {
         totalClients,
@@ -264,4 +322,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-} 
+}

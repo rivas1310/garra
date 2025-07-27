@@ -15,4 +15,4 @@ export async function GET() {
     console.error('API /categorias: Error fetching categories:', error);
     return NextResponse.json({ error: 'Error al obtener categorías' }, { status: 500 });
   }
-} 
+}

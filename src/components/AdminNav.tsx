@@ -7,10 +7,14 @@ import {
   Package, 
   TrendingUp, 
   ShoppingCart, 
+  ShoppingBag,
   Users, 
   Settings,
   BarChart3,
-  FileText
+  FileText,
+  Ticket,
+  ClipboardList,
+  X
 } from 'lucide-react'
 
 const navigation = [
@@ -18,18 +22,49 @@ const navigation = [
   { name: 'Productos', href: '/admin/productos', icon: Package },
   { name: 'Inventario', href: '/admin/inventario', icon: TrendingUp },
   { name: 'Pedidos', href: '/admin/pedidos', icon: ShoppingCart },
+  { name: 'Venta Física', href: '/admin/venta-fisica', icon: ShoppingBag },
+  { name: 'Historial Ventas Físicas', href: '/admin/ventas-fisicas', icon: ClipboardList },
   { name: 'Clientes', href: '/admin/clientes', icon: Users },
+  { name: 'Cupones', href: '/admin/cupones', icon: Ticket },
   { name: 'Reportes', href: '/admin/reportes', icon: BarChart3 },
   { name: 'Configuración', href: '/admin/configuracion', icon: Settings },
 ]
 
-export default function AdminNav() {
+interface AdminNavProps {
+  onCloseMobile?: () => void;
+}
+
+export default function AdminNav({ onCloseMobile }: AdminNavProps) {
   const pathname = usePathname()
+  
+  // Función para manejar clics en enlaces móviles
+  const handleMobileClick = () => {
+    if (onCloseMobile) {
+      onCloseMobile();
+    }
+  }
 
   return (
-    <nav className="bg-white shadow-elegant border-r border-neutral-100 w-64 min-h-screen">
+    <nav className="bg-white shadow-elegant border-r border-neutral-100 w-64 h-full overflow-y-auto">
       <div className="p-6">
-        <div className="flex items-center gap-3 mb-8">
+        {/* Mobile close button */}
+        <div className="flex items-center justify-between lg:hidden mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-premium rounded-lg flex items-center justify-center">
+              <Package className="h-5 w-5 text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-neutral-700">Bazar Admin</h1>
+          </div>
+          {onCloseMobile && (
+            <button 
+              onClick={onCloseMobile}
+              className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        <div className="hidden lg:flex items-center gap-3 mb-8">
           <div className="w-8 h-8 bg-gradient-premium rounded-lg flex items-center justify-center">
             <Package className="h-5 w-5 text-white" />
           </div>
@@ -48,6 +83,7 @@ export default function AdminNav() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={handleMobileClick}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary-50 text-primary-600 border-r-2 border-primary-500'
@@ -69,6 +105,7 @@ export default function AdminNav() {
           <div className="space-y-2">
             <Link
               href="/admin/productos/nuevo"
+              onClick={handleMobileClick}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
             >
               <Package className="h-4 w-4" />
@@ -76,6 +113,7 @@ export default function AdminNav() {
             </Link>
             <Link
               href="/admin/inventario"
+              onClick={handleMobileClick}
               className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
             >
               <TrendingUp className="h-4 w-4" />
@@ -99,4 +137,4 @@ export default function AdminNav() {
       </div>
     </nav>
   )
-} 
+}

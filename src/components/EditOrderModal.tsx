@@ -71,8 +71,8 @@ export default function EditOrderModal({
   if (!isOpen || !order) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-neutral-200">
           <div>
@@ -92,29 +92,29 @@ export default function EditOrderModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Información del pedido */}
-          <div className="bg-neutral-50 rounded-lg p-4">
+          <div className="bg-neutral-50 rounded-lg p-3 sm:p-4">
             <h4 className="font-medium text-neutral-700 mb-3">
               Información del Pedido
             </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
               <div>
-                <p className="text-neutral-500">Cliente</p>
-                <p className="font-medium">{order.user?.email || "N/A"}</p>
+                <p className="text-neutral-500 text-xs sm:text-sm">Cliente</p>
+                <p className="font-medium truncate">{order.user?.email || "N/A"}</p>
               </div>
               <div>
-                <p className="text-neutral-500">Total</p>
+                <p className="text-neutral-500 text-xs sm:text-sm">Total</p>
                 <p className="font-medium">${order.total}</p>
               </div>
               <div>
-                <p className="text-neutral-500">Fecha</p>
+                <p className="text-neutral-500 text-xs sm:text-sm">Fecha</p>
                 <p className="font-medium">
                   {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}
                 </p>
               </div>
               <div>
-                <p className="text-neutral-500">Estado actual</p>
+                <p className="text-neutral-500 text-xs sm:text-sm">Estado actual</p>
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                   orderStatuses.find(s => s.value === order.status)?.color || "bg-gray-100 text-gray-800"
                 }`}>
@@ -132,7 +132,7 @@ export default function EditOrderModal({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
             >
               {orderStatuses.map((statusOption) => (
                 <option key={statusOption.value} value={statusOption.value}>
@@ -150,22 +150,22 @@ export default function EditOrderModal({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+              rows={3}
+              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
               placeholder="Agregar notas sobre el pedido..."
             />
           </div>
 
           {/* Advertencia para envíos */}
           {status === "SHIPPED" && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mt-0.5" />
                 <div>
                   <h4 className="font-medium text-blue-800">
                     Pedido marcado como enviado
                   </h4>
-                  <p className="text-sm text-blue-700 mt-1">
+                  <p className="text-xs sm:text-sm text-blue-700 mt-1">
                     Recuerda generar la etiqueta de envío usando el botón de envío en la tabla de pedidos.
                   </p>
                 </div>
@@ -175,17 +175,17 @@ export default function EditOrderModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-neutral-200">
+        <div className="flex flex-col-reverse sm:flex-row items-center sm:justify-end gap-3 p-4 sm:p-6 border-t border-neutral-200">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-neutral-600 hover:text-neutral-800 transition-colors"
+            className="w-full sm:w-auto px-4 py-2 text-neutral-600 hover:text-neutral-800 transition-colors text-sm"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="btn-primary flex items-center gap-2"
+            className="w-full sm:w-auto btn-primary flex items-center justify-center gap-2 text-sm"
           >
             {isSaving ? (
               <>
@@ -203,4 +203,4 @@ export default function EditOrderModal({
       </div>
     </div>
   );
-} 
+}

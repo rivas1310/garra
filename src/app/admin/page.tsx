@@ -99,10 +99,16 @@ export default function AdminPage() {
         body: JSON.stringify({ id: productId }),
       });
       const data = await res.json();
+      
       if (data.ok) {
         setProducts(prev => prev.filter(p => p.id !== productId));
         handleRefresh();
         toast.success('Producto eliminado');
+      } else if (res.status === 409) {
+        // Producto asociado a órdenes, ofrecer desactivarlo en lugar de eliminarlo
+        if (confirm(`${data.error}. ${data.detalle}\n\n¿Desea desactivar el producto en su lugar?`)) {
+          await handleDeactivateProduct(productId);
+        }
       } else {
         toast.error(data.error || 'Error al eliminar');
       }
@@ -111,12 +117,37 @@ export default function AdminPage() {
     }
   };
 
+  // Función para desactivar producto
+  const handleDeactivateProduct = async (productId: string) => {
+    try {
+      const res = await fetch('/api/productos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: productId, isActive: false }),
+      });
+      const data = await res.json();
+      
+      if (data.ok) {
+        // Actualizar el producto en la lista local
+        setProducts(prev => prev.map(p => 
+          p.id === productId ? { ...p, isActive: false } : p
+        ));
+        handleRefresh();
+        toast.success('Producto desactivado correctamente');
+      } else {
+        toast.error(data.error || 'Error al desactivar el producto');
+      }
+    } catch (err) {
+      toast.error('Error al desactivar el producto');
+    }
+  };
+
   // Estadísticas reales
   const totalProductos = Array.isArray(products) ? products.length : 0;
   const productosRecientes = Array.isArray(products) ? products.slice(0, 3) : [];
 
   return (
-    <div className="min-h-screen bg-gradient-elegant">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white shadow-elegant border-b border-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -252,4 +283,4 @@ export default function AdminPage() {
       </div>
     </div>
   )
-} 
+}

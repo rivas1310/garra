@@ -27,6 +27,10 @@ function LoginContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    
+    // Obtener la URL de retorno si existe
+    const returnUrl = searchParams.get('returnUrl') || '/perfil'
+    
     const res = await signIn('credentials', {
       redirect: false,
       email: form.email,
@@ -35,7 +39,7 @@ function LoginContent() {
     setLoading(false)
     if (res?.ok) {
       toast.success('¡Bienvenido!')
-      router.push('/perfil')
+      router.push(returnUrl)
     } else {
       toast.error('Credenciales incorrectas')
     }
@@ -64,7 +68,12 @@ function LoginContent() {
             />
           </div>
           <div>
-            <label className="block text-neutral-700 font-medium mb-1">Contraseña</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-neutral-700 font-medium">Contraseña</label>
+              <a href="/recuperar-password" className="text-primary-600 text-xs hover:underline">
+                ¿Olvidaste tu contraseña?
+              </a>
+            </div>
             <input
               type="password"
               name="password"
@@ -109,4 +118,4 @@ export default function LoginPage() {
       <LoginContent />
     </Suspense>
   )
-} 
+}

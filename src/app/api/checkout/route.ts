@@ -5,8 +5,8 @@ export async function POST(req: Request) {
   try {
     console.log('Iniciando creación de sesión de Stripe...')
     
-    const { items, customer } = await req.json()
-    console.log('Datos recibidos:', { items, customer })
+    const { items, customer, coupon } = await req.json()
+    console.log('Datos recibidos:', { items, customer, coupon })
 
     // Validaciones
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -16,6 +16,9 @@ export async function POST(req: Request) {
     if (!customer || !customer.email || !customer.nombre) {
       return NextResponse.json({ error: 'Faltan datos del cliente' }, { status: 400 })
     }
+    
+    // Calcular subtotal
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error('STRIPE_SECRET_KEY no está configurada')
@@ -46,6 +49,31 @@ export async function POST(req: Request) {
     })
 
     console.log('Line items para Stripe:', line_items)
+    
+    // Calcular descuento si hay cupón
+    let discountAmount = 0
+    if (coupon) {
+      discountAmount = coupon.discountAmount
+    }
+    
+    // Calcular impuestos y envío
+    const tax = (subtotal - discountAmount) * 0.16 // 16% IVA
+    const shipping = subtotal > 100 ? 0 : 10
+    const total = subtotal + shipping + tax - discountAmount
+    
+    // Crear objeto de descuento para Stripe si hay cupón
+    const discounts = coupon ? [
+      {
+        coupon_id: coupon.id,
+        // Crear un objeto de descuento personalizado
+        discount: {
+          type: coupon.discountType === 'PERCENTAGE' ? 'percent' : 'fixed_amount',
+          amount: coupon.discountType === 'PERCENTAGE' ? coupon.discountValue : Math.round(coupon.discountValue * 100),
+          currency: 'mxn',
+          name: `Cupón ${coupon.code}`,
+        }
+      }
+    ] : []
 
     console.log('Creando sesión de Stripe...')
     const session = await stripe.checkout.sessions.create({
@@ -63,6 +91,8 @@ export async function POST(req: Request) {
         estado: customer?.estado || '',
         codigoPostal: customer?.codigoPostal || '',
         pais: customer?.pais || '',
+        couponCode: coupon?.code || '',
+        couponDiscount: coupon ? String(coupon.discountAmount) : '0',
       },
     })
     
@@ -86,11 +116,19 @@ export async function POST(req: Request) {
           quantity: item.quantity
         })),
         customer,
+        coupon: coupon ? {
+          id: coupon.id,
+          code: coupon.code,
+          discountType: coupon.discountType,
+          discountValue: coupon.discountValue,
+          discountAmount: coupon.discountAmount
+        } : null,
         totals: {
-          subtotal: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-          tax: 0, // Se calculará en el frontend
-          shipping: 0, // Se calculará en el frontend
-          total: 0 // Se calculará en el frontend
+          subtotal,
+          discount: discountAmount,
+          tax,
+          shipping,
+          total
         }
       }
     })
@@ -98,4 +136,4 @@ export async function POST(req: Request) {
     console.error('Error en /api/checkout:', error)
     return NextResponse.json({ error: 'Error al crear la sesión de pago', detalle: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
-} 
+}

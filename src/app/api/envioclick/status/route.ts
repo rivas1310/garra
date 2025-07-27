@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const ENVIOSPERROS_API_KEY = '4ExUSFztbANYkmlOkAFNH3JbUSHSYo5VS8Mcg6r1';
-const ENVIOSPERROS_API_URL = 'https://staging-app.enviosperros.com/api/v2';
+const ENVIOCLICK_API_KEY = process.env.ENVIOCLICK_API_KEY;
+const ENVIOCLICK_API_URL = process.env.ENVIOCLICK_API_URL;
 
 export async function GET() {
   try {
@@ -15,10 +15,10 @@ export async function GET() {
       destination: { codePostal: "64000" }
     };
 
-    const response = await fetch(`${ENVIOSPERROS_API_URL}/shipping/rates`, {
+    const response = await fetch(`${ENVIOCLICK_API_URL}/shipping/rates`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${ENVIOSPERROS_API_KEY}`,
+        'Authorization': `Bearer ${ENVIOCLICK_API_KEY}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
@@ -40,17 +40,17 @@ export async function GET() {
 
       if (hasAccountIssues) {
         status = 'account_issue';
-        message = 'La cuenta de Envíos Perros tiene problemas de verificación o límites alcanzados.';
+        message = 'La cuenta de Envío Click tiene problemas de verificación o límites alcanzados.';
         recommendations = [
-          'Verificar la identidad de la cuenta en el panel de Envíos Perros',
-          'Contactar al soporte de Envíos Perros para resolver el problema',
+          'Verificar la identidad de la cuenta en el panel de Envío Click',
+          'Contactar al soporte de Envío Click para resolver el problema',
           'Verificar que la cuenta esté activa y tenga saldo disponible',
           'Revisar si hay documentos pendientes de verificación',
-          'Acceder a: https://staging-app.enviosperros.com/integrations para verificar el estado'
+          `Acceder a: ${ENVIOCLICK_API_URL?.replace('/api/v2', '')}/integrations para verificar el estado`
         ];
       } else if (rates.some((rate: any) => rate.available)) {
         status = 'working';
-        message = 'La cuenta de Envíos Perros está funcionando correctamente.';
+        message = 'La cuenta de Envío Click está funcionando correctamente.';
       } else {
         status = 'no_rates';
         message = 'No se encontraron tarifas disponibles para la ruta especificada.';
@@ -69,17 +69,17 @@ export async function GET() {
 
       if (hasAccountIssues) {
         status = 'account_issue';
-        message = 'La cuenta de Envíos Perros tiene problemas de verificación o límites alcanzados.';
+        message = 'La cuenta de Envío Click tiene problemas de verificación o límites alcanzados.';
         recommendations = [
-          'Verificar la identidad de la cuenta en el panel de Envíos Perros',
-          'Contactar al soporte de Envíos Perros para resolver el problema',
+          'Verificar la identidad de la cuenta en el panel de Envío Click',
+          'Contactar al soporte de Envío Click para resolver el problema',
           'Verificar que la cuenta esté activa y tenga saldo disponible',
           'Revisar si hay documentos pendientes de verificación',
-          'Acceder a: https://staging-app.enviosperros.com/integrations para verificar el estado'
+          `Acceder a: ${ENVIOCLICK_API_URL?.replace('/api/v2', '')}/integrations para verificar el estado`
         ];
       } else if (rates.some((rate: any) => rate.available)) {
         status = 'working';
-        message = 'La cuenta de Envíos Perros está funcionando correctamente.';
+        message = 'La cuenta de Envío Click está funcionando correctamente.';
       } else {
         status = 'no_rates';
         message = 'No se encontraron tarifas disponibles para la ruta especificada.';
@@ -103,15 +103,19 @@ export async function GET() {
       message,
       recommendations,
       timestamp: new Date().toISOString(),
-      apiResponse: data
+      environment: process.env.NODE_ENV || 'development'
     });
-
   } catch (error) {
-    return NextResponse.json({
-      status: 'error',
-      message: 'Error interno del servidor',
-      error: error instanceof Error ? error.message : 'Error desconocido',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    console.error('Error al verificar estado de la cuenta:', error);
+    return NextResponse.json(
+      { 
+        status: 'error',
+        message: 'Error al verificar el estado de la cuenta',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development'
+      },
+      { status: 500 }
+    );
   }
-} 
+}

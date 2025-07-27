@@ -24,7 +24,10 @@ const categories = [
   { id: 'deportes', name: 'Deportes' }
 ]
 
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+// Tallas por tipo de producto
+const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+const womenShoeSizes = ['2', '3', '4', '5', '6', '7', '8']
+const menShoeSizes = ['2', '3', '4', '5', '6', '7', '8', '9', '10']
 const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 'Gris']
 
 // Subcategorías por categoría (slug o id)
@@ -74,6 +77,7 @@ export default function EditarProductoPage() {
     price: '',
     originalPrice: '',
     stock: '',
+    barcode: '', // Campo para código de barras
     isNew: false,
     isOnSale: false,
     isSecondHand: false,
@@ -108,6 +112,46 @@ export default function EditarProductoPage() {
     return '';
   };
 
+  // Obtener las tallas correctas según la categoría seleccionada
+  const getAvailableSizes = () => {
+    const categorySlug = getSlugByCategoryId(formData.category);
+    
+    if (categorySlug === 'calzado') {
+      // Para calzado, necesitamos determinar si es de mujer u hombre
+      // Primero verificar si la categoría principal indica el género
+      const categoryName = categories.find(c => c.id === formData.category)?.name?.toLowerCase() || '';
+      const subcategory = formData.subcategoria.toLowerCase();
+      
+      // Palabras clave para identificar género
+      const womenKeywords = ['mujer', 'femenino', 'dama', 'damas', 'femenina', 'mujeres'];
+      const menKeywords = ['hombre', 'masculino', 'caballero', 'caballeros', 'masculina', 'hombres'];
+      
+      // Verificar en el nombre de la categoría
+      const isWomenCategory = womenKeywords.some(keyword => categoryName.includes(keyword));
+      const isMenCategory = menKeywords.some(keyword => categoryName.includes(keyword));
+      
+      // Verificar en la subcategoría
+      const isWomenSubcategory = womenKeywords.some(keyword => subcategory.includes(keyword));
+      const isMenSubcategory = menKeywords.some(keyword => subcategory.includes(keyword));
+      
+      // Determinar el género
+      if (isWomenCategory || isWomenSubcategory) {
+        return womenShoeSizes;
+      } else if (isMenCategory || isMenSubcategory) {
+        return menShoeSizes;
+      } else {
+        // Si no hay indicación clara, mostrar ambas opciones
+        return [...womenShoeSizes, ...menShoeSizes];
+      }
+    } else if (categorySlug === 'mujer' || categorySlug === 'hombre') {
+      // Para categorías de ropa por género, usar tallas de ropa
+      return clothingSizes;
+    } else {
+      // Para otros productos (accesorios, bolsos, deportes), usar tallas de ropa
+      return clothingSizes;
+    }
+  };
+
   // Cargar datos del producto y categorías
   useEffect(() => {
     const loadProduct = async () => {
@@ -125,6 +169,7 @@ export default function EditarProductoPage() {
           price: producto.price?.toString() || '',
           originalPrice: producto.originalPrice?.toString() || '',
           stock: producto.stock?.toString() || '',
+          barcode: producto.barcode || '', // Cargar código de barras existente
           isNew: !!producto.isNew,
           isOnSale: !!producto.isOnSale,
           isSecondHand: !!producto.isSecondHand,
@@ -172,17 +217,47 @@ export default function EditarProductoPage() {
   }
 
   const addVariant = () => {
-    setVariants(prev => [...prev, { size: '', color: '', stock: 0 }])
+    console.log('Agregando nueva variante');
+    setVariants(prev => {
+      const newVariants = [...prev, { size: '', color: '', stock: 0 }];
+      console.log('Nuevas variantes:', newVariants);
+      console.log('Número total de variantes:', newVariants.length);
+      return newVariants;
+    });
   }
 
   const removeVariant = (index: number) => {
-    setVariants(prev => prev.filter((_, i) => i !== index))
+    console.log(`Eliminando variante en índice ${index}`);
+    setVariants(prev => {
+      const newVariants = prev.filter((_, i) => i !== index);
+      console.log('Variantes después de eliminar:', newVariants);
+      console.log('Número total de variantes:', newVariants.length);
+      return newVariants;
+    });
   }
 
   const updateVariant = (index: number, field: string, value: string | number) => {
-    setVariants(prev => prev.map((variant, i) => 
-      i === index ? { ...variant, [field]: value } : variant
-    ))
+    console.log(`Actualizando variante ${index}, campo ${field}, valor ${value}`);
+    
+    // Crear una copia profunda del array de variantes para evitar problemas de referencia
+    const updatedVariants = JSON.parse(JSON.stringify(variants));
+    
+    // Actualizar el campo específico en la variante
+    if (updatedVariants[index]) {
+      updatedVariants[index][field] = value;
+      console.log(`Variante ${index} actualizada:`, updatedVariants[index]);
+      
+      // Actualizar el estado con el nuevo array
+      setVariants(updatedVariants);
+      
+      // Verificar el estado actualizado después de un breve retraso
+      setTimeout(() => {
+        console.log('Estado actual de variantes:', variants);
+        console.log('Número total de variantes en estado:', variants.length);
+      }, 100);
+    } else {
+      console.error(`Error: No se encontró la variante en el índice ${index}`);
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -207,7 +282,7 @@ export default function EditarProductoPage() {
           const blob = await res.blob();
           const formData = new FormData();
           formData.append('file', blob, 'imagen.jpg');
-          const uploadRes = await fetch('/api/registro', {
+          const uploadRes = await fetch('/api/upload', {
             method: 'POST',
             body: formData,
           });
@@ -217,30 +292,39 @@ export default function EditarProductoPage() {
           }
         }
       }
+      // Verificar las variantes antes de enviar
+      console.log('Variantes a enviar:', variants);
+      
+      // Preparar datos para enviar
+      const productData = {
+        name: formData.name,
+        description: formData.description,
+        categoryId: formData.category, // ID real
+        subcategoria: formData.subcategoria,
+        price: formData.price,
+        originalPrice: formData.originalPrice,
+        images: uploadedImageUrls,
+        stock: formData.stock,
+        barcode: formData.barcode || null, // Incluir código de barras
+        isActive: formData.isActive,
+        isNew: formData.isNew,
+        isOnSale: formData.isOnSale,
+        isSecondHand: formData.isSecondHand,
+        variants: variants.map(v => ({
+          size: v.size,
+          color: v.color,
+          stock: v.stock,
+          price: v.price,
+        })),
+      };
+      
+      console.log('Datos completos a enviar:', productData);
+      
       // Actualizar producto en la base de datos
       const response = await fetch(`/api/productos/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          categoryId: formData.category, // ID real
-          subcategoria: formData.subcategoria,
-          price: formData.price,
-          originalPrice: formData.originalPrice,
-          images: uploadedImageUrls,
-          stock: formData.stock,
-          isActive: formData.isActive,
-          isNew: formData.isNew,
-          isOnSale: formData.isOnSale,
-          isSecondHand: formData.isSecondHand,
-          variants: variants.map(v => ({
-            size: v.size,
-            color: v.color,
-            stock: v.stock,
-            price: v.price,
-          })),
-        }),
+        body: JSON.stringify(productData),
       });
       if (!response.ok) throw new Error('Error al actualizar el producto');
       toast.success('Producto actualizado correctamente')
@@ -404,6 +488,44 @@ export default function EditarProductoPage() {
                       placeholder="0"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-title mb-2">
+                      Código de Barras
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        name="barcode"
+                        value={formData.barcode}
+                        onChange={handleInputChange}
+                        className="input-field flex-1"
+                        placeholder="Código de barras del producto"
+                        readOnly={!!formData.barcode} // Solo lectura si ya tiene código
+                      />
+                      {!formData.barcode && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Generar código de barras automáticamente
+                            const timestamp = Date.now().toString().slice(-8);
+                            const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+                            const barcode = `PRD${timestamp}${randomDigits}`;
+                            setFormData(prev => ({ ...prev, barcode }));
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Generar
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.barcode 
+                        ? 'Código de barras asignado al producto' 
+                        : 'Genera un código de barras para escanear en ventas físicas'
+                      }
+                    </p>
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -425,7 +547,12 @@ export default function EditarProductoPage() {
               {/* Variantes */}
               <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-title">Variantes</h2>
+                  <div>
+                    <h2 className="text-lg font-semibold text-title">Variantes</h2>
+                    <p className="text-sm text-muted mt-1">
+                      Total de variantes: <span className="font-semibold text-primary-600">{variants.length}</span>
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={addVariant}
@@ -443,14 +570,20 @@ export default function EditarProductoPage() {
                 ) : (
                   <div className="space-y-4">
                     {variants.map((variant, index) => (
-                      <div key={index} className="flex items-center gap-4 p-4 bg-primary-50 rounded-lg">
+                      <div key={`variant-${index}-${variant.size}-${variant.color}`} className="flex items-center gap-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
+                        <div className="flex items-center gap-2 min-w-[60px]">
+                          <span className="text-xs font-medium text-primary-600 bg-primary-100 px-2 py-1 rounded">
+                            #{index + 1}
+                          </span>
+                        </div>
+                        
                         <select
                           value={variant.size}
                           onChange={(e) => updateVariant(index, 'size', e.target.value)}
                           className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
                         >
                           <option value="">Seleccionar talla</option>
-                          {sizes.map((size) => (
+                          {getAvailableSizes().map((size) => (
                             <option key={size} value={size}>{size}</option>
                           ))}
                         </select>
@@ -468,8 +601,8 @@ export default function EditarProductoPage() {
 
                         <input
                           type="number"
-                          value={variant.stock}
-                          onChange={(e) => updateVariant(index, 'stock', parseInt(e.target.value))}
+                          value={variant.stock || 0}
+                          onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
                           min="0"
                           className="w-24 px-3 py-2 border border-primary-200 rounded-lg"
                           placeholder="Stock"
@@ -479,11 +612,26 @@ export default function EditarProductoPage() {
                           type="button"
                           onClick={() => removeVariant(index)}
                           className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
+                          title="Eliminar variante"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     ))}
+                    
+                    {/* Resumen de variantes */}
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">Resumen de variantes:</h4>
+                      <div className="text-xs text-blue-700">
+                        <p>• Total de variantes: <strong>{variants.length}</strong></p>
+                        <p>• Variantes completas: <strong>{variants.filter(v => v.size && v.color && v.stock > 0).length}</strong></p>
+                        <p>• Variantes incompletas: <strong>{variants.filter(v => !v.size || !v.color || v.stock === 0).length}</strong></p>
+                        <p>• Tipo de tallas: <strong>{getSlugByCategoryId(formData.category) === 'calzado' ? 'Calzado' : 'Ropa'}</strong></p>
+                        {getSlugByCategoryId(formData.category) === 'calzado' && (
+                          <p>• Tallas disponibles: <strong>{getAvailableSizes().join(', ')}</strong></p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -515,23 +663,39 @@ export default function EditarProductoPage() {
                   />
 
                   {images.length > 0 && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {images.map((image, index) => (
-                        <div key={index} className="relative group">
-                          <img
-                            src={image}
-                            alt={`Imagen ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeImage(index)}
-                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-sm font-medium text-title">Vista previa de imágenes</h3>
+                        <button 
+                          type="button" 
+                          onClick={() => setImages([])} 
+                          className="text-xs text-red-600 hover:text-red-800"
+                        >
+                          Eliminar todas
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {images.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image}
+                              alt={`Imagen ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg"
+                            />
+                            <div className="absolute top-1 left-1 bg-black bg-opacity-70 text-white text-xs px-1.5 py-0.5 rounded">
+                              {index + 1}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted mt-2">La primera imagen será la principal. Puedes subir hasta 5 imágenes.</p>
                     </div>
                   )}
                 </div>
@@ -648,4 +812,4 @@ export default function EditarProductoPage() {
       </div>
     </div>
   )
-} 
+}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, Heart, Eye, Star, Package, AlertTriangle } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { useSession } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
 import ClientOnly from './ClientOnly'
 
@@ -24,6 +25,11 @@ interface Product {
   isNew?: boolean
   isSale?: boolean
   isSecondHand?: boolean
+  variants?: Array<{
+    size?: string
+    color?: string
+    stock?: number
+  }>
 }
 
 interface ProductCardProps {
@@ -33,8 +39,11 @@ interface ProductCardProps {
 
 function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   const { addToCart, getItemQuantity, canAddMore } = useCart()
+  const { data: session } = useSession()
   const [isFavorite, setIsFavorite] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [selectedColor, setSelectedColor] = useState<string | null>(null)
 
   // Verificar disponibilidad del producto
   const isAvailable = product.isAvailable !== false && (product.stock || 0) > 0 && product.isActive !== false
@@ -45,10 +54,30 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   // Obtener cantidad actual en el carrito
   const currentCartQuantity = getItemQuantity(product.id)
   const canAddMoreToCart = canAddMore(product.id, stock)
+  
+  // Extraer tallas y colores únicos de las variantes
+  const availableSizes = product.variants && product.variants.length > 0
+    ? Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))) as string[]
+    : []
+    
+  const availableColors = product.variants && product.variants.length > 0
+    ? Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))) as string[]
+    : []
 
   const handleAddToCart = async () => {
     if (!isAvailable) {
       toast.error('Producto no disponible')
+      return
+    }
+    
+    // Verificar si hay variantes disponibles y si se seleccionó talla/color
+    if (availableSizes.length > 0 && !selectedSize) {
+      toast.error('Por favor selecciona una talla')
+      return
+    }
+    
+    if (availableColors.length > 0 && !selectedColor) {
+      toast.error('Por favor selecciona un color')
       return
     }
     
@@ -60,6 +89,8 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
       price: product.price,
       image: product.image,
       stock: stock,
+      size: selectedSize || undefined,
+      color: selectedColor || undefined
     })
     
     if (result.success) {
@@ -72,9 +103,66 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
     setTimeout(() => setIsAddingToCart(false), 300)
   }
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite)
-    toast.success(isFavorite ? 'Eliminado de favoritos' : 'Agregado a favoritos')
+  // Verificar si el producto está en favoritos
+  useEffect(() => {
+    if (session?.user) {
+      checkFavoriteStatus()
+    }
+  }, [session, product.id])
+
+  const checkFavoriteStatus = async () => {
+    try {
+      const response = await fetch('/api/favoritos')
+      if (response.ok) {
+        const favorites = await response.json()
+        const isInFavorites = favorites.some((fav: any) => fav.id === product.id)
+        setIsFavorite(isInFavorites)
+      }
+    } catch (error) {
+      console.error('Error al verificar favoritos:', error)
+    }
+  }
+
+  const toggleFavorite = async () => {
+    if (!session?.user) {
+      toast.error('Debes iniciar sesión para agregar favoritos')
+      return
+    }
+
+    try {
+      if (isFavorite) {
+        // Remover de favoritos
+        const response = await fetch(`/api/favoritos/${product.id}`, {
+          method: 'DELETE',
+        })
+        
+        if (response.ok) {
+          setIsFavorite(false)
+          toast.success('Eliminado de favoritos')
+        } else {
+          toast.error('Error al eliminar de favoritos')
+        }
+      } else {
+        // Agregar a favoritos
+        const response = await fetch('/api/favoritos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId: product.id }),
+        })
+        
+        if (response.ok) {
+          setIsFavorite(true)
+          toast.success('Agregado a favoritos')
+        } else {
+          toast.error('Error al agregar a favoritos')
+        }
+      }
+    } catch (error) {
+      console.error('Error al manejar favoritos:', error)
+      toast.error('Error al manejar favoritos')
+    }
   }
 
   const getStockStatus = () => {
@@ -163,37 +251,82 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <span className="text-xs text-muted uppercase tracking-wide">
-                {product.category}
+            <span className="text-xs text-muted uppercase tracking-wide">
+              {product.category}
+            </span>
+            <h3 className="font-semibold text-title mt-1 mb-2">
+              {product.name}
+            </h3>
+            <div className="flex items-center mb-2">
+              <Star size={14} className="text-yellow-400 fill-current" />
+              <span className="text-sm text-body ml-1">
+                {product.rating} ({product.reviewCount} reseñas)
               </span>
-              <h3 className="font-semibold text-title mt-1 mb-2">
-                {product.name}
-              </h3>
-              <div className="flex items-center mb-2">
-                <Star size={14} className="text-yellow-400 fill-current" />
-                <span className="text-sm text-body ml-1">
-                  {product.rating} ({product.reviewCount} reseñas)
-                </span>
-              </div>
-              
-              {/* Stock Status */}
-              <div className={`flex items-center gap-2 mb-2 px-2 py-1 rounded-full ${stockStatus.bgColor}`}>
-                {stockStatus.icon}
-                <span className={`text-xs font-medium ${stockStatus.color}`}>
-                  {stockStatus.text}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg font-bold text-title">
-                  ${product.price}
-                </span>
-                {product.originalPrice && (
-                  <span className="text-sm text-muted line-through">
-                    ${product.originalPrice}
-                  </span>
+            </div>
+            
+            {/* Variantes disponibles - Vista de lista */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="mb-2">
+                {/* Colores disponibles */}
+                {availableColors.length > 0 && (
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="text-xs text-muted">Colores:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {availableColors.map((color, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedColor(color as string)}
+                          className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedColor === color 
+                            ? 'bg-primary-500 text-white' 
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Tallas disponibles */}
+                {availableSizes.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-muted">Tallas:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {availableSizes.map((size, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedSize(size as string)}
+                          className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedSize === size 
+                            ? 'bg-primary-500 text-white' 
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
+            )}
+              
+            {/* Stock Status */}
+            <div className={`flex items-center gap-2 mb-2 px-2 py-1 rounded-full ${stockStatus.bgColor}`}>
+              {stockStatus.icon}
+              <span className={`text-xs font-medium ${stockStatus.color}`}>
+                {stockStatus.text}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg font-bold text-title">
+                ${product.price}
+              </span>
+              {product.originalPrice && (
+                <span className="text-sm text-muted line-through">
+                  ${product.originalPrice}
+                </span>
+              )}
+            </div>
             </div>
 
             {/* Actions */}
@@ -339,6 +472,51 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           {product.name}
         </h3>
 
+        {/* Variantes disponibles */}
+        {product.variants && product.variants.length > 0 && (
+          <div className="mb-2">
+            {/* Colores disponibles */}
+            {availableColors.length > 0 && (
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-xs text-muted">Colores:</span>
+                <div className="flex flex-wrap gap-1">
+                  {availableColors.map((color, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedColor(color as string)}
+                      className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedColor === color 
+                        ? 'bg-primary-500 text-white' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Tallas disponibles */}
+            {availableSizes.length > 0 && (
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-muted">Tallas:</span>
+                <div className="flex flex-wrap gap-1">
+                  {availableSizes.map((size, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedSize(size as string)}
+                      className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedSize === size 
+                        ? 'bg-primary-500 text-white' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-title">
@@ -362,4 +540,4 @@ export default function ProductCard({ product, layout = 'grid' }: ProductCardPro
       <ProductCardContent product={product} layout={layout} />
     </ClientOnly>
   )
-} 
+}

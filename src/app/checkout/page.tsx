@@ -2,12 +2,12 @@
 
 import { useCart } from '@/hooks/useCart'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, ShoppingBag, Tag } from 'lucide-react'
 import Link from 'next/link'
 import { loadStripe } from '@stripe/stripe-js'
 
 export default function CheckoutPage() {
-  const { cartItems, getTotal, clearCart, isHydrated } = useCart()
+  const { cartItems, getTotal, clearCart, isHydrated, coupon } = useCart()
   const [stripePromise, setStripePromise] = useState<any>(null)
   const [form, setForm] = useState({
     nombre: '',
@@ -44,8 +44,9 @@ export default function CheckoutPage() {
 
   const subtotal = getTotal()
   const shipping = subtotal > 100 ? 0 : 10
-  const tax = subtotal * 0.16
-  const total = subtotal + shipping + tax
+  const discount = coupon ? coupon.discountAmount : 0
+  const tax = (subtotal - discount) * 0.16 // Aplicar IVA después del descuento
+  const total = subtotal + shipping + tax - discount
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -78,10 +79,15 @@ export default function CheckoutPage() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
+          size: item.size || null,
+          color: item.color || null,
+          variantId: item.variantId || null,
         })),
         customer: form,
+        coupon: coupon,
         totals: {
           subtotal: subtotal,
+          discount: discount,
           shipping: shipping,
           tax: tax,
           total: total
@@ -104,7 +110,8 @@ export default function CheckoutPage() {
         localStorage.setItem('pendingOrder', JSON.stringify({
           items: orderData.items,
           customer: orderData.customer,
-          totals: orderData.totals
+          totals: orderData.totals,
+          stripeSessionId: data.sessionId
         }))
         
         // Limpiar carrito y redireccionar
@@ -175,6 +182,15 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
+                {coupon && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="flex items-center gap-1">
+                      <Tag size={14} />
+                      Descuento ({coupon.code})
+                    </span>
+                    <span>-${discount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span>Envío</span>
                   <span>{shipping === 0 ? 'Gratis' : `$${shipping.toFixed(2)}`}</span>
@@ -213,4 +229,4 @@ export default function CheckoutPage() {
       </div>
     </main>
   )
-} 
+}

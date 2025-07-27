@@ -2,13 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Trash2, Minus, Plus, ArrowLeft, ShoppingBag } from 'lucide-react'
+import { Trash2, Minus, Plus, ArrowLeft, ShoppingBag, Tag, X } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import toast from 'react-hot-toast'
 
 export default function CarritoPage() {
-  const { cartItems, removeFromCart, updateQuantity, getTotal, clearCart } = useCart()
+  const { cartItems, removeFromCart, updateQuantity, getTotal, clearCart, applyCoupon, removeCoupon, coupon } = useCart()
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
+  const [couponCode, setCouponCode] = useState('')
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
 
   const handleUpdateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -42,7 +44,36 @@ export default function CarritoPage() {
   const subtotal = getTotal()
   const shipping = subtotal > 100 ? 0 : 10
   const tax = subtotal * 0.16 // 16% IVA
-  const total = subtotal + shipping + tax
+  const discount = coupon ? coupon.discountAmount : 0
+  const total = subtotal + shipping + tax - discount
+  
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Ingresa un código de cupón')
+      return
+    }
+    
+    setIsApplyingCoupon(true)
+    try {
+      const result = await applyCoupon(couponCode, subtotal)
+      if (result.success) {
+        toast.success(result.message)
+        setCouponCode('')
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Error al aplicar el cupón')
+      console.error('Error applying coupon:', error)
+    } finally {
+      setIsApplyingCoupon(false)
+    }
+  }
+  
+  const handleRemoveCoupon = () => {
+    removeCoupon()
+    toast.success('Cupón eliminado')
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -192,6 +223,12 @@ export default function CarritoPage() {
                   <span className="text-muted">IVA (16%)</span>
                   <span className="font-medium text-body">${tax.toFixed(2)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 font-medium">Descuento</span>
+                    <span className="font-medium text-green-600">-${discount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="border-t border-primary-100 pt-3">
                   <div className="flex justify-between text-lg font-semibold text-title">
                     <span>Total</span>
@@ -205,16 +242,51 @@ export default function CarritoPage() {
                 <label className="block text-sm font-medium text-title mb-2">
                   Código de Descuento
                 </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Ingresa tu código"
-                    className="flex-1 input-field"
-                  />
-                  <button className="btn-secondary whitespace-nowrap">
-                    Aplicar
-                  </button>
-                </div>
+                {coupon ? (
+                  <div className="flex items-center justify-between p-3 bg-primary-50 border border-primary-100 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-5 w-5 text-primary-600" />
+                      <div>
+                        <p className="font-medium text-primary-800">{coupon.code}</p>
+                        <p className="text-xs text-primary-600">
+                          {coupon.discountType === 'PERCENTAGE' 
+                            ? `${coupon.discountValue}% de descuento` 
+                            : `$${coupon.discountValue.toFixed(2)} de descuento`}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={handleRemoveCoupon}
+                      className="p-1 hover:bg-primary-100 rounded-full text-primary-600"
+                      aria-label="Eliminar cupón"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Ingresa tu código"
+                      className="flex-1 input-field"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    />
+                    <button 
+                      className="btn-secondary whitespace-nowrap"
+                      onClick={handleApplyCoupon}
+                      disabled={isApplyingCoupon}
+                    >
+                      {isApplyingCoupon ? (
+                        <span className="flex items-center gap-1">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                          Aplicando...
+                        </span>
+                      ) : 'Aplicar'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Checkout Button y Continue Shopping */}
@@ -249,4 +321,4 @@ export default function CarritoPage() {
       </div>
     </div>
   )
-} 
+}
