@@ -89,7 +89,27 @@ export default function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps)
       setError(null)
 
       const qrCodeSuccessCallback = (decodedText: string) => {
-        onScan(decodedText)
+        // Limpiar el código escaneado
+        const cleanCode = decodedText
+          .trim()
+          .replace(/[\r\n\t]/g, '') // Remover saltos de línea, retornos de carro y tabulaciones
+          .replace(/\s+/g, '') // Remover espacios múltiples
+          .replace(/[^\w\d]/g, '') // Solo mantener letras y números
+
+        console.log('📱 Código escaneado:', {
+          original: decodedText,
+          cleaned: cleanCode,
+          originalLength: decodedText.length,
+          cleanedLength: cleanCode.length,
+          hasSpecialChars: /[\r\n\t\s]/.test(decodedText)
+        })
+
+        if (cleanCode.length >= 3) {
+          onScan(cleanCode)
+        } else {
+          console.log('⚠️ Código demasiado corto después de limpiar:', cleanCode)
+          setError('Código de barras inválido. Intenta escanear de nuevo.')
+        }
       }
 
       const config = {

@@ -9,21 +9,85 @@ export async function GET(req: Request, context: { params: Promise<{ code: strin
       return NextResponse.json({ error: 'Código de barras requerido' }, { status: 400 });
     }
 
-    console.log('Buscando producto con código de barras:', code);
+    console.log('🔍 Buscando producto con código de barras:', {
+      original: code,
+      decoded: decodeURIComponent(code),
+      length: code.length,
+      decodedLength: decodeURIComponent(code).length
+    });
 
-    // Buscar el producto por código de barras
-    const product = await prisma.product.findUnique({
-      where: { barcode: code },
+    // Limpiar y normalizar el código
+    const cleanCode = decodeURIComponent(code).trim();
+    
+    console.log('🧹 Código limpio:', {
+      cleanCode,
+      length: cleanCode.length
+    });
+
+    // Buscar el producto por código de barras (búsqueda exacta)
+    let product = await prisma.product.findUnique({
+      where: { barcode: cleanCode },
       include: {
         category: true,
         variants: true,
       },
     });
 
+    // Si no se encuentra, intentar búsqueda más flexible
     if (!product) {
+      console.log('❌ No encontrado con búsqueda exacta, intentando búsqueda flexible...');
+      
+      // Buscar productos que contengan el código (búsqueda parcial)
+      const products = await prisma.product.findMany({
+        where: {
+          barcode: {
+            contains: cleanCode,
+            mode: 'insensitive' // Ignorar mayúsculas/minúsculas
+          }
+        },
+        include: {
+          category: true,
+          variants: true,
+        },
+      });
+
+      console.log('🔍 Resultados de búsqueda flexible:', {
+        count: products.length,
+        barcodes: products.map(p => p.barcode)
+      });
+
+      if (products.length === 1) {
+        product = products[0];
+        console.log('✅ Encontrado con búsqueda flexible:', product.barcode);
+      } else if (products.length > 1) {
+        console.log('⚠️ Múltiples productos encontrados:', products.map(p => ({ id: p.id, name: p.name, barcode: p.barcode })));
+        return NextResponse.json({ 
+          error: 'Múltiples productos encontrados',
+          message: `Se encontraron ${products.length} productos con códigos similares`,
+          products: products.map(p => ({ id: p.id, name: p.name, barcode: p.barcode }))
+        }, { status: 400 });
+      }
+    }
+
+    if (!product) {
+      console.log('❌ Producto no encontrado después de todas las búsquedas');
+      
+      // Buscar productos similares para sugerencias
+      const similarProducts = await prisma.product.findMany({
+        where: {
+          OR: [
+            { barcode: { contains: cleanCode.substring(0, Math.max(3, cleanCode.length - 2)) } },
+            { name: { contains: cleanCode, mode: 'insensitive' } }
+          ]
+        },
+        take: 5,
+        select: { id: true, name: true, barcode: true }
+      });
+
       return NextResponse.json({ 
         error: 'Producto no encontrado',
-        message: `No se encontró ningún producto con el código de barras: ${code}`
+        message: `No se encontró ningún producto con el código de barras: ${cleanCode}`,
+        suggestions: similarProducts.length > 0 ? similarProducts : undefined
       }, { status: 404 });
     }
 
@@ -40,10 +104,11 @@ export async function GET(req: Request, context: { params: Promise<{ code: strin
     // Verificar si el producto está disponible
     const isAvailable = totalStock > 0 && product.isActive;
 
-    console.log('Producto encontrado:', {
+    console.log('✅ Producto encontrado:', {
       id: product.id,
       name: product.name,
       barcode: product.barcode,
+      barcodeLength: product.barcode?.length,
       totalStock,
       isAvailable
     });
@@ -58,7 +123,7 @@ export async function GET(req: Request, context: { params: Promise<{ code: strin
     });
 
   } catch (error) {
-    console.error('Error al buscar producto por código de barras:', error);
+    console.error('❌ Error al buscar producto por código de barras:', error);
     return NextResponse.json({ 
       error: 'Error al buscar el producto',
       detalle: error instanceof Error ? error.message : String(error)

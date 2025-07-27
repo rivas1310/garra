@@ -33,20 +33,65 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
     setLoading(true)
     setError(null)
 
+    // Limpiar y normalizar el código
+    const cleanBarcode = barcode
+      .trim()
+      .replace(/[\r\n\t]/g, '') // Remover saltos de línea, retornos de carro y tabulaciones
+      .replace(/\s+/g, '') // Remover espacios múltiples
+      .replace(/[^\w\d]/g, '') // Solo mantener letras y números
+
+    // Logging para debugging
+    console.log('🔍 Buscando producto con código:', {
+      original: barcode,
+      cleaned: cleanBarcode,
+      originalLength: barcode.trim().length,
+      cleanedLength: cleanBarcode.length,
+      type: typeof barcode,
+      hasSpecialChars: /[\r\n\t\s]/.test(barcode)
+    })
+
+    if (cleanBarcode.length < 3) {
+      setError('Código de barras demasiado corto')
+      setLoading(false)
+      return
+    }
+
     try {
-      const response = await fetch(`/api/productos/barcode/${encodeURIComponent(barcode.trim())}`)
+      const response = await fetch(`/api/productos/barcode/${encodeURIComponent(cleanBarcode)}`)
+      
+      console.log('📡 Respuesta de la API:', {
+        status: response.status,
+        ok: response.ok,
+        url: response.url
+      })
       
       if (response.ok) {
         const product = await response.json()
+        console.log('✅ Producto encontrado:', {
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode,
+          barcodeLength: product.barcode?.length
+        })
         addToCart(product)
         setManualBarcode('')
       } else if (response.status === 404) {
-        setError('Producto no encontrado con ese código de barras')
+        const errorData = await response.json()
+        console.log('❌ Producto no encontrado:', errorData)
+        
+        // Mostrar sugerencias si están disponibles
+        if (errorData.suggestions && errorData.suggestions.length > 0) {
+          setError(`Producto no encontrado. Sugerencias: ${errorData.suggestions.map((s: any) => s.name).join(', ')}`)
+        } else {
+          setError(`Producto no encontrado con el código: ${cleanBarcode}`)
+        }
       } else {
+        const errorData = await response.json()
+        console.log('❌ Error de API:', errorData)
         setError('Error al buscar el producto')
       }
     } catch (err) {
-      console.error('Error al buscar producto:', err)
+      console.error('❌ Error de conexión:', err)
       setError('Error de conexión al buscar el producto')
     } finally {
       setLoading(false)
