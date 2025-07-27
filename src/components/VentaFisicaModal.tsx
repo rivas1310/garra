@@ -28,7 +28,12 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
 
   // Buscar producto por código de barras
   const searchProductByBarcode = async (barcode: string) => {
-    if (!barcode.trim()) return
+    console.log('🚀 Iniciando búsqueda de producto por código de barras')
+    
+    if (!barcode.trim()) {
+      console.log('❌ Código vacío, abortando búsqueda')
+      return
+    }
 
     setLoading(true)
     setError(null)
@@ -51,49 +56,73 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
     })
 
     if (cleanBarcode.length < 3) {
+      console.log('❌ Código demasiado corto:', cleanBarcode)
       setError('Código de barras demasiado corto')
       setLoading(false)
       return
     }
 
+    // Construir la URL de la API
+    const apiUrl = `/api/productos/barcode/${encodeURIComponent(cleanBarcode)}`
+    console.log('🌐 URL de la API:', apiUrl)
+
     try {
-      const response = await fetch(`/api/productos/barcode/${encodeURIComponent(cleanBarcode)}`)
+      console.log('📡 Haciendo petición a la API...')
+      const response = await fetch(apiUrl)
       
       console.log('📡 Respuesta de la API:', {
         status: response.status,
         ok: response.ok,
-        url: response.url
+        url: response.url,
+        statusText: response.statusText
       })
       
+      // Obtener el texto de la respuesta para debugging
+      const responseText = await response.text()
+      console.log('📄 Respuesta completa de la API:', responseText)
+      
+      let data
+      try {
+        data = JSON.parse(responseText)
+        console.log('📋 Datos parseados:', data)
+      } catch (parseError) {
+        console.error('❌ Error al parsear JSON:', parseError)
+        setError('Error al procesar la respuesta del servidor')
+        setLoading(false)
+        return
+      }
+      
       if (response.ok) {
-        const product = await response.json()
         console.log('✅ Producto encontrado:', {
-          id: product.id,
-          name: product.name,
-          barcode: product.barcode,
-          barcodeLength: product.barcode?.length
+          id: data.id,
+          name: data.name,
+          barcode: data.barcode,
+          barcodeLength: data.barcode?.length
         })
-        addToCart(product)
+        addToCart(data)
         setManualBarcode('')
       } else if (response.status === 404) {
-        const errorData = await response.json()
-        console.log('❌ Producto no encontrado:', errorData)
+        console.log('❌ Producto no encontrado:', data)
         
         // Mostrar sugerencias si están disponibles
-        if (errorData.suggestions && errorData.suggestions.length > 0) {
-          setError(`Producto no encontrado. Sugerencias: ${errorData.suggestions.map((s: any) => s.name).join(', ')}`)
+        if (data.suggestions && data.suggestions.length > 0) {
+          const errorMsg = `Producto no encontrado. Sugerencias: ${data.suggestions.map((s: any) => s.name).join(', ')}`
+          console.log('💡 Mostrando sugerencias:', errorMsg)
+          setError(errorMsg)
         } else {
-          setError(`Producto no encontrado con el código: ${cleanBarcode}`)
+          const errorMsg = `Producto no encontrado con el código: ${cleanBarcode}`
+          console.log('❌ Sin sugerencias:', errorMsg)
+          setError(errorMsg)
         }
       } else {
-        const errorData = await response.json()
-        console.log('❌ Error de API:', errorData)
+        console.log('❌ Error de API:', data)
         setError('Error al buscar el producto')
       }
     } catch (err) {
       console.error('❌ Error de conexión:', err)
       setError('Error de conexión al buscar el producto')
     } finally {
+      console.log('🏁 Finalizando búsqueda')
       setLoading(false)
     }
   }
@@ -180,6 +209,8 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
     })
     
     setShowScanner(false)
+    
+    // Ejecutar búsqueda automáticamente
     searchProductByBarcode(barcode)
   }
 

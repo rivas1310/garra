@@ -294,21 +294,44 @@ export default function VentaFisicaPage() {
               {showScanner && (
                 <div className="mt-3 sm:mt-4">
                   <BarcodeScanner 
-                    onScan={(decodedText) => {
+                    onScan={async (decodedText) => {
                       setBarcodeInput(decodedText);
                       setShowScanner(false);
-                      // Buscar producto automáticamente después de escanear
-                      const product = products.find(p => 
-                        p.id === decodedText.trim() || 
-                        p.slug === decodedText.trim()
-                      );
                       
-                      if (product) {
-                        addToCart(product);
-                        setBarcodeInput('');
-                        toast.success(`${product.name} agregado al carrito`);
-                      } else {
-                        toast.error('Producto no encontrado');
+                      try {
+                        // Primero intentar buscar por código de barras usando la API
+                        const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
+                        
+                        if (barcodeResponse.ok) {
+                          const product = await barcodeResponse.json();
+                          console.log('Producto encontrado por código de barras:', product);
+                          
+                          if (product.isAvailable) {
+                            addToCart(product);
+                            setBarcodeInput('');
+                            toast.success(`Producto agregado: ${product.name}`);
+                          } else {
+                            toast.error(`Producto encontrado pero sin stock: ${product.name}`);
+                          }
+                          return;
+                        }
+                        
+                        // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
+                        const product = products.find(p => 
+                          p.id === decodedText.trim() || 
+                          p.slug === decodedText.trim()
+                        );
+                        
+                        if (product) {
+                          addToCart(product);
+                          setBarcodeInput('');
+                          toast.success(`${product.name} agregado al carrito`);
+                        } else {
+                          toast.error('Producto no encontrado');
+                        }
+                      } catch (error) {
+                        console.error('Error al buscar producto:', error);
+                        toast.error('Error al buscar el producto');
                       }
                     }}
                     onClose={() => setShowScanner(false)}
