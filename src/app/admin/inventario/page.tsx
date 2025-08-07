@@ -48,8 +48,11 @@ export default function InventarioPage() {
     try {
       const response = await fetch('/api/productos?admin=true');
       const data = await response.json();
+      console.log('Datos recibidos en inventario:', data);
       if (Array.isArray(data)) {
         setInventoryItems(data);
+      } else if (Array.isArray(data.productos)) {
+        setInventoryItems(data.productos);
       } else if (Array.isArray(data.products)) {
         setInventoryItems(data.products);
       } else {

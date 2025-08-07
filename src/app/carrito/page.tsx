@@ -12,7 +12,7 @@ export default function CarritoPage() {
   const [couponCode, setCouponCode] = useState('')
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
 
-  const handleUpdateQuantity = (id: string, newQuantity: number) => {
+  const handleUpdateQuantity = async (id: string, newQuantity: number) => {
     if (newQuantity < 1) {
       removeFromCart(id)
       toast.success('Producto eliminado del carrito')
@@ -20,15 +20,19 @@ export default function CarritoPage() {
     }
     
     setIsUpdating(id)
-    const result = updateQuantity(id, newQuantity)
-    
-    if (result.success) {
-      toast.success(result.message)
-    } else {
-      toast.error(result.message)
+    try {
+      const result = await updateQuantity(id, newQuantity)
+      
+      if (result.success) {
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Error al actualizar cantidad')
+    } finally {
+      setTimeout(() => setIsUpdating(null), 300)
     }
-    
-    setTimeout(() => setIsUpdating(null), 300)
   }
 
   const handleRemoveItem = (id: string) => {

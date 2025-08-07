@@ -14,10 +14,14 @@ export default function CheckoutPage() {
     email: '',
     telefono: '',
     direccion: '',
+    numeroExterior: '',
+    numeroInterior: '',
+    colonia: '',
     ciudad: '',
     estado: '',
     codigoPostal: '',
-    pais: '',
+    pais: 'México',
+    referencias: '',
   })
   const [pedidoRealizado, setPedidoRealizado] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -56,6 +60,16 @@ export default function CheckoutPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    // Validar que todos los campos estén completos
+    const requiredFields = ['nombre', 'email', 'telefono', 'direccion', 'numeroExterior', 'numeroInterior', 'colonia', 'ciudad', 'estado', 'codigoPostal', 'pais', 'referencias']
+    const missingFields = requiredFields.filter(field => !form[field as keyof typeof form] || form[field as keyof typeof form].trim() === '')
+    
+    if (missingFields.length > 0) {
+      setError(`Por favor completa todos los campos obligatorios: ${missingFields.join(', ')}`)
+      setLoading(false)
+      return
+    }
 
     // Validar que Stripe esté configurado
     if (!stripePromise) {
@@ -208,14 +222,39 @@ export default function CheckoutPage() {
             {/* Formulario de envío */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <h2 className="text-lg font-semibold mb-4">Datos de envío</h2>
-              <input type="text" name="nombre" required placeholder="Nombre completo" className="input-field w-full" value={form.nombre} onChange={handleChange} />
-              <input type="email" name="email" required placeholder="Correo electrónico" className="input-field w-full" value={form.email} onChange={handleChange} />
-              <input type="text" name="telefono" required placeholder="Teléfono" className="input-field w-full" value={form.telefono} onChange={handleChange} />
-              <input type="text" name="direccion" required placeholder="Dirección" className="input-field w-full" value={form.direccion} onChange={handleChange} />
-              <input type="text" name="ciudad" required placeholder="Ciudad" className="input-field w-full" value={form.ciudad} onChange={handleChange} />
-              <input type="text" name="estado" required placeholder="Estado" className="input-field w-full" value={form.estado} onChange={handleChange} />
-              <input type="text" name="codigoPostal" required placeholder="Código Postal" className="input-field w-full" value={form.codigoPostal} onChange={handleChange} />
-              <input type="text" name="pais" required placeholder="País" className="input-field w-full" value={form.pais} onChange={handleChange} />
+              
+              {/* Información personal */}
+              <div className="space-y-4">
+                <h3 className="text-md font-medium text-neutral-700">Información personal</h3>
+                <input type="text" name="nombre" required placeholder="Nombre completo" className="input-field w-full" value={form.nombre} onChange={handleChange} />
+                <input type="email" name="email" required placeholder="Correo electrónico" className="input-field w-full" value={form.email} onChange={handleChange} />
+                <input type="text" name="telefono" required placeholder="Teléfono" className="input-field w-full" value={form.telefono} onChange={handleChange} />
+              </div>
+
+              {/* Dirección */}
+              <div className="space-y-4">
+                <h3 className="text-md font-medium text-neutral-700">Dirección de envío</h3>
+                <input type="text" name="direccion" required placeholder="Calle y número" className="input-field w-full" value={form.direccion} onChange={handleChange} />
+                
+                                 <div className="grid grid-cols-2 gap-4">
+                   <input type="text" name="numeroExterior" required placeholder="Número exterior" className="input-field w-full" value={form.numeroExterior} onChange={handleChange} />
+                   <input type="text" name="numeroInterior" required placeholder="Número interior (departamento, local, etc.)" className="input-field w-full" value={form.numeroInterior} onChange={handleChange} />
+                 </div>
+                
+                <input type="text" name="colonia" required placeholder="Colonia/Barrio" className="input-field w-full" value={form.colonia} onChange={handleChange} />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input type="text" name="ciudad" required placeholder="Ciudad" className="input-field w-full" value={form.ciudad} onChange={handleChange} />
+                  <input type="text" name="estado" required placeholder="Estado" className="input-field w-full" value={form.estado} onChange={handleChange} />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <input type="text" name="codigoPostal" required placeholder="Código Postal" className="input-field w-full" value={form.codigoPostal} onChange={handleChange} />
+                  <input type="text" name="pais" required placeholder="País" className="input-field w-full" value={form.pais} onChange={handleChange} />
+                </div>
+                
+                                 <input type="text" name="referencias" required placeholder="Referencias (entre calles, puntos de referencia, etc.)" className="input-field w-full" value={form.referencias} onChange={handleChange} />
+              </div>
               <button type="submit" className="btn-primary w-full py-3 font-semibold" disabled={loading}>
                 {loading ? 'Redirigiendo a la pasarela de pago...' : 'Pagar con tarjeta'}
               </button>

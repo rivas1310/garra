@@ -10,7 +10,9 @@ function CheckoutSuccessContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [orderId, setOrderId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [orderDetails, setOrderDetails] = useState<any>(null)
 
+  // Primer useEffect para crear el pedido con los datos de la sesión
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
     
@@ -69,6 +71,19 @@ function CheckoutSuccessContent() {
 
     createOrder()
   }, [searchParams])
+  
+  // Segundo useEffect para recuperar datos del pedido del localStorage
+  useEffect(() => {
+    const storedOrderData = localStorage.getItem('pendingOrder')
+    if (storedOrderData) {
+      try {
+        const parsedData = JSON.parse(storedOrderData)
+        setOrderDetails(parsedData)
+      } catch (err) {
+        console.error('Error al parsear detalles del pedido:', err)
+      }
+    }
+  }, [])
 
   if (status === 'loading') {
     return (
@@ -102,20 +117,7 @@ function CheckoutSuccessContent() {
     )
   }
 
-  // Recuperar datos del pedido del localStorage para mostrar detalles
-  const [orderDetails, setOrderDetails] = useState<any>(null)
-  
-  useEffect(() => {
-    const storedOrderData = localStorage.getItem('pendingOrder')
-    if (storedOrderData) {
-      try {
-        const parsedData = JSON.parse(storedOrderData)
-        setOrderDetails(parsedData)
-      } catch (err) {
-        console.error('Error al parsear detalles del pedido:', err)
-      }
-    }
-  }, [])
+  // Los datos del pedido ya se recuperan en el segundo useEffect al inicio del componente
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-gradient-elegant">

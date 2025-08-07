@@ -22,27 +22,28 @@ export default function DetalleProducto() {
   const [error, setError] = useState<string>("");
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [addToCartMessage, setAddToCartMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
-  const { addToCart } = useCart();
+  const { addToCart, getItemQuantity } = useCart();
 
   useEffect(() => {
     if (!id) return;
-    fetch(`/api/productos/${id}`)
-      .then(async (res) => {
+    
+    // Función para cargar el producto
+    const loadProduct = async () => {
+      try {
+        // Usar timestamp para evitar caché y asegurar datos actualizados
+        const res = await fetch(`/api/productos/${id}?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.error || 'No se pudo cargar el producto');
         }
-        return res.json();
-      })
-      .then((data) => {
-        // Asegurarse de que el stock de las variantes refleje el stock total si es necesario
-        if (data.variants && data.variants.length > 0 && data.totalStock > 0) {
-          // Si hay stock total pero las variantes tienen stock 0, asignar el stock total a la primera variante
-          const todasConStockCero = data.variants.every((v: any) => v.stock === 0);
-          if (todasConStockCero && data.totalStock > 0) {
-            data.variants[0].stock = data.totalStock;
-          }
-        }
+        
+        const data = await res.json();
+        
+        // Cada variante tiene su propio stock independiente
+        // No asignamos el stock total a ninguna variante para evitar duplicación
         
         setProducto(data);
         setError("");
@@ -84,11 +85,20 @@ export default function DetalleProducto() {
             setSelectedSize("");
           }
         }
-      })
-      .catch((err) => {
+      } catch (err: any) {
         setError(err.message);
         setProducto(null);
-      });
+      }
+    };
+    
+    // Cargar el producto inicialmente
+    loadProduct();
+    
+    // Configurar un intervalo para actualizar el stock cada 10 segundos
+    const intervalId = setInterval(loadProduct, 10000);
+    
+    // Limpiar el intervalo cuando el componente se desmonte
+    return () => clearInterval(intervalId);
   }, [id]);
 
   if (error) {
@@ -217,9 +227,9 @@ export default function DetalleProducto() {
                           .filter((v: any) => v.color === color)
                           .map((v: any) => v.size);
                         
-                        // Buscar primero una talla con stock (considerando también el stock total)
+                        // Buscar primero una talla con stock (considerando solo el stock de la variante)
                         const sizesWithStock = producto.variants
-                          .filter((v: any) => v.color === color && (v.stock > 0 || producto.totalStock > 0))
+                          .filter((v: any) => v.color === color && v.stock > 0)
                           .map((v: any) => v.size);
                         
                         if (sizesWithStock.length > 0) {
@@ -268,8 +278,8 @@ export default function DetalleProducto() {
                     const variant = producto.variants.find(
                       (v: any) => v.color === selectedColor && v.size === size
                     );
-                    // Considerar el stock de la variante o el stock total del producto
-                    const hasStock = (variant && variant.stock > 0) || producto.totalStock > 0;
+                    // Considerar solo el stock de la variante específica
+                    const hasStock = variant && variant.stock > 0;
                     
                     return (
                       <div
@@ -312,12 +322,60 @@ export default function DetalleProducto() {
             className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-100 text-yellow-800 border-2 border-yellow-300 hover:border-yellow-400 cursor-pointer shadow-sm transition-all duration-200 relative"
             role="button"
             tabIndex={0}
-            onClick={() => alert(`Hay ${producto.totalStock} unidades disponibles en total`)}
-            aria-label={producto.totalStock > 0 ? `Solo ${producto.totalStock} disponibles` : "Sin stock disponible"}
+            onClick={() => {
+              // Calcular la cantidad en carrito
+              const cantidadEnCarrito = getItemQuantity(producto.id);
+              
+              if (selectedColor && selectedSize) {
+                const selectedVariant = producto.variants.find(
+                  (v: any) => v.color === selectedColor && v.size === selectedSize
+                );
+                
+                if (selectedVariant) {
+                  const stockVariante = selectedVariant.stock;
+                  const stockDisponibleReal = Math.max(0, stockVariante - cantidadEnCarrito);
+                  alert(`Variante seleccionada (${selectedColor}, ${selectedSize}):\n- Stock de esta variante: ${stockVariante}\n- En tu carrito: ${cantidadEnCarrito}\n- Disponible para agregar: ${stockDisponibleReal}`);
+                } else {
+                  alert(`No se encontró la variante seleccionada.`);
+                }
+              } else {
+                alert(`Stock total del producto: ${producto.calculatedStock || 0}\nEn tu carrito: ${cantidadEnCarrito}\n\nSelecciona color y talla para ver el stock específico de esa variante.`);
+              }
+            }}
+            aria-label={(producto.calculatedStock || 0) > 0 ? `Solo ${producto.calculatedStock || 0} disponibles` : "Sin stock disponible"}
           >
             <AlertCircle size={18} className="text-yellow-800" />
             <span className="text-sm font-medium">
-              {producto.totalStock > 0 ? `Solo ${producto.totalStock} disponibles` : "Sin stock disponible"}
+              {(() => {
+                // Si hay color y talla seleccionados, mostrar stock de esa variante específica
+                if (selectedColor && selectedSize) {
+                  const selectedVariant = producto.variants.find(
+                    (v: any) => v.color === selectedColor && v.size === selectedSize
+                  );
+                  
+                  if (selectedVariant) {
+                    const stockVariante = selectedVariant.stock;
+                    const cantidadEnCarrito = getItemQuantity(producto.id);
+                    const stockDisponibleReal = Math.max(0, stockVariante - cantidadEnCarrito);
+                    
+                    if (cantidadEnCarrito > 0) {
+                      return `${stockDisponibleReal} disponibles (${cantidadEnCarrito} en carrito)`;
+                    } else {
+                      return stockVariante > 0 ? `Solo ${stockVariante} disponibles` : "Sin stock disponible";
+                    }
+                  }
+                }
+                
+                // Si no hay variante seleccionada, mostrar stock total
+                const cantidadEnCarrito = getItemQuantity(producto.id);
+                const stockDisponibleReal = Math.max(0, (producto.calculatedStock || 0) - cantidadEnCarrito);
+                
+                if (cantidadEnCarrito > 0) {
+                  return `${stockDisponibleReal} disponibles (${cantidadEnCarrito} en carrito)`;
+                } else {
+                  return (producto.calculatedStock || 0) > 0 ? `Solo ${producto.calculatedStock || 0} disponibles` : "Sin stock disponible";
+                }
+              })()}
             </span>
             <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -371,8 +429,9 @@ export default function DetalleProducto() {
                 return;
               }
               
-              // Verificar stock (usar el stock de la variante o el stock total)
-              const stockDisponible = selectedVariant.stock > 0 ? selectedVariant.stock : producto.totalStock;
+              // Verificar stock (usar solo el stock de la variante seleccionada)
+              // No considerar el stock total del producto para evitar duplicación
+              const stockDisponible = selectedVariant.stock;
               
               if (stockDisponible <= 0) {
                 setAddToCartMessage({
@@ -382,8 +441,21 @@ export default function DetalleProducto() {
                 return;
               }
               
-              // Agregar al carrito
-              const result = addToCart({
+              // Verificar si ya tiene productos en el carrito
+              const cantidadEnCarrito = getItemQuantity(producto.id);
+              const stockDisponibleReal = Math.max(0, stockDisponible - cantidadEnCarrito);
+              
+              if (stockDisponibleReal <= 0) {
+                setAddToCartMessage({
+                  text: `Ya tienes ${cantidadEnCarrito} unidades en el carrito (máximo disponible: ${stockDisponible})`,
+                  type: "error"
+                });
+                return;
+              }
+              
+              // Agregar al carrito (ahora es asíncrono)
+              // Agregar todas las unidades disponibles de una vez
+              addToCart({
                 id: producto.id,
                 name: producto.name,
                 price: selectedVariant.price || producto.price,
@@ -393,17 +465,65 @@ export default function DetalleProducto() {
                 stock: stockDisponible,
                 maxStock: stockDisponible,
                 variantId: selectedVariant.id
+              }).then((result) => {
+                setAddToCartMessage({
+                  text: result.message,
+                  type: result.success ? "success" : "error"
+                });
+                
+                // Si se agregó correctamente, actualizar el producto inmediatamente
+                if (result.success) {
+                  // Recargar el producto para actualizar el stock con un timestamp para evitar caché
+                  fetch(`/api/productos/${id}?t=${Date.now()}`, {
+                    cache: 'no-store'
+                  })
+                  .then(res => {
+                    if (!res.ok) {
+                      throw new Error('Error al actualizar el stock');
+                    }
+                    return res.json();
+                  })
+                  .then(data => {
+                    // Actualizar el estado del producto con los datos más recientes
+                    setProducto(data);
+                    
+                    // Actualizar la selección de color y talla si es necesario
+                    if (data.variants && data.variants.length > 0) {
+                      // Verificar si la variante seleccionada todavía tiene stock
+                      const updatedVariant = data.variants.find(
+                        (v: any) => v.color === selectedColor && v.size === selectedSize
+                      );
+                      
+                      // Si la variante ya no tiene stock, seleccionar otra con stock
+                      if (!updatedVariant || updatedVariant.stock <= 0) {
+                        const variantesConStock = data.variants.filter((v: any) => v.stock > 0);
+                        
+                        if (variantesConStock.length > 0) {
+                          // Seleccionar la primera variante con stock
+                          setSelectedColor(variantesConStock[0].color);
+                          setSelectedSize(variantesConStock[0].size);
+                        }
+                      }
+                    }
+                  })
+                  .catch(err => console.error('Error al actualizar stock:', err));
+                }
+                
+                // Limpiar el mensaje después de 3 segundos
+                setTimeout(() => {
+                  setAddToCartMessage(null);
+                }, 3000);
+              }).catch((error) => {
+                setAddToCartMessage({
+                  text: "Error al agregar al carrito",
+                  type: "error"
+                });
+                
+                // Limpiar el mensaje después de 3 segundos
+                setTimeout(() => {
+                  setAddToCartMessage(null);
+                }, 3000);
               });
-              
-              setAddToCartMessage({
-                text: result.message,
-                type: result.success ? "success" : "error"
-              });
-              
-              // Limpiar el mensaje después de 3 segundos
-              setTimeout(() => {
-                setAddToCartMessage(null);
-              }, 3000);
             }}
           >
             <ShoppingCart size={18} /> Agregar al Carrito

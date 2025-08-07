@@ -50,7 +50,9 @@ export default function PedidosAdminPage() {
   });
 
   const handleRefresh = () => {
-    fetch("/api/pedidos")
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/pedidos?t=${timestamp}`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) {

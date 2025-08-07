@@ -13,14 +13,14 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
     
-    // Verificar si el usuario es administrador
+    // Verificar si el usuario es administrador o vendedor
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { role: true }
     })
     
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 })
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'VENDEDOR' as any)) {
+      return NextResponse.json({ error: 'Acceso denegado. Se requiere rol de Administrador o Vendedor' }, { status: 403 })
     }
     
     const { id } = params

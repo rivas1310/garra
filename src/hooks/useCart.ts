@@ -27,10 +27,10 @@ interface CartStore {
   cartItems: CartItem[]
   isHydrated: boolean
   coupon: Coupon | null
-  addToCart: (item: Omit<CartItem, 'quantity'> & { stock?: number }) => { success: boolean; message: string }
-  removeFromCart: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => { success: boolean; message: string }
-  clearCart: () => void
+  addToCart: (item: Omit<CartItem, 'quantity'> & { stock?: number }) => Promise<{ success: boolean; message: string }>
+  removeFromCart: (id: string) => Promise<void>
+  updateQuantity: (id: string, quantity: number) => Promise<{ success: boolean; message: string }>
+  clearCart: () => Promise<void>
   getTotal: () => number
   getItemCount: () => number
   setHydrated: () => void
@@ -64,7 +64,7 @@ export const useCart = create<CartStore>()(
         return currentQuantity < stock
       },
       
-      addToCart: (item) => {
+      addToCart: async (item) => {
         const { cartItems } = get()
         const existingItem = cartItems.find(
           (cartItem) => cartItem.id === item.id
@@ -82,36 +82,40 @@ export const useCart = create<CartStore>()(
         if (currentQuantity >= availableStock) {
           return { 
             success: false, 
-            message: `Ya tienes ${currentQuantity} unidades en el carrito. Stock máximo: ${availableStock}` 
+            message: `Ya tienes ${currentQuantity} unidades en el carrito (máximo disponible: ${availableStock})` 
           }
         }
         
+        // Permitir agregar solo 1 unidad por vez
+        const quantityToAdd = 1
+        
+        // Agregar al carrito sin reservar stock físicamente
         set((state) => {
           if (existingItem) {
             return {
               cartItems: state.cartItems.map((cartItem) =>
                 cartItem.id === item.id
-                  ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                  ? { ...cartItem, quantity: cartItem.quantity + quantityToAdd }
                   : cartItem
               ),
             }
           }
           
           return {
-            cartItems: [...state.cartItems, { ...item, quantity: 1 }],
+            cartItems: [...state.cartItems, { ...item, quantity: quantityToAdd }],
           }
         })
         
-        return { success: true, message: 'Producto agregado al carrito' }
+        return { success: true, message: '1 unidad agregada al carrito' }
       },
       
-      removeFromCart: (id) => {
+      removeFromCart: async (id) => {
         set((state) => ({
           cartItems: state.cartItems.filter((item) => item.id !== id),
         }))
       },
       
-      updateQuantity: (id, quantity) => {
+      updateQuantity: async (id, quantity) => {
         const { cartItems } = get()
         const item = cartItems.find(cartItem => cartItem.id === id)
         
@@ -134,6 +138,7 @@ export const useCart = create<CartStore>()(
           return { success: false, message: 'La cantidad no puede ser negativa' }
         }
         
+        // Actualizar carrito
         set((state) => ({
           cartItems: state.cartItems.map((item) =>
             item.id === id ? { ...item, quantity } : item
@@ -143,7 +148,7 @@ export const useCart = create<CartStore>()(
         return { success: true, message: 'Cantidad actualizada' }
       },
       
-      clearCart: () => {
+      clearCart: async () => {
         set({ cartItems: [], coupon: null })
       },
       

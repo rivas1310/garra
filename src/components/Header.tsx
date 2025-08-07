@@ -10,6 +10,7 @@ import { FcGoogle } from 'react-icons/fc'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import ClientOnly from './ClientOnly'
+import { CategoriesButton } from './CategoriesDropdown'
 
 function DrawerRegistro({ onSuccess }: { onSuccess?: () => void }) {
   const [loading, setLoading] = useState(false)
@@ -201,15 +202,15 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <img src="/logos/diseno-sin-titulo-5.png" alt="Logo Garra Felina" className="w-10 h-10 object-contain rounded-lg shadow-azulrey group-hover:scale-105 transition-transform" />
-            <span className="text-2xl font-extrabold text-azulrey drop-shadow-sm tracking-tight group-hover:text-azuloscuro transition-colors">Garra Felina</span>
+            <img src="/logos/diseno-sin-titulo-5.png" alt="Logo Garras Felinas" className="w-10 h-10 object-contain rounded-lg shadow-azulrey group-hover:scale-105 transition-transform" />
+            <span className="text-2xl font-extrabold text-azulrey drop-shadow-sm tracking-tight group-hover:text-azuloscuro transition-colors">Garras Felinas</span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Inicio</Link>
             <Link href="/productos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Productos</Link>
-            <Link href="/categorias" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Categorías</Link>
+            <CategoriesButton />
             <Link href="/ofertas" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Ofertas</Link>
             <Link href="/quienes-somos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">¿Quiénes somos?</Link>
             <Link href="/contacto" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Contacto</Link>

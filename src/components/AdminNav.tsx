@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { 
   Home, 
   Package, 
@@ -17,7 +18,8 @@ import {
   X
 } from 'lucide-react'
 
-const navigation = [
+// Navegación completa para administradores
+const adminNavigation = [
   { name: 'Dashboard', href: '/admin', icon: Home },
   { name: 'Productos', href: '/admin/productos', icon: Package },
   { name: 'Inventario', href: '/admin/inventario', icon: TrendingUp },
@@ -30,12 +32,21 @@ const navigation = [
   { name: 'Configuración', href: '/admin/configuracion', icon: Settings },
 ]
 
+// Navegación restringida para vendedores
+const vendedorNavigation = [
+  { name: 'Venta Física', href: '/admin/venta-fisica', icon: ShoppingBag },
+]
+
 interface AdminNavProps {
   onCloseMobile?: () => void;
 }
 
 export default function AdminNav({ onCloseMobile }: AdminNavProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  
+  // Determinar qué navegación mostrar según el rol del usuario
+  const navigation = session?.user?.role === 'VENDEDOR' ? vendedorNavigation : adminNavigation
   
   // Función para manejar clics en enlaces móviles
   const handleMobileClick = () => {
@@ -53,7 +64,9 @@ export default function AdminNav({ onCloseMobile }: AdminNavProps) {
             <div className="w-8 h-8 bg-gradient-premium rounded-lg flex items-center justify-center">
               <Package className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-neutral-700">Bazar Admin</h1>
+            <h1 className="text-lg font-bold text-neutral-700">
+              {session?.user?.role === 'VENDEDOR' ? 'Bazar Ventas' : 'Bazar Admin'}
+            </h1>
           </div>
           {onCloseMobile && (
             <button 
@@ -69,8 +82,12 @@ export default function AdminNav({ onCloseMobile }: AdminNavProps) {
             <Package className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-neutral-700">Bazar Admin</h1>
-            <p className="text-xs text-neutral-500">Panel de Control</p>
+            <h1 className="text-lg font-bold text-neutral-700">
+              {session?.user?.role === 'VENDEDOR' ? 'Bazar Ventas' : 'Bazar Admin'}
+            </h1>
+            <p className="text-xs text-neutral-500">
+              {session?.user?.role === 'VENDEDOR' ? 'Panel de Ventas' : 'Panel de Control'}
+            </p>
           </div>
         </div>
 
@@ -97,30 +114,32 @@ export default function AdminNav({ onCloseMobile }: AdminNavProps) {
           })}
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 pt-6 border-t border-neutral-100">
-          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-            Acciones Rápidas
-          </h3>
-          <div className="space-y-2">
-            <Link
-              href="/admin/productos/nuevo"
-              onClick={handleMobileClick}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
-            >
-              <Package className="h-4 w-4" />
-              Nuevo Producto
-            </Link>
-            <Link
-              href="/admin/inventario"
-              onClick={handleMobileClick}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
-            >
-              <TrendingUp className="h-4 w-4" />
-              Ver Inventario
-            </Link>
+        {/* Quick Actions - Solo visible para administradores */}
+        {session?.user?.role === 'ADMIN' && (
+          <div className="mt-8 pt-6 border-t border-neutral-100">
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+              Acciones Rápidas
+            </h3>
+            <div className="space-y-2">
+              <Link
+                href="/admin/productos/nuevo"
+                onClick={handleMobileClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+              >
+                <Package className="h-4 w-4" />
+                Nuevo Producto
+              </Link>
+              <Link
+                href="/admin/inventario"
+                onClick={handleMobileClick}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-primary-600 transition-colors"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Ver Inventario
+              </Link>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* User Info */}
         <div className="mt-8 pt-6 border-t border-neutral-100">
@@ -129,8 +148,10 @@ export default function AdminNav({ onCloseMobile }: AdminNavProps) {
               <Users className="h-4 w-4 text-secondary-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-neutral-700">Administrador</p>
-              <p className="text-xs text-neutral-500">admin@bazar.com</p>
+              <p className="text-sm font-medium text-neutral-700">
+                {session?.user?.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}
+              </p>
+              <p className="text-xs text-neutral-500">{session?.user?.email || ''}</p>
             </div>
           </div>
         </div>

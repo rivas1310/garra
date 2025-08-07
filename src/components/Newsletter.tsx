@@ -69,9 +69,7 @@ export default function Newsletter() {
           No spam, solo contenido valioso. Puedes cancelar en cualquier momento.
         </p>
         
-        <p className="text-base text-white font-semibold mt-6">
-          ¡Únete a más de 10,000 suscriptores felices!
-        </p>
+        
       </div>
     </section>
   )

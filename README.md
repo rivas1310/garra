@@ -16,6 +16,9 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
 - **Newsletter**: Suscripción a newsletter
 - **Responsive**: Diseño adaptativo para móviles y desktop
 - **Seguridad**: Generación de contraseñas seguras y normalización de datos
+- **Ventas Físicas**: Sistema para registrar ventas presenciales con acceso para vendedores
+- **Control de Acceso**: Roles de usuario (USER, ADMIN, VENDEDOR) con permisos específicos
+- **Envíos**: Integración con múltiples servicios de paquetería (EnvíoClick, EnvíosPerros)
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -70,11 +73,20 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
    npx prisma db push
    ```
 
-5. **Crear usuario administrador**
+5. **Crear usuarios del sistema**
+   
+   **Crear administrador:**
    ```bash
    node scripts/create-admin.js
    ```
-   > **Importante**: Este script generará una contraseña segura aleatoria. Guarde esta información en un lugar seguro, ya que no podrá recuperarla después. Consulte `SECURITY_README.md` para más información.
+   
+   **Crear vendedor:**
+   ```bash
+   node scripts/create-vendedor.js [email] [nombre]
+   ```
+   Ejemplo: `node scripts/create-vendedor.js vendedor@bazar.com "Juan Pérez"`
+   
+   > **Importante**: Estos scripts generarán contraseñas seguras aleatorias. Guarde esta información en un lugar seguro, ya que no podrá recuperarla después. Consulte `SECURITY_README.md` para más información.
 
 6. **Ejecutar el servidor de desarrollo**
    ```bash
@@ -90,7 +102,7 @@ Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeSc
 
 ### Modelos Principales
 
-- **User**: Usuarios del sistema
+- **User**: Usuarios del sistema con roles (USER, ADMIN, VENDEDOR)
 - **Product**: Productos con variantes
 - **Category**: Categorías de productos
 - **Order**: Pedidos con items
@@ -122,6 +134,7 @@ Consulte `SECURITY_README.md` para obtener información detallada sobre las prá
 - **SECURITY_README.md**: Guía de seguridad y recomendaciones
 - **CUPONES_README.md**: Documentación sobre el sistema de cupones
 - **CODE_QUALITY_RECOMMENDATIONS.md**: Recomendaciones para mantener la calidad del código
+- **ROLES_README.md**: Documentación sobre el sistema de roles y permisos
 
 ## 🎨 Características del Diseño
 
@@ -139,6 +152,8 @@ Consulte `SECURITY_README.md` para obtener información detallada sobre las prá
 - **Carrito**: Gestión de items y checkout
 - **Perfil**: Información del usuario y pedidos
 - **Categorías**: Navegación por categorías
+- **Admin**: Panel de administración completo
+- **Venta Física**: Registro de ventas presenciales (accesible para ADMIN y VENDEDOR)
 
 ## 🔧 Scripts Disponibles
 

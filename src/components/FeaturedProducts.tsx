@@ -21,18 +21,49 @@ export default function FeaturedProducts() {
     );
   };
 
-  const handleAddToCart = (product: any) => {
-    addToCart(product);
-    toast.success('Producto agregado al carrito');
+  const handleAddToCart = async (product: any) => {
+    try {
+      const result = await addToCart(product);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error('Error al agregar al carrito');
+    }
   };
 
   useEffect(() => {
-    // Obtener productos destacados de la API
-    fetch('/api/productos')
-      .then(res => res.json())
-      .then(data => {
-        // Mapear los productos para el formato que necesita ProductCard
-        const mappedProducts = Array.isArray(data) ? data.map((p: any) => ({
+    console.log('🚀 FeaturedProducts: Iniciando carga de productos...');
+    // Obtener productos destacados de la API con timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/productos?t=${timestamp}&limit=50`)
+      .then(res => {
+        console.log('📡 Respuesta de la API:', res.status, res.statusText);
+        return res.json();
+      })
+                      .then(data => {
+          console.log('📦 Datos recibidos de la API:', data);
+          console.log('📦 Tipo de datos:', typeof data);
+          console.log('📦 ¿Es array?', Array.isArray(data));
+          console.log('📦 Longitud de datos:', Array.isArray(data) ? data.length : 'No es array');
+          
+          // Extraer los productos de la respuesta (puede ser un array directo o un objeto con productos)
+          let productos = data;
+          if (data && typeof data === 'object' && !Array.isArray(data) && data.productos) {
+            productos = data.productos;
+            console.log('📦 Datos extraídos de data.productos:', productos);
+          }
+          
+          // Mapear los productos para el formato que necesita ProductCard
+          console.log('🔍 Datos originales de productos:', productos);
+          if (Array.isArray(productos) && productos.length > 0) {
+            console.log('🔍 Primer producto:', productos[0]);
+            console.log('🔍 Propiedades del primer producto:', Object.keys(productos[0]));
+          }
+          
+          const mappedProducts = Array.isArray(productos) ? productos.map((p: any) => ({
           id: p.id,
           name: p.name,
           price: p.price,
@@ -52,12 +83,25 @@ export default function FeaturedProducts() {
         })) : [];
         
         // Filtrar solo productos destacados (por ejemplo, los que están en oferta o son nuevos)
-        const featured = mappedProducts.filter(p => p.isNew || p.isSale).slice(0, 8);
+        console.log('🔍 Filtrando productos destacados...');
+        console.log('🔍 Productos con isNew=true:', mappedProducts.filter(p => p.isNew).length);
+        console.log('🔍 Productos con isSale=true:', mappedProducts.filter(p => p.isSale).length);
+        
+        let featured = mappedProducts.filter(p => p.isNew || p.isSale).slice(0, 8);
+        
+        // Si no hay productos destacados, mostrar los primeros 8 productos
+        if (featured.length === 0) {
+          featured = mappedProducts.slice(0, 8);
+        }
+        
+        console.log('📦 Productos mapeados:', mappedProducts.length);
+        console.log('📦 Productos destacados encontrados:', featured.length);
+        console.log('📦 Productos destacados:', featured);
         setProducts(featured);
         setLoading(false);
       })
       .catch(error => {
-        console.error('Error al cargar productos destacados:', error);
+        console.error('❌ Error al cargar productos destacados:', error);
         setLoading(false);
       });
   }, []);
@@ -74,13 +118,23 @@ export default function FeaturedProducts() {
             Descubre nuestras mejores ofertas y productos más populares.
           </p>
           <p className="text-base text-primary-700 max-w-2xl mx-auto">
-            ♻️ Cada prenda tiene una segunda oportunidad. Al elegir Garra Felina, apoyas la moda sostenible y el consumo responsable.
+            ♻️ Cada prenda tiene una segunda oportunidad. Al elegir Garras Felinas, apoyas la moda sostenible y el consumo responsable.
           </p>
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="mt-2 text-gray-600">Cargando productos destacados...</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600">No hay productos destacados disponibles.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.map((product) => (
             <div key={product.id} className="group card overflow-hidden">
               {/* Product Image */}
               <div className="relative h-64 overflow-hidden">
@@ -97,7 +151,7 @@ export default function FeaturedProducts() {
                       Nuevo
                     </span>
                   )}
-                  {product.isOnSale && (
+                  {product.isSale && (
                     <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
                       Oferta
                     </span>
@@ -145,7 +199,7 @@ export default function FeaturedProducts() {
                   <div className="flex items-center">
                     <Star size={14} className="text-yellow-400 fill-current" />
                     <span className="text-sm text-gray-600 ml-1">
-                      {product.rating} ({product.reviews})
+                      {product.rating} ({product.reviewCount})
                     </span>
                   </div>
                 </div>
@@ -159,7 +213,7 @@ export default function FeaturedProducts() {
                     <span className="text-lg font-bold text-gray-900">
                       ${product.price}
                     </span>
-                    {product.isOnSale && (
+                    {product.isSale && (
                       <span className="text-sm text-gray-500 line-through">
                         ${product.originalPrice}
                       </span>
@@ -169,7 +223,8 @@ export default function FeaturedProducts() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* CTA */}
         <div className="text-center mt-12">

@@ -3,17 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import SubcategoryGrid from "@/components/SubcategoryGrid";
 
-// Definir subcategorías por slug
-const subcategoriasPorCategoria: Record<string, string[]> = {
-  mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas"],
-  hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts"],
-  accesorios: ["Joyas", "Relojes", "Cinturones", "Bolsos"],
-  calzado: ["Zapatos", "Zapatillas", "Botas"],
-  bolsos: ["Carteras", "Mochilas", "Bolsos de mano"],
-  deportes: ["Ropa deportiva", "Fitness", "Accesorios deportivos"],
-  // Agrega más según tus categorías
-};
+
 
 export default function CategoriaPage() {
   const params = useParams();
@@ -26,7 +18,9 @@ export default function CategoriaPage() {
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
-    fetch(`/api/categorias/${slug}`)
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/categorias/${slug}?t=${timestamp}`)
       .then((res) => res.json())
       .then((data) => {
         setCategoria(data.categoria || null);
@@ -44,6 +38,30 @@ export default function CategoriaPage() {
       })
       .finally(() => setLoading(false));
   }, [slug]);
+  
+  // Función para refrescar los productos de la categoría
+  const refreshProducts = () => {
+    if (!slug) return;
+    setLoading(true);
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/categorias/${slug}?t=${timestamp}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setCategoria(data.categoria || null);
+        setProductos(
+          (data.productos || []).map((p: any) => ({
+            ...p,
+            image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/img/placeholder.png',
+            stock: p.stock ?? 0,
+            isActive: p.isActive ?? true,
+            isAvailable: p.isAvailable ?? true,
+            totalStock: p.totalStock ?? p.stock ?? 0,
+          }))
+        );
+      })
+      .finally(() => setLoading(false));
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
@@ -53,8 +71,7 @@ export default function CategoriaPage() {
     return <div className="min-h-screen flex items-center justify-center text-red-600 font-semibold">Categoría no encontrada</div>;
   }
 
-  // Obtener subcategorías para la categoría actual
-  const subcategorias = subcategoriasPorCategoria[slug as string] || [];
+
 
   // Filtrar productos por subcategoría si está seleccionada
   const productosFiltrados = subcatSeleccionada
@@ -69,26 +86,12 @@ export default function CategoriaPage() {
         <h1 className="text-3xl font-bold text-white text-title mb-4">{categoria.name}</h1>
         <p className="text-body text-white mb-8">{categoria.description || "Descubre los productos de esta categoría."}</p>
 
-        {/* Botones de subcategoría */}
-        {subcategorias.length > 0 && (
-          <div className="mb-8 flex flex-wrap gap-3">
-            <button
-              className={`px-4 py-2 rounded-full border font-medium ${subcatSeleccionada === "" ? "bg-primary-500 text-white" : "bg-white text-title"}`}
-              onClick={() => setSubcatSeleccionada("")}
-            >
-              Todas
-            </button>
-            {subcategorias.map((subcat) => (
-              <button
-                key={subcat}
-                className={`px-4 py-2 rounded-full border font-medium ${subcatSeleccionada === subcat ? "bg-primary-500 text-white" : "bg-white text-title"}`}
-                onClick={() => setSubcatSeleccionada(subcat)}
-              >
-                {subcat}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* Subcategorías con imágenes */}
+        <SubcategoryGrid
+          categoriaSlug={slug as string}
+          subcatSeleccionada={subcatSeleccionada}
+          onSubcatChange={setSubcatSeleccionada}
+        />
 
         {productosFiltrados.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -105,4 +108,4 @@ export default function CategoriaPage() {
       </div>
     </div>
   );
-} 
+}

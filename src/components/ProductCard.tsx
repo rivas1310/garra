@@ -14,7 +14,7 @@ interface Product {
   price: number
   image: string
   stock?: number
-  totalStock?: number
+  calculatedStock?: number
   isAvailable?: boolean
   isActive?: boolean
   discount?: number
@@ -44,29 +44,76 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
+  const [productData, setProductData] = useState<Product>(product)
+
+  // Función para actualizar la información del producto desde el servidor
+  const refreshProductData = async () => {
+    try {
+      // Agregar timestamp para evitar caché
+      const timestamp = Date.now();
+      const response = await fetch(`/api/productos/${product.id}?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`ProductCard: Actualizando datos de producto ${product.id}, stock: ${data.stock}`);
+        setProductData({
+          ...product,
+          stock: data.stock,
+          calculatedStock: data.calculatedStock || data.stock,
+          isAvailable: data.isAvailable,
+          isActive: data.isActive,
+          variants: data.variants || product.variants
+        });
+      }
+    } catch (error) {
+      console.error('Error al actualizar datos del producto:', error);
+    }
+  };
+
+  // Actualizar datos del producto cuando se muestra el componente
+  useEffect(() => {
+    refreshProductData();
+  }, [product.id]);
 
   // Verificar disponibilidad del producto
-  const isAvailable = product.isAvailable !== false && (product.stock || 0) > 0 && product.isActive !== false
-  const stock = product.totalStock || product.stock || 0
+  const isAvailable = productData.isAvailable !== false && (productData.calculatedStock || 0) > 0 && productData.isActive !== false
+  const stock = productData.calculatedStock || productData.stock || 0
   const isLowStock = stock > 0 && stock <= 5
   const isOutOfStock = stock === 0
   
   // Obtener cantidad actual en el carrito
   const currentCartQuantity = getItemQuantity(product.id)
+  // Calcular el stock real disponible (calculatedStock - cantidad en carrito)
+  const realAvailableStock = Math.max(0, stock - currentCartQuantity)
   const canAddMoreToCart = canAddMore(product.id, stock)
   
   // Extraer tallas y colores únicos de las variantes
-  const availableSizes = product.variants && product.variants.length > 0
-    ? Array.from(new Set(product.variants.map(v => v.size).filter(Boolean))) as string[]
+  const availableSizes = productData.variants && productData.variants.length > 0
+    ? Array.from(new Set(productData.variants.map(v => v.size).filter(Boolean))) as string[]
     : []
     
-  const availableColors = product.variants && product.variants.length > 0
-    ? Array.from(new Set(product.variants.map(v => v.color).filter(Boolean))) as string[]
+  const availableColors = productData.variants && productData.variants.length > 0
+    ? Array.from(new Set(productData.variants.map(v => v.color).filter(Boolean))) as string[]
     : []
 
   const handleAddToCart = async () => {
-    if (!isAvailable) {
+    // Actualizar datos del producto antes de agregar al carrito
+    await refreshProductData();
+    
+    // Verificar disponibilidad con los datos más recientes
+    if (!productData.isAvailable || (productData.calculatedStock || 0) <= 0 || productData.isActive === false) {
       toast.error('Producto no disponible')
+      return
+    }
+    
+    // Verificar si hay stock real disponible (considerando lo que ya está en el carrito)
+    if (realAvailableStock <= 0) {
+      toast.error('No hay más unidades disponibles')
       return
     }
     
@@ -83,24 +130,31 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
     
     setIsAddingToCart(true)
     
-    const result = addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      stock: stock,
+    // Usar productData en lugar de product para asegurar datos actualizados
+    // Agregar todas las unidades disponibles de una vez
+    addToCart({
+      id: productData.id,
+      name: productData.name,
+      price: productData.price,
+      image: productData.image,
+      stock: productData.calculatedStock || productData.stock || stock,
       size: selectedSize || undefined,
       color: selectedColor || undefined
+    }).then((result) => {
+      if (result.success) {
+        toast.success(result.message)
+        // Actualizar datos del producto después de agregar al carrito
+        setTimeout(() => refreshProductData(), 500); // Pequeño retraso para permitir que la BD se actualice
+      } else {
+        toast.error(result.message)
+      }
+    }).catch((error) => {
+      console.error('Error al agregar al carrito:', error);
+      toast.error('Error al agregar al carrito')
+    }).finally(() => {
+      // Resetear el estado después de un breve delay
+      setTimeout(() => setIsAddingToCart(false), 300)
     })
-    
-    if (result.success) {
-      toast.success(result.message)
-    } else {
-      toast.error(result.message)
-    }
-    
-    // Resetear el estado después de un breve delay
-    setTimeout(() => setIsAddingToCart(false), 300)
   }
 
   // Verificar si el producto está en favoritos
@@ -108,14 +162,21 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
     if (session?.user) {
       checkFavoriteStatus()
     }
-  }, [session, product.id])
+  }, [session, productData.id])
 
   const checkFavoriteStatus = async () => {
     try {
-      const response = await fetch('/api/favoritos')
+      // Agregar timestamp para evitar caché
+      const timestamp = Date.now();
+      const response = await fetch(`/api/favoritos?t=${timestamp}`, {
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate'
+        }
+      })
       if (response.ok) {
         const favorites = await response.json()
-        const isInFavorites = favorites.some((fav: any) => fav.id === product.id)
+        const isInFavorites = favorites.some((fav: any) => fav.id === productData.id)
         setIsFavorite(isInFavorites)
       }
     } catch (error) {
@@ -130,10 +191,18 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
     }
 
     try {
+      // Asegurar que tenemos la información más actualizada
+      await refreshProductData();
+      
       if (isFavorite) {
         // Remover de favoritos
-        const response = await fetch(`/api/favoritos/${product.id}`, {
+        const timestamp = Date.now();
+        const response = await fetch(`/api/favoritos/${productData.id}?t=${timestamp}`, {
           method: 'DELETE',
+          headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          }
         })
         
         if (response.ok) {
@@ -144,12 +213,15 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         }
       } else {
         // Agregar a favoritos
-        const response = await fetch('/api/favoritos', {
+        const timestamp = Date.now();
+        const response = await fetch(`/api/favoritos?t=${timestamp}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
           },
-          body: JSON.stringify({ productId: product.id }),
+          body: JSON.stringify({ productId: productData.id }),
         })
         
         if (response.ok) {
@@ -166,6 +238,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   }
 
   const getStockStatus = () => {
+    // Si no hay stock disponible en total
     if (isOutOfStock) {
       return {
         text: 'Sin stock',
@@ -175,9 +248,10 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
       }
     }
     
+    // Si hay productos en el carrito
     if (currentCartQuantity > 0) {
-      const remainingStock = stock - currentCartQuantity
-      if (remainingStock <= 0) {
+      // Si ya no se pueden agregar más (todo el stock está en el carrito)
+      if (realAvailableStock <= 0) {
         return {
           text: `${currentCartQuantity} en carrito (máximo)`,
           color: 'text-orange-700',
@@ -185,22 +259,25 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           icon: <AlertTriangle className="h-4 w-4" />
         }
       }
-      if (isLowStock || remainingStock <= 5) {
+      // Si queda poco stock disponible
+      if (realAvailableStock <= 5) {
         return {
-          text: `${currentCartQuantity} en carrito, ${remainingStock} disponibles`,
+          text: `${currentCartQuantity} en carrito, ${realAvailableStock} disponibles`,
           color: 'text-yellow-700',
           bgColor: 'bg-yellow-100',
           icon: <AlertTriangle className="h-4 w-4" />
         }
       }
+      // Si hay suficiente stock disponible
       return {
-        text: `${currentCartQuantity} en carrito, ${remainingStock} disponibles`,
+        text: `${currentCartQuantity} en carrito, ${realAvailableStock} disponibles`,
         color: 'text-green-700',
         bgColor: 'bg-green-100',
         icon: <Package className="h-4 w-4" />
       }
     }
     
+    // Si no hay productos en el carrito pero el stock es bajo
     if (isLowStock) {
       return {
         text: `Solo ${stock} disponibles`,
@@ -209,6 +286,8 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         icon: <AlertTriangle className="h-4 w-4" />
       }
     }
+    
+    // Stock normal sin productos en el carrito
     return {
       text: `${stock} disponibles`,
       color: 'text-green-700',
@@ -222,12 +301,12 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   if (layout === 'list') {
     return (
       <div className="bg-white rounded-lg shadow-sm p-4 flex gap-4 border border-primary-100">
-        {/* Product Image */}
-        <div className="relative w-32 h-32 flex-shrink-0">
+        {/* Product Image with Link */}
+        <Link href={`/productos/${product.id}`} className="relative w-32 h-32 flex-shrink-0 block">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover rounded-lg"
+            className="w-full h-full object-cover rounded-lg group-hover:opacity-90 transition-opacity"
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/img/placeholder.png'; }}
           />
           {product.isNew && (
@@ -245,7 +324,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
               Segunda mano
             </span>
           )}
-        </div>
+        </Link>
 
         {/* Product Info */}
         <div className="flex-1">
@@ -254,66 +333,15 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
             <span className="text-xs text-muted uppercase tracking-wide">
               {product.category}
             </span>
-            <h3 className="font-semibold text-title mt-1 mb-2">
-              {product.name}
-            </h3>
+            <Link href={`/productos/${product.id}`} className="block">
+              <h3 className="font-semibold text-title mt-1 mb-2 hover:text-primary-600 transition-colors">
+                {product.name}
+              </h3>
+            </Link>
             <div className="flex items-center mb-2">
               <Star size={14} className="text-yellow-400 fill-current" />
               <span className="text-sm text-body ml-1">
                 {product.rating} ({product.reviewCount} reseñas)
-              </span>
-            </div>
-            
-            {/* Variantes disponibles - Vista de lista */}
-            {product.variants && product.variants.length > 0 && (
-              <div className="mb-2">
-                {/* Colores disponibles */}
-                {availableColors.length > 0 && (
-                  <div className="flex items-center gap-1 mb-1">
-                    <span className="text-xs text-muted">Colores:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {availableColors.map((color, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedColor(color as string)}
-                          className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedColor === color 
-                            ? 'bg-primary-500 text-white' 
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                        >
-                          {color}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Tallas disponibles */}
-                {availableSizes.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted">Tallas:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {availableSizes.map((size, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setSelectedSize(size as string)}
-                          className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedSize === size 
-                            ? 'bg-primary-500 text-white' 
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-              
-            {/* Stock Status */}
-            <div className={`flex items-center gap-2 mb-2 px-2 py-1 rounded-full ${stockStatus.bgColor}`}>
-              {stockStatus.icon}
-              <span className={`text-xs font-medium ${stockStatus.color}`}>
-                {stockStatus.text}
               </span>
             </div>
 
@@ -350,23 +378,14 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
             </div>
           </div>
 
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={!isAvailable || !canAddMoreToCart || isAddingToCart}
-            className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
-              isAvailable && canAddMoreToCart && !isAddingToCart
-                ? 'btn-primary'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
+          {/* Ver Producto Button */}
+          <Link
+            href={`/productos/${product.id}`}
+            className="w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium btn-primary transition-colors"
           >
-            <ShoppingCart size={16} className="mr-2" />
-            {isAddingToCart ? 'Agregando...' : 
-             !isAvailable ? 'No Disponible' : 
-             !canAddMoreToCart ? 'Máximo alcanzado' : 
-             currentCartQuantity > 0 ? `Agregar (${currentCartQuantity}/${stock})` : 
-             'Agregar al Carrito'}
-          </button>
+            <Eye size={16} className="mr-2" />
+            Ver Producto
+          </Link>
         </div>
       </div>
     )
@@ -375,8 +394,8 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   // Grid view (default)
   return (
     <div className="group card overflow-hidden">
-      {/* Product Image */}
-      <div className="relative h-64 overflow-hidden">
+      {/* Product Image with Link */}
+      <Link href={`/productos/${product.id}`} className="block relative h-64 overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -403,20 +422,13 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           )}
         </div>
 
-        {/* Stock Status Badge */}
-        <div className="absolute top-3 right-3">
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${stockStatus.bgColor}`}>
-            {stockStatus.icon}
-            <span className={`text-xs font-medium ${stockStatus.color}`}>
-              {stockStatus.text}
-            </span>
-          </div>
-        </div>
-
         {/* Action Buttons */}
-        <div className="absolute top-12 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute top-3 right-3 flex flex-col gap-2">
           <button
-            onClick={toggleFavorite}
+            onClick={(e) => {
+              e.preventDefault();
+              toggleFavorite();
+            }}
             className={`p-2 rounded-full ${
               isFavorite
                 ? 'bg-red-500 text-white'
@@ -425,34 +437,16 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           >
             <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
-          <Link
-            href={`/productos/${product.id}`}
-            className="p-2 bg-white text-gray-700 rounded-full shadow-lg hover:text-blue-600 hover:scale-110 transition-all duration-200"
-          >
-            <Eye size={16} />
-          </Link>
         </div>
 
-        {/* Quick Add to Cart */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm p-3 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <button
-            onClick={handleAddToCart}
-            disabled={!isAvailable || !canAddMoreToCart || isAddingToCart}
-            className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
-              isAvailable && canAddMoreToCart && !isAddingToCart
-                ? 'btn-primary'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            <ShoppingCart size={16} className="mr-2" />
-            {isAddingToCart ? 'Agregando...' : 
-             !isAvailable ? 'No Disponible' : 
-             !canAddMoreToCart ? 'Máximo alcanzado' : 
-             currentCartQuantity > 0 ? `Agregar (${currentCartQuantity}/${stock})` : 
-             'Agregar al Carrito'}
-          </button>
+        {/* Ver Producto Overlay */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <div className="bg-white text-primary-600 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+            <Eye size={16} />
+            Ver Producto
+          </div>
         </div>
-      </div>
+      </Link>
 
       {/* Product Info */}
       <div className="p-4">
@@ -468,54 +462,11 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           </div>
         </div>
 
-        <h3 className="font-semibold text-title mb-2 line-clamp-2">
-          {product.name}
-        </h3>
-
-        {/* Variantes disponibles */}
-        {product.variants && product.variants.length > 0 && (
-          <div className="mb-2">
-            {/* Colores disponibles */}
-            {availableColors.length > 0 && (
-              <div className="flex items-center gap-1 mb-1">
-                <span className="text-xs text-muted">Colores:</span>
-                <div className="flex flex-wrap gap-1">
-                  {availableColors.map((color, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedColor(color as string)}
-                      className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedColor === color 
-                        ? 'bg-primary-500 text-white' 
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                    >
-                      {color}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Tallas disponibles */}
-            {availableSizes.length > 0 && (
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-muted">Tallas:</span>
-                <div className="flex flex-wrap gap-1">
-                  {availableSizes.map((size, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedSize(size as string)}
-                      className={`text-xs px-1.5 py-0.5 rounded-full transition-colors ${selectedSize === size 
-                        ? 'bg-primary-500 text-white' 
-                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        <Link href={`/productos/${product.id}`} className="block">
+          <h3 className="font-semibold text-title mb-2 line-clamp-2 hover:text-primary-600 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

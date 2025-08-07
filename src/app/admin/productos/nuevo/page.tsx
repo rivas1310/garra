@@ -21,12 +21,18 @@ const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
-  mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas"],
+  mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas", "Sacos", "Abrigos", "Tops", "Overoles", "Faldas", "Shorts"],
   hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts"],
   accesorios: ["Joyas", "Relojes", "Cinturones", "Bolsos"],
   calzado: ["Zapatos", "Zapatillas", "Botas"],
+  "calzado-mujer": ["Tacones", "Zapatillas", "Zapatos", "Sneakers", "Botas", "Huaraches", "Sandalias"],
+  "calzado-hombre": ["Zapatos", "Sneakers", "Botas", "Sandalias"],
+  "calzado-nino": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
+  "calzado-nina": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
+  ninas: ["Vestidos", "Blusas", "Pantalones", "Faldas", "Shorts"],
+  ninos: ["Camisetas", "Pantalones", "Shorts", "Sudaderas", "Chamarras"],
   bolsos: ["Carteras", "Mochilas", "Bolsos de mano"],
-  deportes: ["Ropa deportiva", "Fitness", "Accesorios deportivos"],
+  deportes: ["Ropa deportiva", "Zapatillas", "Accesorios deportivos"],
 };
 
 export default function NuevoProductoPage() {
@@ -87,8 +93,14 @@ export default function NuevoProductoPage() {
     // Si no, puedes mapear manualmente aquí
     if (cat && cat.name) {
       const nombre = cat.name.toLowerCase();
-      if (nombre.includes('mujer')) return 'mujer';
-      if (nombre.includes('hombre')) return 'hombre';
+      if (nombre.includes('calzado de mujer')) return 'calzado-mujer';
+      if (nombre.includes('calzado de hombre')) return 'calzado-hombre';
+      if (nombre.includes('calzado de niño')) return 'calzado-nino';
+      if (nombre.includes('calzado de niña')) return 'calzado-nina';
+      if (nombre.includes('niña') && !nombre.includes('calzado')) return 'ninas';
+      if (nombre.includes('niño') && !nombre.includes('calzado')) return 'ninos';
+      if (nombre.includes('mujer') && !nombre.includes('calzado')) return 'mujer';
+      if (nombre.includes('hombre') && !nombre.includes('calzado')) return 'hombre';
       if (nombre.includes('accesorio')) return 'accesorios';
       if (nombre.includes('calzado')) return 'calzado';
       if (nombre.includes('bolso')) return 'bolsos';

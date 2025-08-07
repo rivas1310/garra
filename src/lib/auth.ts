@@ -8,19 +8,19 @@ import type { JWT } from 'next-auth/jwt'
 // Extender los tipos de NextAuth
 declare module 'next-auth' {
   interface User {
-    role?: string
+    role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
   }
   interface Session {
     user: {
       id?: string
-      role?: string
+      role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
     } & DefaultSession['user']
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    role?: string
+    role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
   }
 }
 
@@ -54,7 +54,14 @@ export const authOptions: NextAuthOptions = {
     }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     })
   ],
   session: {
@@ -67,7 +74,8 @@ export const authOptions: NextAuthOptions = {
     newUser: '/registro',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // Cuando el usuario inicia sesión por primera vez
       if (user) {
         token.role = user.role
       }
@@ -79,6 +87,36 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role
       }
       return session
+    },
+    async signIn({ user, account, profile }) {
+      // Solo se ejecuta para proveedores OAuth como Google
+      if (account?.provider === 'google' && profile?.email) {
+        try {
+          // Verificar si el usuario ya existe
+          const existingUser = await prisma.user.findUnique({
+            where: { email: profile.email }
+          })
+          
+          // Si no existe, crear un nuevo usuario
+          if (!existingUser) {
+            await prisma.user.create({
+              data: {
+                email: profile.email,
+                name: profile.name || 'Usuario de Google',
+                role: 'USER',
+                // No establecemos hashedPassword para usuarios de OAuth
+              }
+            })
+          }
+          
+          return true
+        } catch (error) {
+          console.error('Error en signIn callback:', error)
+          return false
+        }
+      }
+      
+      return true
     }
   }
-} 
+}

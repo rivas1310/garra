@@ -17,7 +17,9 @@ const categories = [
 export default function ProductosPage() {
   const [products, setProducts] = useState<any[]>([]);
   useEffect(() => {
-    fetch('/api/productos')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/productos?t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
         // Si la respuesta es un array, úsala directamente. Si es un objeto, busca la propiedad correcta.

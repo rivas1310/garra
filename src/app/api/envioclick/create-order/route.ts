@@ -31,19 +31,19 @@ export async function POST(request: NextRequest) {
 
     // Preparar el payload para Envío Click
     const envioClickPayload = {
-      // Información del remitente
+      // Información del remitente (dirección real de la tienda)
       address_from: {
-        name: addressFrom.name,
-        company: addressFrom.company,
-        street: addressFrom.street,
-        number: addressFrom.number,
-        district: addressFrom.district,
-        city: addressFrom.city,
-        state: addressFrom.state,
-        country: addressFrom.country,
-        postal_code: addressFrom.postalCode,
-        phone: addressFrom.phone,
-        email: addressFrom.email
+        name: addressFrom.name || "Bazar Fashion",
+        company: addressFrom.company || "Bazar Fashion",
+        street: addressFrom.street || "Av. Revolución",
+        number: addressFrom.number || "381",
+        district: addressFrom.district || "Guadalajara Centro",
+        city: addressFrom.city || "Guadalajara",
+        state: addressFrom.state || "Jalisco",
+        country: addressFrom.country || "México",
+        postal_code: addressFrom.postalCode || "44100",
+        phone: addressFrom.phone || "3336125478",
+        email: addressFrom.email || "envios@bazarfashion.com"
       },
       // Información del destinatario
       address_to: {

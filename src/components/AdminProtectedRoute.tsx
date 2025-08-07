@@ -22,15 +22,40 @@ export default function AdminProtectedRoute({
 
     // Si no hay sesión, redirigir al login
     if (status === 'unauthenticated') {
-      toast.error('Acceso denegado. Debes iniciar sesión como administrador.')
+      toast.error('Acceso denegado. Debes iniciar sesión.')
       router.push(`/login?returnUrl=${encodeURIComponent(pathname)}`)
+      return
     } 
-    // Si el usuario está autenticado pero no es administrador
-    else if (session && session.user.role !== 'ADMIN') {
-      toast.error('Acceso denegado. No tienes permisos de administrador.')
+
+    // Verificar permisos según el rol
+    if (session) {
+      // Si es ADMIN, tiene acceso a todo el panel
+      if (session.user.role === 'ADMIN') {
+        setIsAuthorized(true)
+        return
+      }
+      
+      // Si es VENDEDOR o VENDOR, solo tiene acceso a la página de venta-fisica
+      if (session.user.role === 'VENDEDOR' || session.user.role === 'VENDOR') {
+        // Si intenta acceder a venta-fisica, permitir acceso
+        if (pathname === '/admin/venta-fisica') {
+          setIsAuthorized(true)
+          return
+        } else if (pathname === '/admin') {
+          // Redirigir al vendedor directamente a la página de venta-fisica
+          router.push('/admin/venta-fisica')
+          return
+        } else {
+          // Si intenta acceder a otra página del panel, mostrar error y redirigir
+          toast.error('Acceso restringido. Solo puedes acceder a la página de ventas físicas.')
+          router.push('/admin/venta-fisica')
+          return
+        }
+      }
+      
+      // Si tiene otro rol (USER), no tiene acceso al panel
+      toast.error('Acceso denegado. No tienes permisos para acceder al panel de administración.')
       router.push('/')
-    } else {
-      setIsAuthorized(true)
     }
   }, [session, status, router, pathname])
 

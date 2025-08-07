@@ -7,16 +7,14 @@ import ProductCard from '@/components/ProductCard'
 export default function OfertasPage() {
   const [products, setProducts] = useState<any[]>([]);
   useEffect(() => {
-    fetch('/api/productos')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/productos?t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setProducts(data);
-        } else if (Array.isArray(data.products)) {
-          setProducts(data.products);
-        } else {
-          setProducts([]);
-        }
+        // Manejar tanto array directo como objeto con propiedad productos
+        const productsArray = Array.isArray(data) ? data : (data.productos || []);
+        setProducts(productsArray);
       });
   }, []);
 
@@ -64,7 +62,7 @@ export default function OfertasPage() {
                 reviewCount: product.reviewCount ?? 0,
                 category: product.category?.name ?? '',
                 isNew: product.isNew,
-                isSale: product.isSale,
+                isSale: product.isOnSale,
                 isSecondHand: product.isSecondHand,
               }} />
             ))
@@ -73,4 +71,4 @@ export default function OfertasPage() {
       </div>
     </main>
   )
-} 
+}

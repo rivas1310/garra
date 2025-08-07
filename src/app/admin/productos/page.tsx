@@ -36,20 +36,37 @@ export default function ProductosAdminPage() {
   const [sortBy, setSortBy] = useState('name')
 
   useEffect(() => {
-    fetch('/api/productos')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    console.log('Cargando productos con timestamp:', timestamp);
+    fetch(`/api/productos?admin=true&t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
+        console.log('Datos recibidos de la API:', data);
+        console.log('Tipo de datos:', typeof data);
+        console.log('Es array:', Array.isArray(data));
         if (Array.isArray(data)) {
+          console.log('Usando datos como array, longitud:', data.length);
           setProducts(data);
-        } else if (Array.isArray(data.products)) {
+        } else if (data.productos && Array.isArray(data.productos)) {
+          console.log('Usando data.productos, longitud:', data.productos.length);
+          setProducts(data.productos);
+        } else if (data.products && Array.isArray(data.products)) {
+          console.log('Usando data.products, longitud:', data.products.length);
           setProducts(data.products);
         } else {
+          console.error('Formato de datos no reconocido:', data);
           setProducts([]);
         }
+      })
+      .catch(error => {
+        console.error('Error al cargar productos:', error);
+        toast.error('Error al cargar productos');
       });
   }, []);
 
   // Mapeo de productos para asegurar que stock sea numérico y status correcto
+  console.log('Productos antes del mapeo:', products);
   const mappedProducts = Array.isArray(products) ? products.map((p: any) => {
     const stock = Number(p.stock);
     let status;
@@ -68,6 +85,7 @@ export default function ProductosAdminPage() {
       status,
     };
   }) : [];
+  console.log('Productos después del mapeo:', mappedProducts);
 
   const filteredProducts = mappedProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -75,6 +93,8 @@ export default function ProductosAdminPage() {
     const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus
     return matchesSearch && matchesCategory && matchesStatus
   })
+  console.log('Productos filtrados:', filteredProducts);
+  console.log('Filtros aplicados - searchTerm:', searchTerm, 'selectedCategory:', selectedCategory, 'selectedStatus:', selectedStatus);
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
@@ -189,8 +209,9 @@ export default function ProductosAdminPage() {
         }
       }
       toast.success(`Importación completada: ${success} productos importados, ${fail} fallidos`);
-      // Refrescar productos
-      fetch('/api/productos')
+      // Refrescar productos con timestamp para evitar caché
+      const timestamp = Date.now();
+      fetch(`/api/productos?t=${timestamp}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {

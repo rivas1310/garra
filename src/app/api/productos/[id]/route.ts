@@ -5,6 +5,14 @@ import { updateProductStock, isProductAvailable } from '@/lib/productUtils';
 export async function GET(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
+    
+    // Verificar si hay un parámetro de timestamp para evitar caché
+    const url = new URL(req.url);
+    const timestamp = url.searchParams.get('t');
+    if (timestamp) {
+      console.log(`Solicitud de producto ${id} con timestamp ${timestamp} para evitar caché`);
+    }
+    
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
@@ -16,25 +24,37 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
       return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
     }
 
-    // Verificar si el producto está disponible
-    const isAvailable = await isProductAvailable(id);
-    
     // Calcular el stock total correctamente
     let totalStock;
     if (product.variants && product.variants.length > 0) {
       // Si el producto tiene variantes, usar solo el stock de las variantes
+      // sin sumar el stock principal para evitar duplicación
       totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
     } else {
       // Si no tiene variantes, usar el stock principal
       totalStock = product.stock;
     }
     
+    let isAvailable = false;
+    try {
+      // Verificar si el producto está disponible usando la función actualizada
+      isAvailable = await isProductAvailable(id);
+    } catch (updateError) {
+      console.error('Error al verificar disponibilidad del producto:', updateError);
+      // Continuar con la respuesta aunque falle la verificación
+    }
+    
+    // Configurar headers para evitar caché
+    const headers = new Headers();
+    headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    headers.set('Pragma', 'no-cache');
+    headers.set('Expires', '0');
+    
     return NextResponse.json({ 
       ...product, 
       isAvailable,
-      // Incluir información de stock total
-      totalStock
-    });
+      calculatedStock: totalStock // Enviamos como calculatedStock en lugar de totalStock
+    }, { headers });
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener el producto', detalle: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }

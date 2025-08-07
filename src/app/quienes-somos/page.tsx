@@ -9,7 +9,7 @@ export default function QuienesSomos() {
           <Users className="inline-block w-10 h-10 text-primary-500" /> ¿Quiénes somos?
         </h1>
         <p className="text-xl text-neutral-700 max-w-2xl mx-auto">
-          En <span className="font-bold text-primary-600">Garra Felina</span> damos nueva vida a la moda y apoyamos el talento local. Somos una tienda de ropa de segunda mano y nueva, accesorios y calzado para toda la familia.
+          En <span className="font-bold text-primary-600">Garras Felinas</span> damos nueva vida a la moda y apoyamos el talento local. Somos una tienda de ropa de segunda mano y nueva, accesorios y calzado para toda la familia.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function QuienesSomos() {
             <Leaf className="w-7 h-7 text-green-600" /> Moda con conciencia
           </h2>
           <p className="text-lg text-neutral-700">
-            La industria de la moda es una de las más contaminantes del planeta. En <span className="font-semibold text-primary-600">Garra Felina</span> promovemos el consumo responsable, la reutilización de prendas y el apoyo a emprendedores mexicanos.
+            La industria de la moda es una de las más contaminantes del planeta. En <span className="font-semibold text-primary-600">Garras Felinas</span> promovemos el consumo responsable, la reutilización de prendas y el apoyo a emprendedores mexicanos.
           </p>
         </div>
       </div>
@@ -69,4 +69,4 @@ export default function QuienesSomos() {
       </div>
     </section>
   );
-} 
+}

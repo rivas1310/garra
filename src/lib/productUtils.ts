@@ -17,18 +17,20 @@ export async function updateProductStock(productId: string, newStock: number) {
       throw new Error('Producto no encontrado');
     }
     
-    // Calcular el stock total (stock principal + stock de variantes)
+    // Calcular si el producto debe estar activo
+    // Si tiene variantes, depende EXCLUSIVAMENTE del stock de las variantes
+    // Si no tiene variantes, depende del stock principal
     const variantStock = productWithVariants.variants.reduce((sum, v) => sum + v.stock, 0);
-    const totalStock = newStock + variantStock;
-    const shouldBeActive = totalStock > 0;
+    const shouldBeActive = productWithVariants.variants.length > 0 ? 
+      variantStock > 0 : newStock > 0;
     
-    console.log(`Stock principal: ${newStock}, Stock variantes: ${variantStock}, Total: ${totalStock}, Activo: ${shouldBeActive}`);
+    console.log(`Stock principal: ${newStock}, Stock variantes: ${variantStock}, Activo: ${shouldBeActive}`);
     
     const product = await prisma.product.update({
       where: { id: productId },
       data: {
         stock: newStock,
-        isActive: shouldBeActive, // Activar/desactivar basado en stock total
+        isActive: shouldBeActive, // Activar/desactivar basado en stock disponible
       },
     });
 
@@ -55,21 +57,18 @@ export async function updateProductVariantStock(variantId: string, newStock: num
       where: { productId: variant.productId },
     });
 
+    // Calcular el stock total solo de las variantes
     const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
-    const productStock = await prisma.product.findUnique({
-      where: { id: variant.productId },
-      select: { stock: true },
-    });
+    
+    // Calcular si el producto debe estar activo basado únicamente en el stock de variantes
+    // No sumamos el stock principal al total para evitar duplicación
+    const isProductActive = totalStock > 0;
 
-    // Si el producto tiene stock propio, sumarlo al total
-    const finalTotalStock = totalStock + (productStock?.stock || 0);
-
-    // Actualizar el stock del producto y su estado activo
+    // Actualizar el estado activo del producto basado solo en el stock de variantes
     await prisma.product.update({
       where: { id: variant.productId },
       data: {
-        stock: finalTotalStock,
-        isActive: finalTotalStock > 0,
+        isActive: isProductActive,
       },
     });
 
@@ -95,12 +94,13 @@ export async function syncProductActiveStatus() {
     let updatedCount = 0;
 
     for (const product of products) {
-      // Calcular stock total (producto + variantes)
+      // Calcular stock total (solo de variantes, sin sumar el stock principal)
       const variantStock = product.variants.reduce((sum, variant) => sum + variant.stock, 0);
-      const totalStock = product.stock + variantStock;
-      const shouldBeActive = totalStock > 0;
+      // Si hay variantes, el estado activo depende EXCLUSIVAMENTE del stock de variantes
+      // Si no hay variantes, depende del stock principal
+      const shouldBeActive = product.variants.length > 0 ? variantStock > 0 : product.stock > 0;
 
-      console.log(`Producto ${product.id}: stock actual=${product.stock}, variantes=${variantStock}, total=${totalStock}, isActive actual=${product.isActive}, debería ser=${shouldBeActive}`);
+      console.log(`Producto ${product.id}: stock principal=${product.stock}, variantes=${variantStock}, isActive actual=${product.isActive}, debería ser=${shouldBeActive}`);
 
       // Actualizar si el estado actual no coincide con el esperado
       if (product.isActive !== shouldBeActive) {
@@ -108,7 +108,8 @@ export async function syncProductActiveStatus() {
           where: { id: product.id },
           data: {
             isActive: shouldBeActive,
-            stock: totalStock, // Sincronizar también el stock total
+            // No modificamos el stock principal para evitar duplicación
+            // Cada variante mantiene su propio stock independiente
           },
         });
         updatedCount++;
@@ -168,6 +169,15 @@ export async function isProductAvailable(productId: string, quantity: number = 1
     return false;
   }
 
-  const totalStock = product.stock + product.variants.reduce((sum, v) => sum + v.stock, 0);
+  // Calcular el stock total correctamente
+  let totalStock;
+  if (product.variants && product.variants.length > 0) {
+    // Si el producto tiene variantes, usar solo el stock de las variantes
+    totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0);
+  } else {
+    // Si no tiene variantes, usar el stock principal
+    totalStock = product.stock;
+  }
+  
   return totalStock >= quantity;
-} 
+}

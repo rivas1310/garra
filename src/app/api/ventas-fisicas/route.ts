@@ -13,21 +13,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
     
-    // Verificar si el usuario es administrador
+    // Verificar si el usuario es administrador o vendedor
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { id: true, role: true }
     })
     
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 })
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'VENDEDOR' as any)) {
+      return NextResponse.json({ error: 'Acceso denegado. Se requiere rol de Administrador o Vendedor' }, { status: 403 })
     }
     
     // Obtener datos de la venta física
     const data = await req.json()
     console.log('Datos recibidos para venta física:', data)
     
-    const { items, total, subtotal, tax = 0, saleType = 'FISICA' } = data
+    const { items, total, subtotal, tax = 0, orderType = 'FISICA', paymentMethod = 'efectivo' } = data
     
     // Validaciones
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -65,9 +65,9 @@ export async function POST(req: Request) {
         shipping: 0, // No hay envío en ventas físicas
         discount: 0,
         paymentStatus: 'PAID', // Se asume que el pago ya se realizó
-        paymentMethod: 'EFECTIVO', // Por defecto, se puede modificar si se necesita
+        paymentMethod: paymentMethod === 'efectivo' ? 'EFECTIVO' : 'TARJETA',
         orderType: 'FISICA', // Marcar como venta física
-        notes: `Venta física registrada por ${session.user.email}`,
+        notes: `Venta física registrada por ${session.user.email} - Método: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}`,
         items: {
           create: items.map((item: any) => ({
             productId: item.productId,
@@ -77,7 +77,18 @@ export async function POST(req: Request) {
         }
       },
       include: {
-        items: true
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                images: true
+              }
+            }
+          }
+        }
       }
     })
     
@@ -98,7 +109,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       success: true, 
       message: 'Venta física registrada correctamente',
-      order 
+      id: order.id,
+      total: order.total,
+      items: order.items,
+      paymentMethod: order.paymentMethod,
+      createdAt: order.createdAt
     })
     
   } catch (error) {
@@ -119,14 +134,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
     
-    // Verificar si el usuario es administrador
+    // Verificar si el usuario es administrador o vendedor
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
       select: { role: true }
     })
     
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 })
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'VENDEDOR' as any)) {
+      return NextResponse.json({ error: 'Acceso denegado. Se requiere rol de Administrador o Vendedor' }, { status: 403 })
     }
     
     // Obtener parámetros de consulta

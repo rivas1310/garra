@@ -39,14 +39,25 @@ const categories = [
   },
   {
     id: 4,
-    name: 'Calzado',
-    description: 'Zapatos, zapatillas, botas elegantes',
+    name: 'Calzado de Hombre',
+    description: 'Zapatos, sneakers, botas y sandalias para hombres',
+    image: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    count: '',
+    href: '/categorias/calzado-hombre',
+    isNew: true,
+    isTrending: true,
+    discount: '20% OFF'
+  },
+  {
+    id: 13,
+    name: 'Calzado de Mujer',
+    description: 'Tacones, zapatillas, zapatos, sneakers, botas, huaraches y sandalias',
     image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2012&q=80',
     count: '',
-    href: '/categorias/calzado',
+    href: '/categorias/calzado-mujer',
     isNew: false,
-    isTrending: false,
-    discount: '15% OFF'
+    isTrending: true,
+    discount: '25% OFF'
   },
   {
     id: 5,
@@ -102,6 +113,50 @@ const categories = [
     isNew: false,
     isTrending: false,
     discount: '10% OFF'
+  },
+  {
+    id: 10,
+    name: 'Niñas',
+    description: 'Ropa elegante y divertida para niñas',
+    image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    count: '',
+    href: '/categorias/ninas',
+    isNew: true,
+    isTrending: true,
+    discount: '15% OFF'
+  },
+  {
+    id: 11,
+    name: 'Niños',
+    description: 'Ropa cómoda y resistente para niños',
+    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    count: '',
+    href: '/categorias/ninos',
+    isNew: true,
+    isTrending: false,
+    discount: '20% OFF'
+  },
+  {
+    id: 12,
+    name: 'Calzado de Niño',
+    description: 'Zapatos, botas, sneakers y sandalias para niños',
+    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    count: '',
+    href: '/categorias/calzado-nino',
+    isNew: false,
+    isTrending: true,
+    discount: '25% OFF'
+  },
+  {
+    id: 14,
+    name: 'Calzado de Niña',
+    description: 'Zapatos, botas, sneakers y sandalias para niñas',
+    image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    count: '',
+    href: '/categorias/calzado-nina',
+    isNew: true,
+    isTrending: false,
+    discount: '30% OFF'
   }
 ]
 

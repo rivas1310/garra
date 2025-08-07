@@ -26,6 +26,8 @@ export default function ShippingLabelModal({
   // Estado para guardar los datos exactos de cotización
   const [cotizacionPayload, setCotizacionPayload] = useState<any>(null);
   const [guiaPdfUrl, setGuiaPdfUrl] = useState<string | null>(null);
+  // Estado para seleccionar el proveedor de envío
+  const [shippingProvider, setShippingProvider] = useState<'envioclick' | 'enviosperros'>('envioclick');
 
   // Verificar etiqueta existente al abrir el modal
   useEffect(() => {
@@ -53,8 +55,8 @@ export default function ShippingLabelModal({
 
   if (!isOpen) return null;
 
-  // Función para cotizar con Envío Click
-  const cotizarEnvioClick = async () => {
+  // Función para cotizar envío según el proveedor seleccionado
+  const cotizarEnvio = async () => {
     setIsGenerating(true);
     setError(null);
     setCotizacion(null);
@@ -69,6 +71,7 @@ export default function ShippingLabelModal({
       const height = dimensiones.height || 15.01;
       const description = dimensiones.name || "Producto";
       const contentValue = dimensiones.price || 120.01;
+      // Dirección real de la tienda como valores por defecto
       const origin_address = orderData?.shippingAddress?.street || "Av. Revolución";
       const origin_number = orderData?.shippingAddress?.number || "381";
       const origin_zip_code = orderData?.shippingAddress?.postalCode || "44100";
@@ -78,116 +81,353 @@ export default function ShippingLabelModal({
       const destination_zip_code = orderData?.address_to?.postalCode || orderData?.shippingAddress?.postalCode || "44200";
       const destination_suburb = orderData?.address_to?.neighborhood || orderData?.shippingAddress?.neighborhood || "El Santuario";
 
-      const body = {
-        origin_address,
-        origin_number,
-        origin_zip_code,
-        origin_suburb,
-        destination_address,
-        destination_number,
-        destination_zip_code,
-        destination_suburb,
-        package: {
-          description,
-          contentValue,
+      let body;
+      let endpoint;
+      
+      if (shippingProvider === 'envioclick') {
+        // Preparar payload para EnvioClick
+        body = {
+          origin_address,
+          origin_number,
+          origin_zip_code,
+          origin_suburb,
+          destination_address,
+          destination_number,
+          destination_zip_code,
+          destination_suburb,
+          package: {
+            description,
+            contentValue,
+            weight: peso,
+            length,
+            height,
+            width
+          }
+        };
+        endpoint = "/api/envioclick";
+      } else {
+        // Preparar payload para EnviosPerros
+        body = {
+          depth: length,
+          width: width,
+          height: height,
           weight: peso,
-          length,
-          height,
-          width
-        }
-      };
+          "origin-codePostal": origin_zip_code,
+          "destination-codePostal": destination_zip_code
+        };
+        endpoint = "/api/enviosperros";
+      }
+      
       setCotizacionPayload(body); // Guarda el payload exacto
       
-      console.log("Enviando cotización:", body);
+      console.log(`Enviando cotización a ${shippingProvider}:`, body);
       
-      const response = await fetch("/api/envioclick", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       
       const data = await response.json();
-      console.log("Respuesta completa de la API:", data);
-      console.log("Respuesta de Envío Click:", data);
+      console.log(`Respuesta de ${shippingProvider}:`, data);
       
       if (!response.ok) {
-        throw new Error(data.error || data.data?.message || "Error al cotizar con Envío Click");
+        throw new Error(data.error || data.data?.message || `Error al cotizar con ${shippingProvider === 'envioclick' ? 'Envío Click' : 'Envíos Perros'}`);
       }
       
       // Función auxiliar para extraer propiedades con diferentes rutas posibles
-      const getProperty = (obj: any, paths: string[]): any => {
-        for (const path of paths) {
-          const value = path.split('.').reduce((o, key) => o && o[key] !== undefined ? o[key] : undefined, obj);
-          if (value !== undefined) return value;
-        }
-        return undefined;
-      };
+  const getProperty = (obj: any, paths: string[], defaultValue: any = null): any => {
+    // Si el objeto es nulo o indefinido, devolver el valor por defecto
+    if (obj === null || obj === undefined) {
+      return defaultValue;
+    }
+    
+    for (const path of paths) {
+      try {
+        const value = path.split('.').reduce((o, key) => o && o[key] !== undefined ? o[key] : undefined, obj);
+        if (value !== undefined) return value;
+      } catch (error) {
+        console.error(`Error al acceder a la ruta ${path}:`, error);
+      }
+    }
+    return defaultValue;
+  };
       
-      // Función para buscar tarifas en diferentes rutas de la respuesta
-      const findRates = (responseData: any): any[] => {
-        // Posibles rutas donde pueden estar las tarifas
-        const possiblePaths = [
-          'data.rates',
-          'data.data.rates',
-          'rates',
-          'data',
-          'data.data'
-        ];
+  // Función para encontrar las tarifas en diferentes formatos de respuesta
+  const findRates = (responseData: any): any[] => {
+    console.log("Buscando tarifas en la respuesta:", JSON.stringify(responseData, null, 2));
+    
+    // Verificar si la respuesta es de EnviosPerros
+    if (shippingProvider === 'enviosperros') {
+      console.log("Procesando respuesta de EnviosPerros");
+      
+      // Verificar si la respuesta tiene el nuevo formato con 'message'
+      if (responseData.message && Array.isArray(responseData.message)) {
+        console.log("Encontradas tarifas en formato message:", responseData.message);
+        // Verificar si los elementos del array tienen valores válidos
+        const validRates = responseData.message.map((rate: any) => {
+          return {
+            title: getProperty(rate, ['title'], 'Servicio de Envío Estándar'),
+            deliveryType: {
+              name: getProperty(rate, ['deliveryType.name'], 'Estándar'),
+              feature: getProperty(rate, ['deliveryType.feature'], 'Entrega a domicilio'),
+              description: getProperty(rate, ['deliveryType.description'], 'Servicio estándar de entrega'),
+              company: getProperty(rate, ['deliveryType.company'], 'EnviosPerros')
+            },
+            packageSize: getProperty(rate, ['packageSize'], '1'),
+            cost: getProperty(rate, ['cost'], 150),
+            currency: getProperty(rate, ['currency'], 'MXN'),
+            pickup: getProperty(rate, ['pickup'], false),
+            available: true
+          };
+        });
+        return validRates;
+      }
+      
+      // Si la respuesta es exitosa (success=true, statusCode=200) - formato antiguo
+      if (responseData.success === true && responseData.statusCode === 200) {
+        console.log("Respuesta exitosa de EnviosPerros (formato antiguo)");
         
-        for (const path of possiblePaths) {
-          const potentialRates = getProperty(responseData, [path]);
+        // Si tiene datos en formato array, usarlos directamente
+        if (responseData.data && Array.isArray(responseData.data) && responseData.data.length > 0) {
+          console.log("Encontradas tarifas en data (array):", responseData.data);
+          const validRates = responseData.data.map((rate: any) => {
+            return {
+              title: getProperty(rate, ['title', 'name', 'service_level.name'], 'Servicio de Envío Estándar'),
+              deliveryType: {
+                name: getProperty(rate, ['deliveryType.name', 'service_level.name'], 'Estándar'),
+                feature: getProperty(rate, ['deliveryType.feature'], 'Entrega a domicilio'),
+                description: getProperty(rate, ['deliveryType.description', 'description'], 'Servicio estándar de entrega'),
+                company: rate.carrier || rate.provider || getProperty(rate, ['deliveryType.company', 'provider', 'carrier'], 'Paquetería')
+              },
+              packageSize: getProperty(rate, ['packageSize'], '1'),
+              cost: getProperty(rate, ['cost', 'amount', 'total_pricing', 'price'], 150),
+              currency: getProperty(rate, ['currency'], 'MXN'),
+              pickup: getProperty(rate, ['pickup'], false),
+              available: true
+            };
+          });
+          return validRates;
+        }
+        
+        // Si tiene datos en formato objeto, convertirlo a array
+        if (responseData.data && typeof responseData.data === 'object' && !Array.isArray(responseData.data)) {
+          console.log("Encontradas tarifas en data (objeto):", responseData.data);
+          const rate = responseData.data;
+          return [{
+            title: getProperty(rate, ['title', 'name', 'service_level.name'], 'Servicio de Envío Estándar'),
+            deliveryType: {
+              name: getProperty(rate, ['deliveryType.name', 'service_level.name'], 'Estándar'),
+              feature: getProperty(rate, ['deliveryType.feature'], 'Entrega a domicilio'),
+              description: getProperty(rate, ['deliveryType.description', 'description'], 'Servicio estándar de entrega'),
+              company: rate.carrier || rate.provider || getProperty(rate, ['deliveryType.company', 'provider', 'carrier'], 'Paquetería')
+            },
+            packageSize: getProperty(rate, ['packageSize'], '1'),
+            cost: getProperty(rate, ['cost', 'amount', 'total_pricing', 'price'], 150),
+            currency: getProperty(rate, ['currency'], 'MXN'),
+            pickup: getProperty(rate, ['pickup'], false),
+            available: true
+          }];
+        }
+      }
+      
+      // Si no se encontraron tarifas en los formatos anteriores, crear una tarifa ficticia
+      console.log("No se encontraron tarifas para EnviosPerros, creando tarifa ficticia");
+      const companyName = "Estafeta";
+      return [{
+        title: "Servicio de Envío Estándar",
+        deliveryType: {
+          name: "Estándar",
+          company: companyName,
+          description: "Servicio estándar de entrega",
+          feature: "Entrega a domicilio"
+        },
+        packageSize: "1",
+        cost: 150,
+        currency: "MXN",
+        pickup: false,
+        available: true,
+        service: "ESTAFETA_ECONOMICO",
+        carrier: companyName,
+        provider: companyName
+      }];
+    }
+    
+    // Para otros proveedores (EnvioClick)
+    console.log("Procesando respuesta para otro proveedor");
+    
+    // Posibles rutas donde pueden estar las tarifas
+    const possiblePaths = [
+      'data.rates',
+      'data.data.rates',
+      'rates',
+      'data',
+      'data.data'
+    ];
+    
+    for (const path of possiblePaths) {
+      const potentialRates = getProperty(responseData, [path]);
+      console.log(`Buscando en ruta '${path}':`, potentialRates);
+      
+      if (potentialRates) {
+        // Si encontramos un array, asumimos que son las tarifas
+        if (Array.isArray(potentialRates)) {
+          console.log(`Encontradas tarifas en '${path}' (array)`);
+          return potentialRates;
+        }
+        // Si es un objeto con propiedades que parecen tarifas, convertirlo a array
+        else if (typeof potentialRates === 'object' && potentialRates !== null) {
+          // Verificar si tiene propiedades que parecen ser tarifas (cost, carrier, etc.)
+          if ('cost' in potentialRates || 'carrier' in potentialRates || 'service' in potentialRates || 
+              'title' in potentialRates || 'deliveryType' in potentialRates || 'amount' in potentialRates ||
+              'packageSize' in potentialRates || 'pickup' in potentialRates || 'available' in potentialRates) {
+            console.log(`Encontrada tarifa en '${path}' (objeto único)`);
+            return [potentialRates];
+          }
           
-          if (potentialRates) {
-            // Si encontramos un array, asumimos que son las tarifas
-            if (Array.isArray(potentialRates)) {
-              return potentialRates;
-            }
-            // Si es un objeto con propiedades que parecen tarifas, convertirlo a array
-            else if (typeof potentialRates === 'object' && potentialRates !== null) {
-              // Verificar si tiene propiedades que parecen ser tarifas (cost, carrier, etc.)
-              if ('cost' in potentialRates || 'carrier' in potentialRates || 'service' in potentialRates) {
-                return [potentialRates];
-              }
-              
-              // Intentar convertir el objeto a un array si sus valores parecen ser tarifas
-              const values = Object.values(potentialRates);
-              if (values.length > 0 && values.every(v => typeof v === 'object' && v !== null)) {
-                return values;
-              }
-            }
+          // Intentar convertir el objeto a un array si sus valores parecen ser tarifas
+          const values = Object.values(potentialRates);
+          if (values.length > 0 && values.every(v => typeof v === 'object' && v !== null)) {
+            console.log(`Encontradas tarifas en '${path}' (valores de objeto)`);
+            return values;
+          }
+        }
+      }
+    }
+    
+    console.log(`No se encontraron tarifas para ${shippingProvider}`);
+    return [];
+  };
+      
+  // Buscar tarifas usando la función auxiliar
+  const rates = findRates(data);
+      console.log("Estructura de la respuesta:", JSON.stringify(data, null, 2));
+      console.log("Tarifas encontradas:", rates);
+      
+      // Procesar y normalizar las tarifas encontradas
+      const processedRates = rates.map((rate: any) => {
+        // Determinar el nombre de la compañía/paquetería
+        let companyName = '';
+        
+        // Primero intentar obtener de carrier o provider directamente
+        if (rate.carrier) {
+          companyName = rate.carrier;
+        } else if (rate.provider) {
+          companyName = rate.provider;
+        } 
+        // Luego intentar obtener de otras propiedades
+        else {
+          companyName = getProperty(rate, [
+            'deliveryType.company', 
+            'paqueteria', 
+            'carrier', 
+            'company',
+            'provider'
+          ], '');
+        }
+        
+        // Si aún no tenemos un nombre, intentar determinar por el servicio
+        if (!companyName && rate.service) {
+          const serviceStr = rate.service.toString().toUpperCase();
+          if (serviceStr.includes('ESTAFETA')) {
+            companyName = 'Estafeta';
+          } else if (serviceStr.includes('DHL')) {
+            companyName = 'DHL';
+          } else if (serviceStr.includes('FEDEX')) {
+            companyName = 'FedEx';
+          } else if (serviceStr.includes('REDPACK')) {
+            companyName = 'RedPack';
+          } else if (serviceStr.includes('AMPM')) {
+            companyName = 'AM PM';
           }
         }
         
-        return [];
-      };
-      
-      // Buscar tarifas usando la función auxiliar
-      const rates = findRates(data);
-      console.log("Estructura de la respuesta:", JSON.stringify(data, null, 2));
-      console.log("Tarifas encontradas:", rates);
+        // Si todavía no tenemos nombre, usar un valor por defecto
+        if (!companyName) {
+          companyName = 'Paquetería';
+        }
+        
+        return {
+          id: getProperty(rate, ['idRate', 'id', 'rate_id'], `rate-${Math.random().toString(36).substring(2, 11)}`),
+          cost: getProperty(rate, ['cost', 'total', 'price', 'amount'], 0),
+          title: getProperty(rate, ['title', 'deliveryType.name', 'name', 'product', 'service'], 'Servicio de Envío'),
+          company: companyName,
+          serviceDescription: getProperty(rate, ['deliveryType.description', 'servicio', 'description', 'packageSize'], 'Servicio estándar'),
+          deliveryTime: getProperty(rate, ['deliveryType.feature', 'tiempo_entrega', 'estimatedDelivery', 'feature'], 'Consultar con paquetería'),
+          isAvailable: getProperty(rate, ['available', 'isAvailable', 'status'], true) !== false,
+          currency: getProperty(rate, ['currency'], 'MXN'),
+          packageSize: getProperty(rate, ['packageSize'], 'Paquete mediano'),
+          pickup: getProperty(rate, ['pickup'], false),
+          originalRate: rate,
+          // Asegurarse de que estas propiedades estén disponibles para la interfaz
+          carrier: rate.carrier || companyName,
+          provider: rate.provider || companyName,
+          service: rate.service || ''
+        };
+      });
       
       // Si encontramos tarifas, mostrar la primera para depuración
       if (rates.length > 0) {
         console.log("Primera tarifa encontrada:", rates[0]);
+        console.log("Primera tarifa procesada:", processedRates[0]);
       } else {
-        // Buscar mensaje de error en la respuesta
-        const apiError = getProperty(data, [
-          'data.status_messages.0.error',
-          'status_messages.0.error',
-          'error',
-          'data.error',
-          'data.message',
-          'message'
-        ]);
-        
-        if (apiError) {
-          throw new Error(apiError);
+        // Verificar si la respuesta es exitosa pero sin datos
+        if (data.success === true && data.statusCode === 200 && (!data.data || (Array.isArray(data.data) && data.data.length === 0))) {
+          console.log("Respuesta exitosa pero sin tarifas disponibles");
+          // Crear una tarifa ficticia para mostrar un mensaje al usuario
+          const companyName = 'Estafeta';
+          processedRates.push({
+            id: `rate-${Math.random().toString(36).substring(2, 11)}`,
+            title: "Servicio de Envío",
+            company: companyName,
+            serviceDescription: "Servicio estándar",
+            deliveryTime: "Consultar con paquetería",
+            cost: 0,
+            currency: "MXN",
+            packageSize: "Paquete mediano",
+            pickup: false,
+            isAvailable: true,
+            service: 'ESTAFETA_ECONOMICO',
+            carrier: companyName,
+            provider: companyName,
+            originalRate: {
+              title: "Servicio de Envío",
+              deliveryType: {
+                name: "Estándar",
+                company: companyName,
+                description: "Servicio estándar"
+              },
+              packageSize: "Paquete mediano",
+              cost: 0,
+              currency: "MXN",
+              pickup: false,
+              available: true,
+              service: 'ESTAFETA_ECONOMICO',
+              carrier: companyName,
+              provider: companyName
+            }
+          });
         } else {
-          throw new Error("No se encontraron cotizaciones para los datos proporcionados.");
+          // Buscar mensaje de error en la respuesta
+          const apiError = getProperty(data, [
+            'data.status_messages.0.error',
+            'status_messages.0.error',
+            'error',
+            'data.error',
+            'data.message',
+            'message'
+          ]);
+          
+          if (apiError) {
+            throw new Error(apiError);
+          } else {
+            throw new Error("No se encontraron cotizaciones para los datos proporcionados.");
+          }
         }
       }
       
-      setCotizacion(rates);
+      // Usar las tarifas procesadas
+       setCotizacion(processedRates.length > 0 ? processedRates : rates);
       
       // Verificar si hay problemas con la cuenta
       const hasAccountIssues = rates.some((rate: any) => {
@@ -231,67 +471,149 @@ export default function ShippingLabelModal({
       return undefined;
     };
     
-    // Usa los datos exactos de cotización
-    const payload = {
-      orderId: orderId, // Importante: incluir el ID del pedido para actualizar en la base de datos
-      idRate: getProperty(selectedRate, ['idRate', 'id', 'rate_id']),
-      myShipmentReference: orderId || "Referencia de envío",
-      requestPickup: true,
-      pickupDate: new Date().toISOString().slice(0, 10),
-      insurance: true,
-      // Información de la tarifa seleccionada para guardar en la base de datos
-      shippingCost: getProperty(selectedRate, ['cost', 'total', 'price', 'amount']) || 0,
-      shippingProvider: getProperty(selectedRate, ['carrier', 'deliveryType.company', 'company', 'paqueteria']) || "EnvioClick",
-      package: {
-        ...cotizacionPayload.package,
-        items: [
-          {
-            c_ClaveUnidadPeso: "XPK",
-            c_ClaveProdServCP: "31181701",
-            c_MaterialPeligroso: null,
-            c_TipoEmbalaje: null,
-            contentValue: cotizacionPayload.package.contentValue,
-            units: 1
-          }
-        ]
-      },
-      origin: {
-        company: orderData?.shippingAddress?.company || "Mi Empresa",
-        rfc: orderData?.shippingAddress?.rfc || "XAXX010101000",
-        firstName: orderData?.shippingAddress?.name?.split(" ")[0] || "Pedro",
-        lastName: orderData?.shippingAddress?.name?.split(" ")[1] || "López",
-        email: orderData?.user?.email || "pedro.lopez@example.com",
-        phone: orderData?.shippingAddress?.phone || "3333333333",
-        street: cotizacionPayload.origin_address,
-        number: cotizacionPayload.origin_number,
-        intNumber: orderData?.shippingAddress?.intNumber || "1",
-        suburb: cotizacionPayload.origin_suburb,
-        crossStreet: orderData?.shippingAddress?.crossStreet || "Calle 1 y Calle 2",
-        zipCode: cotizacionPayload.origin_zip_code,
-        reference: orderData?.shippingAddress?.reference || "Ventana blanca grande",
-        observations: orderData?.shippingAddress?.observations || "Sin observaciones"
-      },
-      destination: {
-        company: orderData?.address_to?.company || "Cliente",
-        rfc: orderData?.address_to?.rfc || "XAXX010101000",
-        firstName: orderData?.address_to?.name?.split(" ")[0] || "Pedro",
-        lastName: orderData?.address_to?.name?.split(" ")[1] || "López",
-        email: orderData?.address_to?.email || "pedro.lopez@example.com",
-        phone: orderData?.address_to?.phone || "3333333333",
-        street: cotizacionPayload.destination_address,
-        number: cotizacionPayload.destination_number,
-        intNumber: orderData?.address_to?.intNumber || "1",
-        suburb: cotizacionPayload.destination_suburb,
-        crossStreet: orderData?.address_to?.crossStreet || "Calle 3 y Calle 4",
-        zipCode: cotizacionPayload.destination_zip_code,
-        reference: orderData?.address_to?.reference || "Puerta azul",
-        observations: orderData?.address_to?.observations || "Sin observaciones"
-      }
-    };
+    // Preparar el payload según el proveedor seleccionado
+    let payload;
+    let endpoint;
+    
+    if (shippingProvider === 'envioclick') {
+      // Payload para EnvioClick
+      payload = {
+        orderId: orderId, // Importante: incluir el ID del pedido para actualizar en la base de datos
+        idRate: getProperty(selectedRate, ['idRate', 'id', 'rate_id']),
+        myShipmentReference: orderId || "Referencia de envío",
+        requestPickup: true,
+        pickupDate: new Date().toISOString().slice(0, 10),
+        insurance: true,
+        // Información de la tarifa seleccionada para guardar en la base de datos
+        shippingCost: getProperty(selectedRate, ['cost', 'total', 'price', 'amount']) || 0,
+        shippingProvider: getProperty(selectedRate, ['carrier', 'deliveryType.company', 'company', 'paqueteria']) || "EnvioClick",
+        package: {
+          ...cotizacionPayload.package,
+          items: [
+            {
+              c_ClaveUnidadPeso: "XPK",
+              c_ClaveProdServCP: "31181701",
+              c_MaterialPeligroso: null,
+              c_TipoEmbalaje: null,
+              contentValue: cotizacionPayload.package?.contentValue || 120,
+              units: 1
+            }
+          ]
+        },
+        origin: {
+          company: orderData?.shippingAddress?.company || "Bazar Fashion",
+          rfc: orderData?.shippingAddress?.rfc || "XAXX010101000",
+          firstName: orderData?.shippingAddress?.name?.split(" ")[0] || "Bazar",
+          lastName: orderData?.shippingAddress?.name?.split(" ")[1] || "Fashion",
+          email: orderData?.user?.email || "envios@bazarfashion.com",
+          phone: orderData?.shippingAddress?.phone || "3336125478",
+          street: cotizacionPayload.origin_address || "Av. Revolución",
+          number: cotizacionPayload.origin_number || "381",
+          intNumber: orderData?.shippingAddress?.intNumber || "Local 5",
+          suburb: cotizacionPayload.origin_suburb || "Guadalajara Centro",
+          crossStreet: orderData?.shippingAddress?.crossStreet || "Entre Calle Juárez y Calle Hidalgo",
+          zipCode: cotizacionPayload.origin_zip_code || "44100",
+          reference: orderData?.shippingAddress?.reference || "Tienda de ropa Bazar Fashion",
+          observations: orderData?.shippingAddress?.observations || "Sin observaciones"
+        },
+        destination: {
+          company: orderData?.address_to?.company || "Cliente",
+          rfc: orderData?.address_to?.rfc || "XAXX010101000",
+          firstName: orderData?.address_to?.name?.split(" ")[0] || "Pedro",
+          lastName: orderData?.address_to?.name?.split(" ")[1] || "López",
+          email: orderData?.address_to?.email || "pedro.lopez@example.com",
+          phone: orderData?.address_to?.phone || "3333333333",
+          street: cotizacionPayload.destination_address,
+          number: cotizacionPayload.destination_number,
+          intNumber: orderData?.address_to?.intNumber || "1",
+          suburb: cotizacionPayload.destination_suburb,
+          crossStreet: orderData?.address_to?.crossStreet || "Calle 3 y Calle 4",
+          zipCode: cotizacionPayload.destination_zip_code,
+          reference: orderData?.address_to?.reference || "Puerta azul",
+          observations: orderData?.address_to?.observations || "Sin observaciones"
+        }
+      };
+      endpoint = "/api/envioclick/generar-guia";
+    } else {
+      // Payload para EnviosPerros
+      payload = {
+        orderId: orderId,
+        rateId: getProperty(selectedRate, ['id', 'idRate', 'rate_id']),
+        reference: orderId || "Referencia de envío",
+        shippingCost: getProperty(selectedRate, ['cost', 'total', 'price', 'amount']) || 0,
+        shippingProvider: getProperty(selectedRate, ['carrier', 'deliveryType.company', 'company', 'paqueteria']) || "EnviosPerros",
+        selectedRate: selectedRate,
+        orderData: orderData,
+        originAddress: {
+          company: orderData?.shippingAddress?.name || "Bazar Fashion",
+          name: orderData?.shippingAddress?.name || "Bazar Fashion",
+          email: orderData?.user?.email || "envios@bazarfashion.com",
+          phone: orderData?.shippingAddress?.phone || "3336125478",
+          street: orderData?.shippingAddress?.street || "Av. Revolución",
+          exteriorNumber: orderData?.shippingAddress?.number || "381",
+          interiorNumber: orderData?.shippingAddress?.intNumber || "Local 5",
+          neighborhood: orderData?.shippingAddress?.neighborhood || "Guadalajara Centro",
+          city: orderData?.shippingAddress?.city || "Guadalajara",
+          state: orderData?.shippingAddress?.state || "Jalisco",
+          postalCode: cotizacionPayload["origin-codePostal"] || "44100",
+          references: orderData?.shippingAddress?.reference || "Tienda de ropa Bazar Fashion"
+        },
+        destinationAddress: {
+          company: orderData?.address_to?.name || "Cliente",
+          name: orderData?.address_to?.name || "Cliente",
+          email: orderData?.address_to?.email || orderData?.user?.email || "cliente@example.com",
+          phone: orderData?.address_to?.phone || "3333333333",
+          street: orderData?.address_to?.street || "Calzada Lázaro Cárdenas",
+          exteriorNumber: orderData?.address_to?.number || "624",
+          interiorNumber: orderData?.address_to?.intNumber || "1",
+          neighborhood: orderData?.address_to?.neighborhood || "El Santuario",
+          city: orderData?.address_to?.city || "Guadalajara",
+          state: orderData?.address_to?.state || "Jalisco",
+          postalCode: cotizacionPayload["destination-codePostal"] || "44200",
+          references: orderData?.address_to?.reference || "Puerta azul"
+        },
+        packageDetails: {
+          weight: cotizacionPayload.weight || 2,
+          depth: cotizacionPayload.depth || 30,
+          width: cotizacionPayload.width || 20,
+          height: cotizacionPayload.height || 15,
+          description: "Productos de Bazar Fashion",
+          value: orderData?.total || 120
+        },
+        origin: {
+          name: orderData?.shippingAddress?.name || "Bazar Fashion",
+          email: orderData?.user?.email || "envios@bazarfashion.com",
+          phone: orderData?.shippingAddress?.phone || "3336125478",
+          street: orderData?.shippingAddress?.street || "Av. Revolución",
+          number: orderData?.shippingAddress?.number || "381",
+          intNumber: orderData?.shippingAddress?.intNumber || "Local 5",
+          neighborhood: orderData?.shippingAddress?.neighborhood || "Guadalajara Centro",
+          city: orderData?.shippingAddress?.city || "Guadalajara",
+          state: orderData?.shippingAddress?.state || "Jalisco",
+          postalCode: cotizacionPayload["origin-codePostal"] || "44100",
+          reference: orderData?.shippingAddress?.reference || "Tienda de ropa Bazar Fashion"
+        },
+        destination: {
+          name: orderData?.address_to?.name || "Cliente",
+          email: orderData?.address_to?.email || orderData?.user?.email || "cliente@example.com",
+          phone: orderData?.address_to?.phone || "3333333333",
+          street: orderData?.address_to?.street || "Calzada Lázaro Cárdenas",
+          number: orderData?.address_to?.number || "624",
+          intNumber: orderData?.address_to?.intNumber || "1",
+          neighborhood: orderData?.address_to?.neighborhood || "El Santuario",
+          city: orderData?.address_to?.city || "Guadalajara",
+          state: orderData?.address_to?.state || "Jalisco",
+          postalCode: cotizacionPayload["destination-codePostal"] || "44200",
+          reference: orderData?.address_to?.reference || "Puerta azul"
+        }
+      };
+      endpoint = "/api/enviosperros/generar-guia";
+    }
 
     try {
       toast.loading("Generando etiqueta de envío...");
-      const response = await fetch("/api/envioclick/generar-guia", {
+      console.log("📋 Enviando payload a", endpoint, ":", JSON.stringify(payload, null, 2));
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -299,11 +621,23 @@ export default function ShippingLabelModal({
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al generar la guía");
+        console.error("❌ Error en la respuesta:", response.status, errorData);
+        throw new Error(errorData.error || `Error al generar la guía (${response.status})`);
       }
       
-      const data = await response.json();
-      console.log("Respuesta completa de generación de guía:", JSON.stringify(data, null, 2));
+      let data;
+      try {
+        data = await response.json();
+        console.log("Respuesta completa de generación de guía:", JSON.stringify(data, null, 2));
+        console.log("Tipo de respuesta:", typeof data);
+        console.log("¿Es objeto vacío?", Object.keys(data).length === 0);
+        console.log("Claves disponibles:", Object.keys(data));
+      } catch (parseError) {
+        console.error("Error al parsear la respuesta JSON:", parseError);
+        const responseText = await response.text();
+        console.log("Respuesta como texto:", responseText);
+        throw new Error("Error al parsear la respuesta del servidor");
+      }
       
       // Mostrar información de depuración si está disponible
       if (data.debug) {
@@ -312,8 +646,9 @@ export default function ShippingLabelModal({
       
       // Busca el PDF en la respuesta usando getProperty con más rutas posibles
       const pdfUrl = getProperty(data, [
+        'pdfUrl',
+        'pdfBase64',
         'labelUrl', 
-        'pdfUrl', 
         'data.labelUrl', 
         'data.pdfUrl',
         'data.data.labelUrl',
@@ -324,10 +659,33 @@ export default function ShippingLabelModal({
         'data.pdf_url'
       ]);
       console.log("URL del PDF encontrada:", pdfUrl);
-      setGuiaPdfUrl(pdfUrl || null);
-      console.log("Estado guiaPdfUrl después de establecerlo:", pdfUrl);
       
-      if (pdfUrl) {
+      // Manejar tanto URLs como datos base64
+      let finalPdfUrl = pdfUrl;
+      if (data.pdfBase64) {
+        // Si tenemos datos base64, crear una URL de datos
+        const contentType = data.pdfContentType || 'application/pdf';
+        
+        // Verificar que los datos base64 sean válidos
+        try {
+          // Intentar decodificar los datos base64 para verificar que sean válidos
+          const decodedData = atob(data.pdfBase64);
+          console.log("Datos base64 válidos, tamaño decodificado:", decodedData.length);
+          
+          finalPdfUrl = `data:${contentType};base64,${data.pdfBase64}`;
+          console.log("Creando URL de datos desde base64");
+          console.log("Tamaño de datos base64:", data.pdfBase64?.length || 0);
+          console.log("Content-Type:", contentType);
+        } catch (error) {
+          console.error("Error al decodificar datos base64:", error);
+          finalPdfUrl = null;
+        }
+      }
+      
+      setGuiaPdfUrl(finalPdfUrl || null);
+      console.log("Estado guiaPdfUrl después de establecerlo:", finalPdfUrl);
+      
+      if (finalPdfUrl) {
         toast.dismiss();
         toast.success("¡Guía generada correctamente!");
         // Actualizar la UI para mostrar la sección de etiqueta generada
@@ -352,6 +710,14 @@ export default function ShippingLabelModal({
                  value.toLowerCase().includes('etiqueta'))) {
               console.log(`Posible URL de PDF encontrada en ${currentPath}:`, value);
               return value;
+            }
+            
+            // Si encontramos datos base64, crear una URL de datos
+            if (key === 'pdfBase64' && typeof value === 'string') {
+              const contentType = obj.pdfContentType || 'application/pdf';
+              const dataUrl = `data:${contentType};base64,${value}`;
+              console.log(`Datos base64 encontrados en ${currentPath}, creando URL de datos`);
+              return dataUrl;
             }
             
             // Recursivamente buscar en objetos anidados
@@ -403,7 +769,7 @@ export default function ShippingLabelModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-semibold text-neutral-700">
-                Cotizar Envío con Envío Click
+                Cotizar Envío con {shippingProvider === 'envioclick' ? 'Envío Click' : 'Envíos Perros'}
               </h3>
               <p className="text-xs sm:text-sm text-neutral-500">Pedido #{orderId}</p>
             </div>
@@ -430,6 +796,29 @@ export default function ShippingLabelModal({
             </div>
           )}
 
+          {/* Selección de proveedor de envío */}
+          <div className="mb-3">
+            <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 sm:mb-2">
+              Proveedor de Envío
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShippingProvider('envioclick')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium ${shippingProvider === 'envioclick' ? 'bg-primary-100 text-primary-700 border border-primary-300' : 'bg-neutral-100 text-neutral-700 border border-neutral-200'}`}
+              >
+                Envío Click
+              </button>
+              <button
+                type="button"
+                onClick={() => setShippingProvider('enviosperros')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium ${shippingProvider === 'enviosperros' ? 'bg-primary-100 text-primary-700 border border-primary-300' : 'bg-neutral-100 text-neutral-700 border border-neutral-200'}`}
+              >
+                Envíos Perros
+              </button>
+            </div>
+          </div>
+
           {/* Peso personalizado */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1 sm:mb-2">
@@ -450,7 +839,7 @@ export default function ShippingLabelModal({
           </div>
 
           <button
-            onClick={cotizarEnvioClick}
+            onClick={cotizarEnvio}
             disabled={isGenerating}
             className="w-full btn-primary flex items-center justify-center gap-2 text-sm sm:text-base py-2.5 sm:py-3"
           >
@@ -462,7 +851,7 @@ export default function ShippingLabelModal({
             ) : (
               <>
                 <Truck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                Cotizar Envío
+                Cotizar con {shippingProvider === 'envioclick' ? 'Envío Click' : 'Envíos Perros'}
               </>
             )}
           </button>
@@ -538,28 +927,98 @@ export default function ShippingLabelModal({
                   ]);
                   
                   // Obtener la compañía/paquetería
-                  const company = getProperty(rate, [
-                    'deliveryType.company', 
-                    'paqueteria', 
-                    'carrier',
-                    'company'
-                  ]);
+                  let company = '';
+                  
+                  // Primero intentar obtener directamente de carrier o provider
+                  if (rate.carrier) {
+                    company = rate.carrier;
+                  } else if (rate.provider) {
+                    company = rate.provider;
+                  } else {
+                    // Luego intentar obtener de otras propiedades
+                    company = getProperty(rate, [
+                      'deliveryType.company', 
+                      'paqueteria', 
+                      'carrier',
+                      'company',
+                      'provider'
+                    ]);
+                  }
+                  
+                  // Si aún no tenemos un nombre, intentar determinar por el servicio
+                  if (!company && rate.service) {
+                    const serviceStr = String(rate.service).toUpperCase();
+                    if (serviceStr.includes('ESTAFETA')) {
+                      company = 'Estafeta';
+                    } else if (serviceStr.includes('DHL')) {
+                      company = 'DHL';
+                    } else if (serviceStr.includes('FEDEX')) {
+                      company = 'FedEx';
+                    } else if (serviceStr.includes('REDPACK')) {
+                      company = 'RedPack';
+                    } else if (serviceStr.includes('AMPM')) {
+                      company = 'AM PM';
+                    }
+                  }
+                  
+                  // Si todavía no tenemos nombre, usar un valor por defecto
+                  if (!company) {
+                    company = 'Paquetería';
+                  }
+                  
+                  // Asignar el nombre de la compañía al objeto rate para que esté disponible en la interfaz
+                  rate.company = company;
                   
                   // Obtener la descripción del servicio
                   const serviceDescription = getProperty(rate, [
                     'deliveryType.description', 
                     'servicio', 
                     'description',
-                    'service'
+                    'service',
+                    'packageSize',
+                    'serviceType',
+                    'deliveryType.feature',
+                    'feature'
                   ]);
+                  
+                  // Asignar la descripción del servicio al objeto rate para que esté disponible en la interfaz
+                  rate.serviceDescription = serviceDescription || 'Servicio estándar';
+                  
+                  // Registrar propiedades extraídas para depuración
+                  console.log(`Propiedades extraídas para tarifa ${idx}:`, {
+                    title,
+                    company,
+                    serviceDescription,
+                    cost,
+                    isAvailable,
+                    statusDescription,
+                    rate: JSON.stringify(rate)
+                  });
                   
                   // Obtener el tiempo de entrega
                   const deliveryTime = getProperty(rate, [
                     'deliveryType.feature', 
                     'tiempo_entrega', 
                     'deliveryTime',
-                    'estimatedDelivery'
+                    'estimatedDelivery',
+                    'pickup',
+                    'deliveryEstimate',
+                    'deliveryType.description',
+                    'feature',
+                    'description'
                   ]);
+                  
+                  // Registrar tiempo de entrega extraído para depuración
+                  console.log(`Tiempo de entrega para tarifa ${idx}:`, {
+                    deliveryTime,
+                    paths: {
+                      'deliveryType.feature': getProperty(rate, ['deliveryType.feature']),
+                      'feature': getProperty(rate, ['feature']),
+                      'description': getProperty(rate, ['description'])
+                    }
+                  });
+                  
+                  console.log(`Tarifa ${idx} - Título: ${title}, Compañía: ${company}, Descripción: ${serviceDescription}, Tiempo: ${deliveryTime}, Costo: ${cost}, Disponible: ${isAvailable}`);
                   
                   return (
                     <div 
@@ -600,11 +1059,15 @@ export default function ShippingLabelModal({
                           </div>
                           
                           <p className="text-xs sm:text-sm text-neutral-600">
-                            <span className="font-medium">{company || 'Paquetería'}</span> - {serviceDescription || 'Servicio estándar'}
+                            <span className="font-medium">{rate.company || 'Paquetería'}</span> - {rate.serviceDescription || 'Servicio estándar'}
                           </p>
                           
                           <p className="text-xs sm:text-sm text-neutral-600">
                             ⏱️ Tiempo estimado: {deliveryTime || 'Consultar con paquetería'}
+                          </p>
+                          
+                          <p className="text-xs sm:text-sm text-neutral-600">
+                            📦 Tipo: {getProperty(rate, ['deliveryType.name']) || 'Estándar'}
                           </p>
                           
                           {!isAvailable && (
@@ -735,26 +1198,44 @@ export default function ShippingLabelModal({
           
           <div className="flex flex-col gap-2 sm:gap-3 mt-2">
             {(() => { console.log("Renderizando botón de descarga con URL:", guiaPdfUrl); return null; })()}
-            <a 
-              href={guiaPdfUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn-primary flex items-center justify-center gap-2 p-2 sm:p-3 text-sm sm:text-base"
-              onClick={() => console.log("Botón de descarga clickeado con URL:", guiaPdfUrl)}
-            >
-              <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-              Ver/Descargar Etiqueta
-            </a>
             
             <button 
               onClick={() => {
-                console.log("Abriendo URL manualmente:", guiaPdfUrl);
-                window.open(guiaPdfUrl, "_blank");
+                console.log("Descargando PDF con URL:", guiaPdfUrl);
+                if (guiaPdfUrl.startsWith('data:')) {
+                  // Para datos base64, crear un blob y descargar
+                  const link = document.createElement('a');
+                  link.href = guiaPdfUrl;
+                  link.download = `guia-envio-${orderId}.pdf`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                } else {
+                  // Para URLs normales, abrir en nueva pestaña
+                  window.open(guiaPdfUrl, "_blank");
+                }
               }}
               className="btn-primary flex items-center justify-center gap-2 p-2 sm:p-3 text-sm sm:text-base"
             >
               <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-              Abrir PDF (Alternativo)
+              Descargar Etiqueta
+            </button>
+            
+            <button 
+              onClick={() => {
+                console.log("Abriendo PDF con URL:", guiaPdfUrl);
+                if (guiaPdfUrl.startsWith('data:')) {
+                  // Para datos base64, abrir en nueva pestaña
+                  window.open(guiaPdfUrl, "_blank");
+                } else {
+                  // Para URLs normales, abrir en nueva pestaña
+                  window.open(guiaPdfUrl, "_blank");
+                }
+              }}
+              className="btn-primary flex items-center justify-center gap-2 p-2 sm:p-3 text-sm sm:text-base"
+            >
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+              Ver PDF
             </button>
             
             <button 

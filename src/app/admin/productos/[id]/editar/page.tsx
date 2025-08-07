@@ -32,7 +32,7 @@ const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
-  mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas"],
+  mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas", "Sacos", "Abrigos", "Tops", "Overoles", "Faldas", "Shorts"],
   hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts"],
   accesorios: ["Joyas", "Relojes", "Cinturones", "Bolsos"],
   calzado: ["Zapatos", "Zapatillas", "Botas"],
@@ -159,8 +159,9 @@ export default function EditarProductoPage() {
         // Cargar categorías reales
         const categorias = await fetch('/api/categorias').then(res => res.json());
         setCategories(categorias);
-        // Cargar datos reales del producto
-        const producto = await fetch(`/api/productos/${productId}`).then(res => res.json());
+        // Cargar datos reales del producto con timestamp para evitar caché
+        const timestamp = Date.now();
+        const producto = await fetch(`/api/productos/${productId}?t=${timestamp}`).then(res => res.json());
         setFormData({
           name: producto.name || '',
           description: producto.description || '',

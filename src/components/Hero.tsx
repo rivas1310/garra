@@ -20,7 +20,7 @@ export default function Hero() {
               Moda circular, apoya local, viste con causa.
             </p>
             <p className="text-lg md:text-xl text-blanco mb-8 max-w-2xl">
-              En <span className="font-bold">Garra Felina</span> damos nueva vida a la moda, apoyamos el talento mexicano y promovemos el consumo responsable. Cada prenda cuenta una historia, ¡sé parte del cambio!
+              En <span className="font-bold">Garras Felinas</span> damos nueva vida a la moda, apoyamos el talento mexicano y promovemos el consumo responsable. Cada prenda cuenta una historia, ¡sé parte del cambio!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link 
@@ -45,21 +45,7 @@ export default function Hero() {
               </span>
             </div>
             
-            {/* Stats */}
-            <div className="mt-12 grid grid-cols-3 gap-8 max-w-md mx-auto lg:mx-0">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blanco">500+</div>
-                <div className="text-sm text-blanco/80">Productos</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blanco">10k+</div>
-                <div className="text-sm text-blanco/80">Clientes</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blanco">24/7</div>
-                <div className="text-sm text-blanco/80">Soporte</div>
-              </div>
-            </div>
+            {/* Stats section removed as requested */}
           </div>
           
           {/* Image */}
@@ -91,4 +77,4 @@ export default function Hero() {
       <div className="absolute bottom-20 right-10 w-32 h-32 bg-primary-300 rounded-full opacity-20"></div>
     </section>
   )
-} 
+}

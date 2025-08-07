@@ -20,7 +20,7 @@ interface FavoriteProduct {
   isNew: boolean
   isOnSale: boolean
   isSecondHand: boolean
-  totalStock: number
+  calculatedStock: number
   isActive: boolean
   isAvailable: boolean
   variants: any[]
@@ -78,9 +78,17 @@ export default function FavoritosPage() {
   }
 
   // Agregar al carrito
-  const handleAddToCart = (product: FavoriteProduct) => {
-    addToCart(product)
-    toast.success('Producto agregado al carrito')
+  const handleAddToCart = async (product: FavoriteProduct) => {
+    try {
+      const result = await addToCart(product)
+      if (result.success) {
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error('Error al agregar al carrito')
+    }
   }
 
   // Si no está autenticado
@@ -231,7 +239,7 @@ export default function FavoritosPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500">
-                        Stock: {product.totalStock}
+                        Stock: {product.calculatedStock}
                       </span>
                     </div>
                   </div>
@@ -265,4 +273,4 @@ export default function FavoritosPage() {
       </div>
     </div>
   )
-} 
+}

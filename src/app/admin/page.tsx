@@ -61,11 +61,16 @@ export default function AdminPage() {
   const [products, setProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/productos')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/productos?admin=true&t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
+        console.log('Datos recibidos en dashboard:', data);
         if (Array.isArray(data)) {
           setProducts(data);
+        } else if (Array.isArray(data.productos)) {
+          setProducts(data.productos);
         } else if (Array.isArray(data.products)) {
           setProducts(data.products);
         } else {
@@ -76,11 +81,16 @@ export default function AdminPage() {
 
   // Nueva función para refrescar productos
   const handleRefresh = () => {
-    fetch('/api/productos')
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now();
+    fetch(`/api/productos?admin=true&t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
+        console.log('Datos recibidos en refresh:', data);
         if (Array.isArray(data)) {
           setProducts(data);
+        } else if (Array.isArray(data.productos)) {
+          setProducts(data.productos);
         } else if (Array.isArray(data.products)) {
           setProducts(data.products);
         } else {

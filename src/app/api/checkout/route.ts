@@ -1,12 +1,40 @@
 import { NextResponse } from 'next/server'
 import stripe from '@/utils/stripe'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(req: Request) {
   try {
     console.log('Iniciando creación de sesión de Stripe...')
     
     const { items, customer, coupon } = await req.json()
-    console.log('Datos recibidos:', { items, customer, coupon })
+    console.log('📋 DATOS RECIBIDOS DEL FORMULARIO:')
+    console.log('📦 Items:', JSON.stringify(items, null, 2))
+    console.log('👤 Customer:', JSON.stringify(customer, null, 2))
+    console.log('🎫 Coupon:', JSON.stringify(coupon, null, 2))
+    
+    // Verificar específicamente los campos problemáticos
+    console.log('🔍 VERIFICACIÓN DE CAMPOS PROBLEMÁTICOS:')
+    console.log('   📍 Colonia:', customer?.colonia)
+    console.log('   📮 CP:', customer?.codigoPostal)
+    console.log('   📝 Referencias:', customer?.referencias)
+    console.log('   📍 Calle:', customer?.direccion)
+    console.log('   📍 Número exterior:', customer?.numeroExterior)
+    console.log('   📍 Número interior:', customer?.numeroInterior)
+    
+    // Verificar que todos los campos estén presentes
+    console.log('🔍 VERIFICACIÓN COMPLETA DE CAMPOS:')
+    console.log('   👤 nombre:', customer?.nombre)
+    console.log('   📧 email:', customer?.email)
+    console.log('   📞 telefono:', customer?.telefono)
+    console.log('   📍 direccion:', customer?.direccion)
+    console.log('   📍 numeroExterior:', customer?.numeroExterior)
+    console.log('   📍 numeroInterior:', customer?.numeroInterior)
+    console.log('   🏘️ colonia:', customer?.colonia)
+    console.log('   🏙️ ciudad:', customer?.ciudad)
+    console.log('   🏛️ estado:', customer?.estado)
+    console.log('   📮 codigoPostal:', customer?.codigoPostal)
+    console.log('   🌍 pais:', customer?.pais)
+    console.log('   📝 referencias:', customer?.referencias)
 
     // Validaciones
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -87,10 +115,14 @@ export async function POST(req: Request) {
         nombre: customer?.nombre || '',
         telefono: customer?.telefono || '',
         direccion: customer?.direccion || '',
+        numeroExterior: customer?.numeroExterior || '',
+        numeroInterior: customer?.numeroInterior || '',
+        colonia: customer?.colonia || '',
         ciudad: customer?.ciudad || '',
         estado: customer?.estado || '',
         codigoPostal: customer?.codigoPostal || '',
         pais: customer?.pais || '',
+        referencias: customer?.referencias || '',
         couponCode: coupon?.code || '',
         couponDiscount: coupon ? String(coupon.discountAmount) : '0',
       },
@@ -101,36 +133,117 @@ export async function POST(req: Request) {
     if (!session.url) {
       throw new Error('Stripe no devolvió una URL de sesión')
     }
-    
-    // Almacenar la información del pedido en metadata para webhook
-    // o devolver el session ID para crear el pedido manualmente
-    return NextResponse.json({ 
-      url: session.url, 
-      sessionId: session.id,
-      // Información para crear el pedido después
-      orderData: {
-        items: items.map((item, index) => ({
-          productId: `product_${index}`, // Esto debería venir del carrito real
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        })),
-        customer,
-        coupon: coupon ? {
-          id: coupon.id,
-          code: coupon.code,
-          discountType: coupon.discountType,
-          discountValue: coupon.discountValue,
-          discountAmount: coupon.discountAmount
-        } : null,
-        totals: {
-          subtotal,
+
+    // Crear la orden en la base de datos con el session ID
+    try {
+      // Obtener el primer usuario disponible (para pruebas)
+      const user = await prisma.user.findFirst();
+      if (!user) {
+        throw new Error('No hay usuarios en la base de datos');
+      }
+      
+      // Crear la orden en la base de datos
+      
+      const order = await prisma.order.create({
+        data: {
+          userId: user.id, // Usar el ID del usuario real
+          total: total,
+          subtotal: subtotal,
+          tax: tax,
+          shipping: shipping,
           discount: discountAmount,
-          tax,
-          shipping,
-          total
+          couponCode: coupon?.code || null,
+          couponDiscount: discountAmount,
+          status: 'PENDING',
+          paymentStatus: 'PENDING',
+          notes: `Cliente: ${customer?.nombre} - Email: ${customer?.email}`,
+          // Crear los OrderItems
+          items: {
+            create: items.map((item: any) => ({
+              productId: item.productId,
+              variantId: item.variantId || null,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          }
+        }
+      })
+
+      console.log('✅ Orden creada en la base de datos:', order.id)
+      
+      // Descontar stock de los productos
+      console.log('📦 Descontando stock de los productos...')
+      for (const item of items) {
+        console.log(`📦 Descontando stock para: ${item.name} - Cantidad: ${item.quantity}`)
+        
+        try {
+          if (item.variantId) {
+            // Si tiene variante, descontar del stock de la variante
+            const updatedVariant = await prisma.productVariant.update({
+              where: { id: item.variantId },
+              data: {
+                stock: {
+                  decrement: item.quantity
+                }
+              }
+            });
+            console.log(`✅ Stock de variante descontado: ${item.variantId}, nuevo stock: ${updatedVariant.stock}`);
+            
+            // Si el stock de la variante llega a 0, verificar si desactivar el producto
+            if (updatedVariant.stock <= 0) {
+              // Verificar si todas las variantes del producto tienen stock 0
+              const allVariants = await prisma.productVariant.findMany({
+                where: { productId: item.productId }
+              });
+              
+              const allOutOfStock = allVariants.every(v => v.stock <= 0);
+              
+              if (allOutOfStock) {
+                await prisma.product.update({
+                  where: { id: item.productId },
+                  data: { isActive: false }
+                });
+                console.log(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
+              }
+            }
+          } else {
+            // Si no tiene variante, descontar del stock principal del producto
+            const updatedProduct = await prisma.product.update({
+              where: { id: item.productId },
+              data: {
+                stock: {
+                  decrement: item.quantity
+                }
+              }
+            });
+            console.log(`✅ Stock de producto descontado: ${item.productId}, nuevo stock: ${updatedProduct.stock}`);
+            
+            // Si el stock llega a 0, desactivar el producto
+            if (updatedProduct.stock <= 0) {
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: { isActive: false }
+              });
+              console.log(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
+            }
+          }
+          
+          console.log(`✅ Item procesado: ${item.name} - Cantidad: ${item.quantity}`);
+        } catch (error) {
+          console.error(`❌ Error al descontar stock para ${item.name}:`, error);
         }
       }
+      
+      console.log('✅ Stock descontado correctamente');
+      console.log('📋 Orden creada exitosamente:', order.id);
+    } catch (error) {
+      console.error('❌ Error al crear la orden:', error)
+      // Continuar aunque falle la creación de la orden
+    }
+    
+    return NextResponse.json({ 
+      url: session.url, 
+      sessionId: session.id
     })
   } catch (error) {
     console.error('Error en /api/checkout:', error)
