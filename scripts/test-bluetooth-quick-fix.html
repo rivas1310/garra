@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Rápido Bluetooth - Arreglo Automático</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .device-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Diagnóstico y Arreglo Automático de Bluetooth</h1>
+        <p>Esta herramienta te ayudará a identificar y solucionar problemas de conectividad Bluetooth paso a paso.</p>
+        
+        <div id="status" class="status info">
+            ⏳ Iniciando diagnóstico automático...
+        </div>
+
+        <div class="status warning" style="margin: 15px 0;">
+            🔧 <strong>Actualización:</strong> Se han agregado servicios adicionales para impresoras como PT-210. 
+            Si experimentaste el error "Origin is not allowed to access any service", esto ya está solucionado.
+        </div>
+
+        <div class="step">
+            <h3>Paso 1: Verificación Automática del Sistema</h3>
+            <button onclick="runDiagnostic()">🔍 Iniciar Diagnóstico Completo</button>
+            <button onclick="quickTest()">⚡ Prueba Rápida</button>
+        </div>
+
+        <div class="step">
+            <h3>Paso 2: Buscar Dispositivos</h3>
+            <button onclick="scanAllDevices()">📡 Escanear Todos los Dispositivos</button>
+            <button onclick="scanPrinters()">🖨️ Buscar Solo Impresoras</button>
+        </div>
+
+        <div class="step">
+            <h3>Paso 3: Conectar y Probar</h3>
+            <button onclick="connectAndTest()" id="connectBtn" disabled>🔗 Conectar y Probar Impresión</button>
+        </div>
+
+        <div id="deviceInfo" class="device-info" style="display: none;">
+            <h4>📱 Información del Dispositivo Conectado:</h4>
+            <div id="deviceDetails"></div>
+        </div>
+
+        <div id="log" class="log"></div>
+
+        <div class="step">
+            <h3>🆘 Soluciones Automáticas</h3>
+            <button onclick="openBluetoothSettings()">⚙️ Abrir Configuración Bluetooth</button>
+            <button onclick="openPermissions()">🔐 Verificar Permisos</button>
+            <button onclick="showManualSteps()">📋 Pasos Manuales</button>
+        </div>
+    </div>
+
+    <script>
+        let connectedDevice = null;
+        let characteristic = null;
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            logElement.textContent += `[${timestamp}] ${typeIcon[type]} ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        async function runDiagnostic() {
+            log('🔍 Iniciando diagnóstico completo del sistema...');
+            updateStatus('🔍 Ejecutando diagnóstico automático...', 'info');
+
+            // Verificar soporte de Web Bluetooth
+            if (!navigator.bluetooth) {
+                log('❌ Web Bluetooth no está soportado en este navegador', 'error');
+                updateStatus('❌ Navegador no compatible. Usa Chrome, Edge u Opera', 'error');
+                return;
+            }
+            log('✅ Web Bluetooth está disponible', 'success');
+
+            // Verificar disponibilidad del adaptador
+            try {
+                const available = await navigator.bluetooth.getAvailability();
+                if (!available) {
+                    log('❌ Adaptador Bluetooth no disponible', 'error');
+                    updateStatus('❌ Bluetooth deshabilitado. Habilítalo en configuración del sistema', 'error');
+                    return;
+                }
+                log('✅ Adaptador Bluetooth disponible', 'success');
+            } catch (error) {
+                log(`⚠️ No se pudo verificar disponibilidad: ${error.message}`, 'warning');
+            }
+
+            // Verificar HTTPS
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                log('⚠️ Se requiere HTTPS para Web Bluetooth', 'warning');
+                updateStatus('⚠️ Advertencia: Se requiere HTTPS para funcionamiento completo', 'warning');
+            } else {
+                log('✅ Protocolo seguro verificado', 'success');
+            }
+
+            updateStatus('✅ Diagnóstico completado. Procede a buscar dispositivos', 'success');
+            log('🎉 Diagnóstico completado. Sistema listo para conectar dispositivos.');
+        }
+
+        async function quickTest() {
+            log('⚡ Ejecutando prueba rápida...');
+            updateStatus('⚡ Prueba rápida en progreso...', 'info');
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Thermal printer service
+                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+                        '0000ff00-0000-1000-8000-00805f9b34fb', // Custom service
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // HM-10 service
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', // Common BLE service
+                        '12345678-1234-1234-1234-123456789abc', // Generic custom service
+                        'battery_service',
+                        'device_information'
+                    ]
+                });
+                log(`✅ Dispositivo encontrado: ${device.name || 'Dispositivo sin nombre'}`, 'success');
+                updateStatus('✅ ¡Dispositivo encontrado! El Bluetooth funciona correctamente', 'success');
+                document.getElementById('connectBtn').disabled = false;
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    log('⚠️ No se encontraron dispositivos. Verifica que la impresora esté encendida y en modo emparejamiento', 'warning');
+                    updateStatus('⚠️ No hay dispositivos disponibles. Enciende tu impresora', 'warning');
+                } else if (error.name === 'NotAllowedError') {
+                    log('❌ Permisos denegados. Otorga permisos de Bluetooth', 'error');
+                    updateStatus('❌ Permisos denegados. Haz clic en "Verificar Permisos"', 'error');
+                } else {
+                    log(`❌ Error: ${error.message}`, 'error');
+                    updateStatus('❌ Error en la prueba. Revisa el log para detalles', 'error');
+                }
+            }
+        }
+
+        async function scanAllDevices() {
+            log('📡 Escaneando todos los dispositivos Bluetooth...');
+            updateStatus('📡 Buscando dispositivos...', 'info');
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: [
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Thermal printer service
+                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+                        '0000ff00-0000-1000-8000-00805f9b34fb', // Custom service
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // HM-10 service
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', // Common BLE service
+                        '12345678-1234-1234-1234-123456789abc', // Generic custom service
+                        'battery_service',
+                        'device_information'
+                    ]
+                });
+                
+                log(`📱 Dispositivo encontrado: ${device.name || 'Sin nombre'} (${device.id})`, 'success');
+                connectedDevice = device;
+                document.getElementById('connectBtn').disabled = false;
+                updateStatus('✅ Dispositivo seleccionado. Ahora puedes conectar', 'success');
+                
+                showDeviceInfo(device);
+            } catch (error) {
+                handleBluetoothError(error);
+            }
+        }
+
+        async function scanPrinters() {
+            log('🖨️ Buscando impresoras específicamente...');
+            updateStatus('🖨️ Buscando impresoras...', 'info');
+
+            const printerFilters = [
+                { namePrefix: 'Printer' },
+                { namePrefix: 'POS' },
+                { namePrefix: 'Thermal' },
+                { namePrefix: 'Receipt' },
+                { namePrefix: 'ZJ' },
+                { namePrefix: 'GP' },
+                { namePrefix: 'SP' },
+                { namePrefix: 'PT-' },
+                { namePrefix: 'PT' },
+                { namePrefix: 'BT-' },
+                { namePrefix: 'BLE' }
+            ];
+
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    filters: printerFilters,
+                    optionalServices: [
+                        '000018f0-0000-1000-8000-00805f9b34fb', // Thermal printer service
+                        '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+                        '0000ff00-0000-1000-8000-00805f9b34fb', // Custom service
+                        '49535343-fe7d-4ae5-8fa9-9fafd205e455', // HM-10 service
+                        '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service
+                        '0000ffe0-0000-1000-8000-00805f9b34fb', // Common BLE service
+                        '12345678-1234-1234-1234-123456789abc', // Generic custom service
+                        'battery_service',
+                        'device_information'
+                    ]
+                });
+                
+                log(`🖨️ Impresora encontrada: ${device.name || 'Impresora sin nombre'}`, 'success');
+                connectedDevice = device;
+                document.getElementById('connectBtn').disabled = false;
+                updateStatus('✅ Impresora encontrada. Lista para conectar', 'success');
+                
+                showDeviceInfo(device);
+            } catch (error) {
+                handleBluetoothError(error);
+            }
+        }
+
+        async function connectAndTest() {
+            if (!connectedDevice) {
+                log('❌ No hay dispositivo seleccionado', 'error');
+                return;
+            }
+
+            log(`🔗 Conectando a ${connectedDevice.name}...`);
+            updateStatus('🔗 Conectando al dispositivo...', 'info');
+
+            try {
+                const server = await connectedDevice.gatt.connect();
+                log('✅ Conectado al servidor GATT', 'success');
+
+                // Buscar servicios disponibles
+                const services = await server.getPrimaryServices();
+                log(`📋 Servicios encontrados: ${services.length}`, 'info');
+
+                for (const service of services) {
+                    log(`🔧 Servicio: ${service.uuid}`);
+                    try {
+                        const characteristics = await service.getCharacteristics();
+                        for (const char of characteristics) {
+                            log(`  📝 Característica: ${char.uuid} (${char.properties.write ? 'escribible' : 'solo lectura'})`);
+                            if (char.properties.write || char.properties.writeWithoutResponse) {
+                                characteristic = char;
+                                log('✅ Característica de escritura encontrada', 'success');
+                            }
+                        }
+                    } catch (e) {
+                        log(`⚠️ No se pudieron obtener características del servicio ${service.uuid}`, 'warning');
+                    }
+                }
+
+                if (characteristic) {
+                    await testPrint();
+                    updateStatus('✅ ¡Conexión exitosa! Impresora lista para usar', 'success');
+                } else {
+                    log('⚠️ No se encontró característica de escritura', 'warning');
+                    updateStatus('⚠️ Dispositivo conectado pero no se puede imprimir', 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ Error de conexión: ${error.message}`, 'error');
+                updateStatus('❌ Error de conexión. Revisa el log', 'error');
+            }
+        }
+
+        async function testPrint() {
+            if (!characteristic) {
+                log('❌ No hay característica de escritura disponible', 'error');
+                return;
+            }
+
+            log('🖨️ Enviando datos de prueba a la impresora...');
+            
+            const testData = '\n🧪 PRUEBA DE IMPRESIÓN\n' +
+                           '========================\n' +
+                           'Fecha: ' + new Date().toLocaleString() + '\n' +
+                           'Estado: Conexión exitosa\n' +
+                           '========================\n\n\n';
+            
+            try {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(testData);
+                
+                if (characteristic.properties.writeWithoutResponse) {
+                    await characteristic.writeValueWithoutResponse(data);
+                } else {
+                    await characteristic.writeValue(data);
+                }
+                
+                log('✅ Datos enviados correctamente a la impresora', 'success');
+                log('📄 Si no se imprimió nada, verifica que la impresora esté configurada correctamente');
+            } catch (error) {
+                log(`❌ Error al imprimir: ${error.message}`, 'error');
+            }
+        }
+
+        function showDeviceInfo(device) {
+            const deviceInfo = document.getElementById('deviceInfo');
+            const deviceDetails = document.getElementById('deviceDetails');
+            
+            deviceDetails.innerHTML = `
+                <strong>Nombre:</strong> ${device.name || 'Sin nombre'}<br>
+                <strong>ID:</strong> ${device.id}<br>
+                <strong>Conectado:</strong> ${device.gatt.connected ? 'Sí' : 'No'}<br>
+            `;
+            
+            deviceInfo.style.display = 'block';
+        }
+
+        function handleBluetoothError(error) {
+            switch (error.name) {
+                case 'NotFoundError':
+                    log('⚠️ No se encontraron dispositivos. Asegúrate de que:', 'warning');
+                    log('  • La impresora esté encendida');
+                    log('  • Esté en modo de emparejamiento');
+                    log('  • Esté cerca del dispositivo (menos de 1 metro)');
+                    updateStatus('⚠️ No hay dispositivos. Verifica que la impresora esté encendida', 'warning');
+                    break;
+                case 'NotAllowedError':
+                    log('❌ Permisos denegados. Haz clic en "Verificar Permisos"', 'error');
+                    updateStatus('❌ Permisos denegados. Verifica la configuración', 'error');
+                    break;
+                case 'InvalidStateError':
+                    log('❌ Bluetooth no está disponible. Verifica que esté habilitado', 'error');
+                    updateStatus('❌ Bluetooth deshabilitado. Habilítalo en configuración', 'error');
+                    break;
+                default:
+                    log(`❌ Error: ${error.message}`, 'error');
+                    updateStatus('❌ Error inesperado. Revisa el log', 'error');
+            }
+        }
+
+        function openBluetoothSettings() {
+            log('⚙️ Abriendo configuración de Bluetooth del navegador...');
+            window.open('chrome://settings/content/bluetoothDevices', '_blank');
+        }
+
+        function openPermissions() {
+            log('🔐 Abriendo información de Bluetooth...');
+            window.open('chrome://bluetooth-internals/', '_blank');
+        }
+
+        function showManualSteps() {
+            log('📋 PASOS MANUALES PARA SOLUCIONAR PROBLEMAS:', 'info');
+            log('1. Verifica que uses Chrome, Edge u Opera (no Firefox/Safari)');
+            log('2. Asegúrate de estar en HTTPS (no HTTP)');
+            log('3. Habilita Bluetooth en tu sistema operativo');
+            log('4. Pon la impresora en modo de emparejamiento');
+            log('5. Acerca la impresora al dispositivo (menos de 1 metro)');
+            log('6. Otorga permisos de Bluetooth cuando se soliciten');
+            log('7. Si persiste el problema, reinicia el navegador');
+            log('8. Como último recurso, reinicia el adaptador Bluetooth');
+        }
+
+        // Ejecutar diagnóstico automático al cargar la página
+        window.addEventListener('load', () => {
+            setTimeout(runDiagnostic, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -243,9 +243,21 @@ declare global {
 
 ```typescript
 const serviceUUIDs = [
-  '000018f0-0000-1000-8000-00805f9b34fb', // Servicio común
-  '0000ffe0-0000-1000-8000-00805f9b34fb', // Servicio alternativo
-  '0000ffe5-0000-1000-8000-00805f9b34fb'  // Otro servicio común
+  // Servicios estándar de impresoras térmicas
+  '000018f0-0000-1000-8000-00805f9b34fb', // Servicio térmico genérico
+  '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+  '0000ffe0-0000-1000-8000-00805f9b34fb', // Servicio SPP
+  '0000ffe1-0000-1000-8000-00805f9b34fb', // Característica SPP
+  '0000ff00-0000-1000-8000-00805f9b34fb', // Custom service
+  // Servicios específicos para PT-210 y similares
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455', // HM-10 service
+  '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service
+  '12345678-1234-1234-1234-123456789abc', // Generic custom service
+  // Servicios genéricos
+  'generic_access',
+  'generic_attribute',
+  'device_information',
+  'battery_service'
 ]
 ```
 

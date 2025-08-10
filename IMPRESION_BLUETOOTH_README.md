@@ -220,3 +220,4 @@ console.log('Error:', error)
 
 **🐾 Garras Felinas - Impresión Bluetooth Directa 🐾**
 
+

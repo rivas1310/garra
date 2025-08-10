@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Printer, Bluetooth, AlertCircle, CheckCircle, Settings } from 'lucide-react'
+import { useState } from 'react'
+import { Printer, Bluetooth, AlertCircle, CheckCircle, Settings, Search } from 'lucide-react'
+import { useBluetoothPrinter } from '@/hooks/useBluetoothPrinter'
 
 interface BluetoothPrinterProps {
   onPrint?: (data: string) => void
@@ -9,280 +10,256 @@ interface BluetoothPrinterProps {
 }
 
 export default function BluetoothPrinter({ onPrint, ticketData }: BluetoothPrinterProps) {
-  const [isConnected, setIsConnected] = useState(false)
-  const [isPrinting, setIsPrinting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [deviceName, setDeviceName] = useState<string | null>(null)
+  const {
+    isConnected,
+    isPrinting,
+    error,
+    deviceName,
+    debugInfo,
+    connect,
+    disconnect,
+    print,
+    isSupported
+  } = useBluetoothPrinter()
+
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [selectedService, setSelectedService] = useState('auto')
-  const deviceRef = useRef<BluetoothDevice | null>(null)
-  const characteristicRef = useRef<BluetoothRemoteGATTCharacteristic | null>(null)
+  const [showDebug, setShowDebug] = useState(false)
 
-  // Verificar si Web Bluetooth está disponible
-  const isWebBluetoothSupported = () => {
-    return 'bluetooth' in navigator && navigator.bluetooth !== undefined
-  }
-
-  // Servicios comunes de impresoras Bluetooth
-  const printerServices = {
-    auto: 'Detección automática',
-    thermal: '000018f0-0000-1000-8000-00805f9b34fb', // Servicio térmico común
-    serial: '0000ffe0-0000-1000-8000-00805f9b34fb', // Servicio serial
-    spp: '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
-    custom: '0000ffe0-0000-1000-8000-00805f9b34fb' // Servicio personalizado
-  }
-
-  // Características comunes para escritura
-  const writeCharacteristics = [
-    '00002af1-0000-1000-8000-00805f9b34fb', // Característica común
-    '0000ffe1-0000-1000-8000-00805f9b34fb', // Característica serial
-    '0000ffe2-0000-1000-8000-00805f9b34fb'  // Característica alternativa
-  ]
-
-  // Conectar a la impresora Bluetooth
-  const connectToPrinter = async () => {
-    if (!isWebBluetoothSupported()) {
-      setError('Web Bluetooth no está soportado en este navegador')
+  // Función para escanear dispositivos sin conectar
+  const scanDevices = async () => {
+    if (!isSupported) {
+      alert('Web Bluetooth no está soportado en este navegador')
       return
     }
 
     try {
-      setIsPrinting(true)
-      setError(null)
-
-      // Configurar filtros según el servicio seleccionado
-      let filters: any[] = []
-      let optionalServices: string[] = []
-
-      if (selectedService === 'auto') {
-        // Detección automática con múltiples filtros
-        filters = [
-          // Por nombre
-          { namePrefix: 'Printer' },
-          { namePrefix: 'POS' },
+      // Escanear dispositivos con filtros específicos
+      const device = await navigator.bluetooth!.requestDevice({
+        filters: [
           { namePrefix: 'Thermal' },
           { namePrefix: 'Receipt' },
           { namePrefix: 'Ticket' },
-          { namePrefix: 'BT' },
-          { namePrefix: 'Bluetooth' },
-          // Por servicios conocidos
-          { services: [printerServices.thermal] },
-          { services: [printerServices.serial] },
-          { services: [printerServices.spp] }
+          { namePrefix: 'Printer' },
+          { namePrefix: 'TM-' },
+          { namePrefix: 'ZJ-' },
+          { namePrefix: 'GP-' },
+          { namePrefix: 'SP-' },
+          { namePrefix: 'POS' },
+          { namePrefix: 'ESC' },
+          { namePrefix: 'PT-' },
+          { namePrefix: 'PT' },
+          { namePrefix: 'BT-' },
+          { namePrefix: 'BLE' },
+          { namePrefix: 'Bixolon' },
+          { namePrefix: 'Star' },
+          { namePrefix: 'Citizen' },
+          { namePrefix: 'Epson' },
+          { namePrefix: 'Brother' }
+        ],
+        optionalServices: [
+          '000018f0-0000-1000-8000-00805f9b34fb', // Térmico
+          '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+          '0000ffe0-0000-1000-8000-00805f9b34fb', // SPP
+          '0000ffe1-0000-1000-8000-00805f9b34fb', // Característica SPP
+          '0000ff00-0000-1000-8000-00805f9b34fb', // Custom service
+          '49535343-fe7d-4ae5-8fa9-9fafd205e455', // HM-10 service
+          '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART service
+          '12345678-1234-1234-1234-123456789abc', // Generic custom service
+          'generic_access',
+          'generic_attribute',
+          'device_information',
+          'battery_service'
         ]
-        optionalServices = Object.values(printerServices).filter(v => v !== 'auto')
-      } else {
-        // Servicio específico
-        const serviceId = printerServices[selectedService as keyof typeof printerServices]
-        filters = [{ services: [serviceId] }]
-        optionalServices = [serviceId]
-      }
-
-      // Solicitar dispositivo Bluetooth
-      const device = await navigator.bluetooth!.requestDevice({
-        filters,
-        optionalServices
       })
 
-      deviceRef.current = device
+      console.log(`📱 Dispositivo encontrado: ${device.name || 'Sin nombre'} (${device.id})`)
 
-      // Escuchar eventos de desconexión
-      device.addEventListener('gattserverdisconnected', () => {
-        setIsConnected(false)
-        setDeviceName(null)
-        setError('Dispositivo desconectado')
-      })
-
-      // Conectar al servidor GATT
-      const server = await device.gatt?.connect()
-      if (!server) {
-        throw new Error('No se pudo conectar al servidor GATT')
-      }
-
-      // Buscar el servicio correcto
-      let service = null
-      if (selectedService === 'auto') {
-        // Intentar encontrar cualquier servicio de impresora
-        for (const serviceId of Object.values(printerServices)) {
-          if (serviceId === 'auto') continue
-          try {
-            service = await server.getPrimaryService(serviceId)
-            break
-          } catch (e) {
-            console.log(`Servicio ${serviceId} no encontrado, intentando siguiente...`)
+      // Intentar conectar temporalmente para obtener información
+      try {
+        const server = await device.gatt?.connect()
+        if (server) {
+          console.log('🔧 Conectado temporalmente para obtener información')
+          
+          // Intentar obtener servicios conocidos
+          const knownServices = [
+            '000018f0-0000-1000-8000-00805f9b34fb',
+            '00001101-0000-1000-8000-00805f9b34fb',
+            '0000ffe0-0000-1000-8000-00805f9b34fb'
+          ]
+          
+          console.log('📋 Verificando servicios conocidos...')
+          for (const serviceUuid of knownServices) {
+             try {
+               const service = await server.getPrimaryService(serviceUuid)
+               console.log(`  ✅ Servicio encontrado: ${serviceUuid}`)
+              
+              try {
+                 const characteristics = await service.getCharacteristics()
+                 console.log(`    Características encontradas: ${characteristics.length}`)
+               } catch (e) {
+                 console.log(`    ❌ Error al obtener características: ${e}`)
+               }
+            } catch (e) {
+              console.log(`  ❌ Servicio ${serviceUuid} no disponible`)
+            }
           }
+          
+          server.disconnect()
+          console.log('🔌 Desconectado del escaneo')
         }
-      } else {
-        const serviceId = printerServices[selectedService as keyof typeof printerServices]
-        service = await server.getPrimaryService(serviceId)
+      } catch (e) {
+        console.log(`⚠️ No se pudo conectar para obtener información: ${e}`)
       }
-
-      if (!service) {
-        throw new Error('No se encontró ningún servicio de impresora compatible')
-      }
-
-      // Buscar la característica de escritura correcta
-      let characteristic = null
-      for (const charId of writeCharacteristics) {
-        try {
-          characteristic = await service.getCharacteristic(charId)
-          break
-        } catch (e) {
-          console.log(`Característica ${charId} no encontrada, intentando siguiente...`)
-        }
-      }
-
-      if (!characteristic) {
-        // Si no encontramos las características conocidas, intentar con todas las disponibles
-        const characteristics = await service.getCharacteristics()
-        characteristic = characteristics.find(char => 
-          char.properties.write || char.properties.writeWithoutResponse
-        ) || null
-      }
-
-      if (!characteristic) {
-        throw new Error('No se encontró una característica de escritura compatible')
-      }
-
-      characteristicRef.current = characteristic
-
-      setIsConnected(true)
-      setDeviceName(device.name || 'Impresora Bluetooth')
-      setError(null)
-
-      console.log('Conectado exitosamente:', {
-        deviceName: device.name,
-        serviceId: service.uuid,
-        characteristicId: characteristic.uuid,
-        properties: characteristic.properties
-      })
 
     } catch (err) {
-      console.error('Error al conectar:', err)
-      setError(err instanceof Error ? err.message : 'Error al conectar')
-      setIsConnected(false)
-    } finally {
-      setIsPrinting(false)
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
+      console.error(`Error de escaneo: ${errorMessage}`)
+      alert(`Error de escaneo: ${errorMessage}`)
     }
   }
 
-  // Imprimir ticket
+  // Función para imprimir ticket
   const printTicket = async () => {
-    if (!isConnected || !characteristicRef.current) {
-      setError('No hay conexión con la impresora')
+    if (!isConnected) {
+      alert('No hay conexión con la impresora')
       return
     }
 
     if (!ticketData) {
-      setError('No hay datos para imprimir')
+      alert('No hay datos de ticket para imprimir')
       return
     }
 
     try {
-      setIsPrinting(true)
-      setError(null)
-
-      // Convertir texto a bytes (UTF-8)
-      const encoder = new TextEncoder()
-      const data = encoder.encode(ticketData)
-
-      // Enviar datos a la impresora
-      if (characteristicRef.current.properties.writeWithoutResponse) {
-        await characteristicRef.current.writeValueWithoutResponse(data)
-      } else {
-        await characteristicRef.current.writeValue(data)
-      }
-
-      // Llamar callback si existe
-      if (onPrint) {
-        onPrint(ticketData)
-      }
-
+      await print(ticketData)
+      console.log('✅ Ticket impreso exitosamente')
+      onPrint?.(ticketData)
     } catch (err) {
       console.error('Error al imprimir:', err)
-      setError(err instanceof Error ? err.message : 'Error al imprimir')
-    } finally {
-      setIsPrinting(false)
+      alert(`Error al imprimir: ${err instanceof Error ? err.message : 'Error desconocido'}`)
     }
   }
 
-  // Desconectar
-  const disconnect = () => {
-    if (deviceRef.current?.gatt?.connected) {
-      deviceRef.current.gatt.disconnect()
-    }
-    setIsConnected(false)
-    setDeviceName(null)
-    deviceRef.current = null
-    characteristicRef.current = null
+  // Limpiar información de depuración
+  const clearDebugInfo = () => {
+    // La información de debug se maneja en el hook
+    console.log('Información de debug limpiada')
+  }
+
+  if (!isSupported) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-center gap-2 text-red-700">
+          <AlertCircle className="h-5 w-5" />
+          <span className="font-medium">Web Bluetooth no soportado</span>
+        </div>
+        <p className="text-sm text-red-600 mt-2">
+          Tu navegador no soporta Web Bluetooth. Usa Chrome, Edge u Opera.
+        </p>
+      </div>
+    )
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center gap-3 mb-4">
-        <Printer className="h-6 w-6 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Impresora Bluetooth</h3>
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="ml-auto flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:text-gray-800"
-        >
-          <Settings className="h-4 w-4" />
-          {showAdvanced ? 'Ocultar' : 'Avanzado'}
-        </button>
-      </div>
-
-      {/* Configuración avanzada */}
-      {showAdvanced && (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Tipo de servicio:
-          </label>
-          <select
-            value={selectedService}
-            onChange={(e) => setSelectedService(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {Object.entries(printerServices).map(([key, value]) => (
-              <option key={key} value={key}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <p className="mt-2 text-xs text-gray-600">
-            Si la detección automática no funciona, selecciona el tipo específico de tu impresora.
-          </p>
-        </div>
-      )}
-
+    <div className="space-y-4">
       {/* Estado de conexión */}
-      <div className="mb-4">
-        {isConnected ? (
-          <div className="flex items-center gap-2 text-green-600">
-            <CheckCircle className="h-5 w-5" />
-            <span className="font-medium">Conectado a: {deviceName}</span>
+      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-full ${isConnected ? 'bg-green-100' : 'bg-red-100'}`}>
+            {isConnected ? (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-2 text-gray-500">
-            <AlertCircle className="h-5 w-5" />
-            <span>No conectado</span>
+          <div>
+            <p className="font-medium">
+              {isConnected ? 'Conectado' : 'Desconectado'}
+            </p>
+            {deviceName && (
+              <p className="text-sm text-gray-600">{deviceName}</p>
+            )}
           </div>
-        )}
+        </div>
+        
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+          >
+            <Settings className="h-4 w-4" />
+            Avanzado
+          </button>
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="flex items-center gap-2 px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+          >
+            <Search className="h-4 w-4" />
+            Debug
+          </button>
+        </div>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-          {error}
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="font-medium">Error:</span>
+          </div>
+          <p className="text-sm mt-1">{error}</p>
         </div>
       )}
 
-      {/* Botones */}
+      {/* Información de debug */}
+      {showDebug && debugInfo.length > 0 && (
+        <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-medium text-gray-900">Información de Debug</h4>
+            <button
+              onClick={clearDebugInfo}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              Limpiar
+            </button>
+          </div>
+          <div className="max-h-40 overflow-y-auto space-y-1">
+            {debugInfo.map((info, index) => (
+              <div key={index} className="text-xs font-mono text-gray-600 bg-white p-2 rounded">
+                {info}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Opciones avanzadas */}
+      {showAdvanced && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-3">Opciones Avanzadas</h4>
+          <div className="space-y-3">
+            <button
+              onClick={scanDevices}
+              disabled={isPrinting}
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Search className="h-4 w-4" />
+              {isPrinting ? 'Escaneando...' : 'Escanear Dispositivos'}
+            </button>
+            <p className="text-sm text-blue-700">
+              Escanea todos los dispositivos Bluetooth para diagnosticar problemas de conexión.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Botones de control */}
       <div className="flex gap-3">
         {!isConnected ? (
           <button
-            onClick={connectToPrinter}
-            disabled={isPrinting || !isWebBluetoothSupported()}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={connect}
+            disabled={isPrinting}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
             <Bluetooth className="h-4 w-4" />
             {isPrinting ? 'Conectando...' : 'Conectar Impresora'}
@@ -290,38 +267,31 @@ export default function BluetoothPrinter({ onPrint, ticketData }: BluetoothPrint
         ) : (
           <>
             <button
+              onClick={disconnect}
+              className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            >
+              Desconectar
+            </button>
+            <button
               onClick={printTicket}
               disabled={isPrinting || !ticketData}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               <Printer className="h-4 w-4" />
               {isPrinting ? 'Imprimiendo...' : 'Imprimir Ticket'}
-            </button>
-            <button
-              onClick={disconnect}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-            >
-              Desconectar
             </button>
           </>
         )}
       </div>
 
       {/* Información de compatibilidad */}
-      {!isWebBluetoothSupported() && (
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm">
-          <strong>Nota:</strong> Web Bluetooth requiere HTTPS y un navegador compatible (Chrome, Edge, Opera).
-        </div>
-      )}
-
-      {/* Consejos de conexión */}
-      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-sm">
-        <strong>Consejos para conectar:</strong>
-        <ul className="mt-1 list-disc list-inside space-y-1">
-          <li>Asegúrate de que la impresora esté en modo de emparejamiento</li>
-          <li>Verifica que Bluetooth esté activado en tu dispositivo</li>
-          <li>Si no aparece, intenta con diferentes tipos de servicio en "Avanzado"</li>
-          <li>Algunas impresoras requieren estar a menos de 1 metro de distancia</li>
+      <div className="p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm">
+        <h4 className="font-medium mb-1">📱 Requisitos:</h4>
+        <ul className="space-y-1">
+          <li>• Navegador: Chrome, Edge, Opera</li>
+          <li>• Conexión HTTPS</li>
+          <li>• Bluetooth habilitado</li>
+          <li>• Impresora térmica compatible</li>
         </ul>
       </div>
     </div>

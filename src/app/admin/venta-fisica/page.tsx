@@ -52,8 +52,7 @@ export default function VentaFisicaPage() {
     deviceName,
     connect: connectPrinter,
     disconnect: disconnectPrinter,
-    print: printToBluetooth,
-    clearError: clearPrinterError
+    print: printToBluetooth
   } = useBluetoothPrinter()
   
   // Cargar productos
@@ -819,50 +818,89 @@ export default function VentaFisicaPage() {
       return
     }
 
+    if (!saleData) {
+      toast.error('No hay datos de venta para imprimir')
+      return
+    }
+
     try {
       const ticketContent = generateBluetoothTicketContent(saleData)
       await printToBluetooth(ticketContent)
       toast.success('Ticket impreso exitosamente')
     } catch (error) {
-      toast.error('Error al imprimir el ticket')
       console.error('Error de impresión Bluetooth:', error)
+      toast.error(error instanceof Error ? error.message : 'Error al imprimir el ticket')
     }
   }
 
   // Generar contenido del ticket para Bluetooth
   const generateBluetoothTicketContent = (sale: any) => {
-    const items = sale.items.map((item: any) => 
-      `${item.product?.name || 'Producto'.padEnd(25)} $${(item.price * item.quantity).toFixed(2)}`
-    ).join('\n')
+    // Verificar que sale no sea null
+    if (!sale) {
+      throw new Error('No hay datos de venta para generar el ticket')
+    }
+
+    // Calcular subtotal si no existe
+    const subtotal = sale.subtotal || sale.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
+    const total = sale.total || subtotal
+    const tax = subtotal * 0.16
+    const realSubtotal = total - tax
+
+    // Formatear productos con detalles
+    const items = sale.items?.map((item: any) => {
+      const productName = item.product?.name || 'Producto'
+      const quantity = item.quantity || 1
+      const unitPrice = item.price || 0
+      const totalPrice = unitPrice * quantity
+      const sku = item.product?.barcode || item.product?.sku || 'N/A'
+      
+      return `${productName} x${quantity}\n  SKU: ${sku} | $${unitPrice.toFixed(2)} c/u\n  Total: $${totalPrice.toFixed(2)}`
+    }).join('\n\n') || ''
+
+    const currentDate = new Date()
+    const formattedDate = currentDate.toLocaleDateString('es-MX')
+    const formattedTime = currentDate.toLocaleTimeString('es-MX')
 
     return `
+ /\\_/\\ GARRAS FELINAS  /\\_/\\
+ ( o.o )               ( o.o )
+ > ^ <                 > ^ <
+      Vístete con causa     
+    Vístete con conciencia
 ================================
-        GARRAS FELINAS
-================================
+    Venta Fisica
+andador 20 de noviembre, Zapopan
+  Tel: +52 33 5193 5392
+ info@garrasfelinas.com
+   RFC: GAR-123456-ABC
 
-Fecha: ${new Date().toLocaleDateString()}
-Hora: ${new Date().toLocaleTimeString()}
-Ticket: #${sale.id}
-Vendedor: ${sale.vendedor || 'Sistema'}
-
 ================================
-PRODUCTO                    PRECIO
+Fecha: ${formattedDate}, ${formattedTime}
+Ticket #: ${sale.id || 'N/A'}
+Cajero: ${sale.vendedor || 'Admin'}
+
 ================================
 ${items}
 
 ================================
-SUBTOTAL:                   $${sale.subtotal.toFixed(2)}
-IVA (16%):                  $${(sale.subtotal * 0.16).toFixed(2)}
-TOTAL:                      $${sale.total.toFixed(2)}
+Subtotal:                $${realSubtotal.toFixed(2)}
+IVA (16%):               $${tax.toFixed(2)}
+TOTAL:                   $${total.toFixed(2)}
 
 ================================
-Método de Pago: ${sale.paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}
-${sale.paymentMethod === 'tarjeta' ? 'Últimos 4 dígitos: ****1234' : ''}
+Metodo de pago: ${sale.paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}
+${sale.paymentMethod === 'tarjeta' ? 'Ultimos 4 digitos: ****1234' : ''}
 
 ================================
-¡Gracias por tu compra!
-🐾 Garras Felinas 🐾
+Gracias por tu compra!
+ /\\_/\\ GARRAS FELINAS  /\\_/\\
+ ( ^.^ )               ( ^.^ )
+ > ^ <                 > ^ <
 ================================
+        Visita 
+www.garrasfelinas.com
+Conserve este ticket para
+garantias y devoluciones
 
     `
   }
@@ -1365,15 +1403,7 @@ ${sale.paymentMethod === 'tarjeta' ? 'Últimos 4 dígitos: ****1234' : ''}
               {/* Error */}
               {printerError && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                  <div className="flex items-center justify-between">
-                    <span>{printerError}</span>
-                    <button
-                      onClick={clearPrinterError}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <span>{printerError}</span>
                 </div>
               )}
 
@@ -1396,7 +1426,7 @@ ${sale.paymentMethod === 'tarjeta' ? 'Últimos 4 dígitos: ****1234' : ''}
                 >
                   Cerrar
                 </button>
-                {isPrinterConnected && (
+                {isPrinterConnected && lastSale && (
                   <button
                     onClick={() => {
                       printTicketBluetooth(lastSale)
@@ -1407,6 +1437,11 @@ ${sale.paymentMethod === 'tarjeta' ? 'Últimos 4 dígitos: ****1234' : ''}
                     <Printer className="h-4 w-4" />
                     Imprimir Ahora
                   </button>
+                )}
+                {isPrinterConnected && !lastSale && (
+                  <div className="flex-1 px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-center text-sm">
+                    No hay venta reciente para imprimir
+                  </div>
                 )}
               </div>
             </div>

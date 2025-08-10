@@ -1,0 +1,45 @@
+
+    /\_/\  GARRAS FELINAS  /\_/\
+   ( o.o )                ( o.o )
+    > ^ <    TIENDA DE     > ^ <
+           MASCOTAS Y MAS
+================================
+       Venta Fisica
+andador 20 de noviembre, Zapopan
+  Tel: +52 (555) 123-4567
+ info@garrasfelinas.com
+   RFC: GAR-123456-ABC
+
+================================
+Fecha: 10/8/2025, 5:20:10 p.m.
+Ticket #: LOGO-TEST-001
+Cajero: Admin
+
+================================
+Collar Antipulgas x1
+  SKU: 1111222233334 | $300.00 c/u
+  Total: $300.00
+
+Shampoo para Gatos x1
+  SKU: 4444555566667 | $200.00 c/u
+  Total: $200.00
+
+================================
+Subtotal:                $420.00
+IVA (16%):               $80.00
+TOTAL:                   $500.00
+
+================================
+Metodo de pago: Efectivo
+
+
+================================
+Gracias por tu compra!
+    /\_/\  GARRAS FELINAS  /\_/\
+   ( ^.^ )                ( ^.^ )
+    > ^ <                  > ^ <
+================================
+Conserve este ticket para
+garantias y devoluciones
+
+    
