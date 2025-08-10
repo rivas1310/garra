@@ -18,10 +18,12 @@ import {
   Printer,
   CreditCard,
   DollarSign,
-  X
+  X,
+  Bluetooth
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import dynamic from 'next/dynamic'
+import { useBluetoothPrinter } from '@/hooks/useBluetoothPrinter'
 
 // Importar el escáner de códigos de barras de forma dinámica (solo en el cliente)
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), {
@@ -40,6 +42,19 @@ export default function VentaFisicaPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'tarjeta'>('efectivo')
   const [lastSale, setLastSale] = useState<any>(null)
+  const [showBluetoothModal, setShowBluetoothModal] = useState(false)
+  
+  // Hook de impresión Bluetooth
+  const {
+    isConnected: isPrinterConnected,
+    isPrinting,
+    error: printerError,
+    deviceName,
+    connect: connectPrinter,
+    disconnect: disconnectPrinter,
+    print: printToBluetooth,
+    clearError: clearPrinterError
+  } = useBluetoothPrinter()
   
   // Cargar productos
   useEffect(() => {
@@ -796,6 +811,62 @@ export default function VentaFisicaPage() {
     }
   }
 
+  // Imprimir ticket con Bluetooth
+  const printTicketBluetooth = async (saleData: any) => {
+    if (!isPrinterConnected) {
+      toast.error('No hay conexión con la impresora Bluetooth')
+      setShowBluetoothModal(true)
+      return
+    }
+
+    try {
+      const ticketContent = generateBluetoothTicketContent(saleData)
+      await printToBluetooth(ticketContent)
+      toast.success('Ticket impreso exitosamente')
+    } catch (error) {
+      toast.error('Error al imprimir el ticket')
+      console.error('Error de impresión Bluetooth:', error)
+    }
+  }
+
+  // Generar contenido del ticket para Bluetooth
+  const generateBluetoothTicketContent = (sale: any) => {
+    const items = sale.items.map((item: any) => 
+      `${item.product?.name || 'Producto'.padEnd(25)} $${(item.price * item.quantity).toFixed(2)}`
+    ).join('\n')
+
+    return `
+================================
+        GARRAS FELINAS
+================================
+
+Fecha: ${new Date().toLocaleDateString()}
+Hora: ${new Date().toLocaleTimeString()}
+Ticket: #${sale.id}
+Vendedor: ${sale.vendedor || 'Sistema'}
+
+================================
+PRODUCTO                    PRECIO
+================================
+${items}
+
+================================
+SUBTOTAL:                   $${sale.subtotal.toFixed(2)}
+IVA (16%):                  $${(sale.subtotal * 0.16).toFixed(2)}
+TOTAL:                      $${sale.total.toFixed(2)}
+
+================================
+Método de Pago: ${sale.paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}
+${sale.paymentMethod === 'tarjeta' ? 'Últimos 4 dígitos: ****1234' : ''}
+
+================================
+¡Gracias por tu compra!
+🐾 Garras Felinas 🐾
+================================
+
+    `
+  }
+
   return (
     <div className="min-h-screen bg-gradient-elegant">
       {/* Header */}
@@ -811,6 +882,21 @@ export default function VentaFisicaPage() {
                 <h1 className="text-xl sm:text-2xl font-bold text-title">Venta Física</h1>
                 <p className="text-sm sm:text-base text-body">Registra ventas realizadas en tienda física</p>
               </div>
+            </div>
+            
+            {/* Indicador de estado Bluetooth */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowBluetoothModal(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  isPrinterConnected 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                }`}
+              >
+                <Bluetooth className={`h-4 w-4 ${isPrinterConnected ? 'text-green-600' : 'text-red-600'}`} />
+                {isPrinterConnected ? 'Impresora Conectada' : 'Sin Impresora'}
+              </button>
             </div>
           </div>
         </div>
@@ -1202,6 +1288,16 @@ export default function VentaFisicaPage() {
                   </button>
                 </div>
                 
+                {/* Botón de impresión Bluetooth */}
+                <button
+                  onClick={() => printTicketBluetooth(lastSale)}
+                  disabled={!isPrinterConnected}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <Bluetooth className="h-3 w-3" />
+                  {isPrinterConnected ? 'Imprimir Bluetooth' : 'Conectar Impresora'}
+                </button>
+                
                 {/* Botón alternativo de impresión */}
                 <button
                   onClick={printTicketAlternative}
@@ -1210,6 +1306,108 @@ export default function VentaFisicaPage() {
                   <Printer className="h-3 w-3" />
                   Imprimir (Método Alternativo)
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de configuración Bluetooth */}
+      {showBluetoothModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Bluetooth className="h-6 w-6 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Configurar Impresora Bluetooth</h3>
+              </div>
+
+              {/* Estado de conexión */}
+              <div className="mb-4 p-4 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Estado:</span>
+                  <span className={`px-2 py-1 rounded text-sm font-medium ${
+                    isPrinterConnected 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {isPrinterConnected ? 'Conectado' : 'Desconectado'}
+                  </span>
+                </div>
+                {deviceName && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Dispositivo: {deviceName}
+                  </div>
+                )}
+              </div>
+
+              {/* Botones de control */}
+              <div className="space-y-3 mb-4">
+                {!isPrinterConnected ? (
+                  <button
+                    onClick={connectPrinter}
+                    disabled={isPrinting}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    <Bluetooth className="h-4 w-4" />
+                    {isPrinting ? 'Conectando...' : 'Conectar Impresora'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={disconnectPrinter}
+                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  >
+                    Desconectar
+                  </button>
+                )}
+              </div>
+
+              {/* Error */}
+              {printerError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>{printerError}</span>
+                    <button
+                      onClick={clearPrinterError}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Información de compatibilidad */}
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm">
+                <h4 className="font-medium mb-1">📱 Requisitos:</h4>
+                <ul className="text-xs space-y-1">
+                  <li>• Navegador: Chrome, Edge, Opera</li>
+                  <li>• Conexión HTTPS</li>
+                  <li>• Bluetooth habilitado</li>
+                  <li>• Impresora térmica compatible</li>
+                </ul>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowBluetoothModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cerrar
+                </button>
+                {isPrinterConnected && (
+                  <button
+                    onClick={() => {
+                      printTicketBluetooth(lastSale)
+                      setShowBluetoothModal(false)
+                    }}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Imprimir Ahora
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -14,3 +14,4 @@ if (allConfigured) {
   console.log('\n❌ Faltan variables por configurar')
 }
 
+
