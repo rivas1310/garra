@@ -545,32 +545,32 @@ export default function ShippingLabelModal({
         selectedRate: selectedRate,
         orderData: orderData,
         originAddress: {
-          company: orderData?.shippingAddress?.name || "Bazar Fashion",
-          name: orderData?.shippingAddress?.name || "Bazar Fashion",
-          email: orderData?.user?.email || "envios@bazarfashion.com",
-          phone: orderData?.shippingAddress?.phone || "3336125478",
-          street: orderData?.shippingAddress?.street || "Av. Revolución",
-          exteriorNumber: orderData?.shippingAddress?.number || "381",
-          interiorNumber: orderData?.shippingAddress?.intNumber || "Local 5",
-          neighborhood: orderData?.shippingAddress?.neighborhood || "Guadalajara Centro",
-          city: orderData?.shippingAddress?.city || "Guadalajara",
-          state: orderData?.shippingAddress?.state || "Jalisco",
-          postalCode: cotizacionPayload["origin-codePostal"] || "44100",
-          references: orderData?.shippingAddress?.reference || "Tienda de ropa Bazar Fashion"
+          company: "Garras Felinas",
+          name: "Garras Felinas",
+          email: "envios@garrasfelinas.com",
+          phone: "3327432497",
+          street: "Prolongación 20 de Noviembre",
+          exteriorNumber: "224",
+          interiorNumber: "",
+          neighborhood: "Zapopan Centro",
+          city: "Zapopan",
+          state: "Jalisco",
+          postalCode: cotizacionPayload["origin-codePostal"] || "45100",
+          references: "Tienda Garras Felinas"
         },
         destinationAddress: {
-          company: orderData?.address_to?.name || "Cliente",
-          name: orderData?.address_to?.name || "Cliente",
-          email: orderData?.address_to?.email || orderData?.user?.email || "cliente@example.com",
-          phone: orderData?.address_to?.phone || "3333333333",
-          street: orderData?.address_to?.street || "Calzada Lázaro Cárdenas",
-          exteriorNumber: orderData?.address_to?.number || "624",
-          interiorNumber: orderData?.address_to?.intNumber || "1",
-          neighborhood: orderData?.address_to?.neighborhood || "El Santuario",
-          city: orderData?.address_to?.city || "Guadalajara",
-          state: orderData?.address_to?.state || "Jalisco",
-          postalCode: cotizacionPayload["destination-codePostal"] || "44200",
-          references: orderData?.address_to?.reference || "Puerta azul"
+          company: orderData?.customerName || "Cliente",
+          name: orderData?.customerName || "Cliente",
+          email: orderData?.customerEmail || orderData?.user?.email || "cliente@example.com",
+          phone: orderData?.customerPhone || "3333333333",
+          street: orderData?.customerStreet || "Calzada Lázaro Cárdenas",
+          exteriorNumber: orderData?.customerNumberExterior || "624",
+          interiorNumber: orderData?.customerNumberInterior || "1",
+          neighborhood: orderData?.customerColonia || "El Santuario",
+          city: orderData?.customerCity || "Guadalajara",
+          state: orderData?.customerState || "Jalisco",
+          postalCode: orderData?.customerPostalCode || cotizacionPayload["destination-codePostal"] || "44200",
+          references: orderData?.customerReferences || "Puerta azul"
         },
         packageDetails: {
           weight: cotizacionPayload.weight || 2,
@@ -581,36 +581,50 @@ export default function ShippingLabelModal({
           value: orderData?.total || 120
         },
         origin: {
-          name: orderData?.shippingAddress?.name || "Bazar Fashion",
-          email: orderData?.user?.email || "envios@bazarfashion.com",
-          phone: orderData?.shippingAddress?.phone || "3336125478",
-          street: orderData?.shippingAddress?.street || "Av. Revolución",
-          number: orderData?.shippingAddress?.number || "381",
-          intNumber: orderData?.shippingAddress?.intNumber || "Local 5",
-          neighborhood: orderData?.shippingAddress?.neighborhood || "Guadalajara Centro",
-          city: orderData?.shippingAddress?.city || "Guadalajara",
-          state: orderData?.shippingAddress?.state || "Jalisco",
-          postalCode: cotizacionPayload["origin-codePostal"] || "44100",
-          reference: orderData?.shippingAddress?.reference || "Tienda de ropa Bazar Fashion"
+          name: "Garras Felinas",
+          email: "envios@garrasfelinas.com",
+          phone: "3327432497",
+          street: "Prolongación 20 de Noviembre",
+          number: "224",
+          intNumber: "",
+          neighborhood: "Zapopan Centro",
+          city: "Zapopan",
+          state: "Jalisco",
+          postalCode: cotizacionPayload["origin-codePostal"] || "45100",
+          reference: "Tienda Garras Felinas"
         },
         destination: {
-          name: orderData?.address_to?.name || "Cliente",
-          email: orderData?.address_to?.email || orderData?.user?.email || "cliente@example.com",
-          phone: orderData?.address_to?.phone || "3333333333",
-          street: orderData?.address_to?.street || "Calzada Lázaro Cárdenas",
-          number: orderData?.address_to?.number || "624",
-          intNumber: orderData?.address_to?.intNumber || "1",
-          neighborhood: orderData?.address_to?.neighborhood || "El Santuario",
-          city: orderData?.address_to?.city || "Guadalajara",
-          state: orderData?.address_to?.state || "Jalisco",
-          postalCode: cotizacionPayload["destination-codePostal"] || "44200",
-          reference: orderData?.address_to?.reference || "Puerta azul"
+          name: orderData?.customerName || "Cliente",
+          email: orderData?.customerEmail || orderData?.user?.email || "cliente@example.com",
+          phone: orderData?.customerPhone || "3333333333",
+          street: orderData?.customerStreet || "Calzada Lázaro Cárdenas",
+          number: orderData?.customerNumberExterior || "624",
+          intNumber: orderData?.customerNumberInterior || "1",
+          neighborhood: orderData?.customerColonia || "El Santuario",
+          city: orderData?.customerCity || "Guadalajara",
+          state: orderData?.customerState || "Jalisco",
+          postalCode: orderData?.customerPostalCode || cotizacionPayload["destination-codePostal"] || "44200",
+          reference: orderData?.customerReferences || "Puerta azul"
         }
       };
       endpoint = "/api/enviosperros/generar-guia";
     }
 
     try {
+      // Debug: Verificar qué datos tenemos
+      console.log("🔍 orderData completo:", JSON.stringify(orderData, null, 2));
+      console.log("🔍 orderData.shippingAddress:", orderData?.shippingAddress);
+      console.log("🔍 orderData.user:", orderData?.user);
+      console.log("🔍 Datos de cliente directos:", {
+        customerName: orderData?.customerName,
+        customerEmail: orderData?.customerEmail,
+        customerPhone: orderData?.customerPhone,
+        customerStreet: orderData?.customerStreet,
+        customerCity: orderData?.customerCity,
+        customerState: orderData?.customerState,
+        customerPostalCode: orderData?.customerPostalCode
+      });
+      
       toast.loading("Generando etiqueta de envío...");
       console.log("📋 Enviando payload a", endpoint, ":", JSON.stringify(payload, null, 2));
       const response = await fetch(endpoint, {

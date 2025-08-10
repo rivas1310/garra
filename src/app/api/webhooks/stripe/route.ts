@@ -132,22 +132,25 @@ export async function POST(req: Request) {
                 })
                 console.log(`✅ Stock de variante descontado: ${item.variantId}, nuevo stock: ${updatedVariant.stock}`)
                 
-                // Si el stock de la variante llega a 0, verificar si desactivar el producto
-                if (updatedVariant.stock <= 0) {
-                  // Verificar si todas las variantes del producto tienen stock 0
-                  const allVariants = await prisma.productVariant.findMany({
-                    where: { productId: item.productId }
-                  })
-                  
-                  const allOutOfStock = allVariants.every(v => v.stock <= 0)
-                  
-                  if (allOutOfStock) {
-                    await prisma.product.update({
-                      where: { id: item.productId },
-                      data: { isActive: false }
-                    })
-                    console.log(`⚠️ Producto ${item.product.name} desactivado - sin stock disponible`)
+                // Actualizar el stock total del producto principal
+                const allVariants = await prisma.productVariant.findMany({
+                  where: { productId: item.productId }
+                })
+                
+                const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0)
+                
+                await prisma.product.update({
+                  where: { id: item.productId },
+                  data: { 
+                    stock: totalStock,
+                    isActive: totalStock > 0
                   }
+                })
+                
+                console.log(`✅ Stock total del producto actualizado: ${item.product.name}, nuevo stock total: ${totalStock}`)
+                
+                if (totalStock <= 0) {
+                  console.log(`⚠️ Producto ${item.product.name} desactivado - sin stock disponible`)
                 }
               } else {
                 // Si no tiene variante, descontar del stock principal del producto

@@ -293,69 +293,89 @@ export default function VentaFisicaPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 12px; 
+              font-size: 14px; 
               line-height: 1.4;
               margin: 0; 
-              padding: 10px; 
+              padding: 4px; 
               background: white;
               color: black;
+              width: 58mm;
+              max-width: 58mm;
             }
             .header { 
               text-align: center; 
-              margin-bottom: 20px; 
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
+              margin-bottom: 8px; 
+              border-bottom: 1px solid #000;
+              padding-bottom: 4px;
             }
             .title { 
               font-size: 18px; 
               font-weight: bold; 
-              margin-bottom: 5px; 
+              margin-bottom: 2px; 
               text-transform: uppercase;
             }
             .subtitle { 
-              font-size: 10px; 
-              color: #333; 
-              margin-bottom: 2px;
+              font-size: 12px; 
+              margin-bottom: 1px;
+              font-weight: bold;
             }
             .divider { 
               border-top: 1px dashed #000; 
-              margin: 10px 0; 
+              margin: 4px 0; 
             }
             .item { 
               display: flex; 
               justify-content: space-between; 
-              margin: 5px 0; 
-              font-size: 11px;
+              margin: 2px 0; 
+              font-size: 12px;
+              word-wrap: break-word;
+              font-weight: bold;
             }
             .item-name { 
               flex: 1; 
-              text-align: left; 
+              text-align: left;
+              padding-right: 4px;
+              word-wrap: break-word;
+              font-weight: bold;
             }
             .item-price { 
               text-align: right; 
               font-weight: bold;
+              white-space: nowrap;
             }
             .total { 
               font-weight: bold; 
-              border-top: 2px solid #000; 
-              padding-top: 10px; 
-              margin-top: 10px; 
+              border-top: 1px solid #000; 
+              padding-top: 4px; 
+              margin-top: 4px; 
+              font-size: 13px;
             }
             .footer { 
               text-align: center; 
-              margin-top: 20px; 
+              margin-top: 8px; 
               font-size: 10px; 
               border-top: 1px dashed #000;
-              padding-top: 10px;
+              padding-top: 4px;
+              font-weight: bold;
             }
             .payment-method {
-              font-size: 10px;
-              color: #333;
-              margin-top: 5px;
+              font-size: 11px;
+              margin-top: 2px;
+              text-align: center;
+              font-weight: bold;
             }
             @media print { 
-              body { margin: 0; padding: 5px; }
+              body { 
+                margin: 0; 
+                padding: 2px; 
+                width: 58mm;
+                max-width: 58mm;
+              }
               .no-print { display: none; }
+              @page {
+                size: 58mm auto;
+                margin: 0;
+              }
             }
           </style>
         </head>
@@ -462,7 +482,7 @@ export default function VentaFisicaPage() {
       // Información de la empresa
       const companyInfo = {
         name: 'Garras Felinas',
-        logo: 'img/garrasfelinas_logo.png',
+        logo: '/logos/diseno-sin-titulo-5.png',
         address: 'andador 20 de noviembre, Zapopan',
         phone: '+52 (555) 123-4567',
         email: 'info@garrasfelinas.com',
@@ -480,89 +500,116 @@ export default function VentaFisicaPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 11px; 
-              line-height: 1.3;
+              font-size: 14px; 
+              line-height: 1.4;
               margin: 0; 
-              padding: 8px; 
+              padding: 4px; 
               background: white;
               color: black;
-              max-width: 400px;
+              width: 58mm;
+              max-width: 58mm;
             }
             .header { 
               text-align: center; 
-              margin-bottom: 15px; 
-              border-bottom: 2px solid #000;
-              padding-bottom: 8px;
+              margin-bottom: 8px; 
+              border-bottom: 1px solid #000;
+              padding-bottom: 4px;
             }
             .logo {
-              max-width: 200px;
+              max-width: 50mm;
               height: auto;
-              margin-bottom: 5px;
+              margin-bottom: 2px;
             }
             .title { 
-              font-size: 16px; 
+              font-size: 18px; 
               font-weight: bold; 
-              margin-bottom: 3px; 
+              margin-bottom: 2px; 
               text-transform: uppercase;
             }
             .subtitle { 
-              font-size: 9px; 
-              color: #333; 
+              font-size: 12px; 
               margin-bottom: 1px;
+              font-weight: bold;
             }
             .company-info {
-              font-size: 8px;
-              margin: 5px 0;
+              font-size: 10px;
+              margin: 3px 0;
+              line-height: 1.2;
+              font-weight: bold;
             }
             .divider { 
               border-top: 1px dashed #000; 
-              margin: 8px 0; 
+              margin: 4px 0; 
             }
             .item { 
-              display: flex; 
-              justify-content: space-between; 
-              margin: 3px 0; 
-              font-size: 10px;
+              margin: 2px 0; 
+              font-size: 12px;
+              word-wrap: break-word;
+              font-weight: bold;
+            }
+            .item-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
             }
             .item-details {
-              font-size: 8px;
-              color: #666;
-              margin-left: 10px;
+              font-size: 10px;
+              color: #333;
+              margin-top: 1px;
+              word-wrap: break-word;
+              font-weight: bold;
             }
             .item-name { 
               flex: 1; 
-              text-align: left; 
+              text-align: left;
+              padding-right: 4px;
+              word-wrap: break-word;
+              font-weight: bold;
             }
             .item-price { 
               text-align: right; 
               font-weight: bold;
+              white-space: nowrap;
             }
             .total { 
               font-weight: bold; 
-              border-top: 2px solid #000; 
-              padding-top: 8px; 
-              margin-top: 8px; 
+              border-top: 1px solid #000; 
+              padding-top: 4px; 
+              margin-top: 4px; 
+              font-size: 13px;
             }
             .footer { 
               text-align: center; 
-              margin-top: 15px; 
-              font-size: 8px; 
+              margin-top: 8px; 
+              font-size: 10px; 
               border-top: 1px dashed #000;
-              padding-top: 8px;
+              padding-top: 4px;
+              font-weight: bold;
             }
             .payment-method {
-              font-size: 9px;
-              color: #333;
-              margin-top: 3px;
+              font-size: 11px;
+              margin-top: 2px;
+              text-align: center;
+              font-weight: bold;
             }
             .tax-info {
-              font-size: 8px;
-              color: #666;
-              margin-top: 3px;
+              font-size: 9px;
+              margin-top: 2px;
+              text-align: center;
+              font-weight: bold;
             }
             @media print { 
-              body { margin: 0; padding: 5px; }
+              body { 
+                margin: 0; 
+                padding: 2px; 
+                width: 58mm;
+                max-width: 58mm;
+              }
               .no-print { display: none; }
+              @page {
+                size: 58mm auto;
+                margin: 0;
+              }
             }
           </style>
         </head>
@@ -604,11 +651,13 @@ export default function VentaFisicaPage() {
           
           ${saleData.items.map((item: any) => `
             <div class="item">
-              <span class="item-name">${item.product?.name || 'Producto'} x${item.quantity}</span>
-              <span class="item-price">$${(item.price * item.quantity).toFixed(2)}</span>
-            </div>
-            <div class="item-details">
-              SKU: ${item.product?.sku || 'N/A'} | Precio unitario: $${item.price.toFixed(2)}
+              <div class="item-row">
+                <span class="item-name">${item.product?.name || 'Producto'} x${item.quantity}</span>
+                <span class="item-price">$${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+              <div class="item-details">
+                SKU: ${item.product?.sku || 'N/A'} | $${item.price.toFixed(2)} c/u
+              </div>
             </div>
           `).join('')}
           
@@ -1001,10 +1050,10 @@ export default function VentaFisicaPage() {
       {console.log('🎭 Estado del modal:', showPaymentModal)}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white  rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Confirmar Venta</h3>
+                <h3 className="text-lg font-semibold bg-white text-blue-600">Confirmar Venta</h3>
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -1084,18 +1133,18 @@ export default function VentaFisicaPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-red-600 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={processPhysicalSale}
                   disabled={processingOrder}
-                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-primary-600 text-white hover:bg-green-600 bg-red-500 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
                 >
                   {processingOrder ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white  mr-2"></div>
                       Procesando...
                     </>
                   ) : (

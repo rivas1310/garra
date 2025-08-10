@@ -46,7 +46,7 @@ export default function CarritoPage() {
   }
 
   const subtotal = getTotal()
-  const shipping = subtotal > 100 ? 0 : 10
+  const shipping = subtotal >= 1500 ? 0 : 200 // Envío gratis para compras de $1500 o más, $200 para menores
   const tax = subtotal * 0.16 // 16% IVA
   const discount = coupon ? coupon.discountAmount : 0
   const total = subtotal + shipping + tax - discount
@@ -241,6 +241,29 @@ export default function CarritoPage() {
                 </div>
               </div>
 
+              {/* Mensaje de envío gratis */}
+              {subtotal < 1500 && (
+                <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-orange-700">
+                    <span className="text-sm">🚚</span>
+                    <span className="text-sm font-medium">
+                      ¡Agrega ${(1500 - subtotal).toFixed(2)} más y obtén envío GRATIS!
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {subtotal >= 1500 && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <span className="text-sm">✅</span>
+                    <span className="text-sm font-medium">
+                      ¡Felicidades! Tu envío es GRATIS
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Promo Code */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-title mb-2">
@@ -278,13 +301,13 @@ export default function CarritoPage() {
                       onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
                     />
                     <button 
-                      className="btn-secondary whitespace-nowrap"
+                      className="btn-secondary whitespace-nowrap hover:bg-blue-900 hover:text-white"
                       onClick={handleApplyCoupon}
                       disabled={isApplyingCoupon}
                     >
                       {isApplyingCoupon ? (
-                        <span className="flex items-center gap-1">
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                        <span className="flex items-center  gap-1">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2  border-primary-600"></div>
                           Aplicando...
                         </span>
                       ) : 'Aplicar'}
@@ -297,25 +320,25 @@ export default function CarritoPage() {
               <div className="flex flex-col gap-3 mt-4">
                 <Link
                   href="/checkout"
-                  className="w-full btn-primary text-center py-3 text-lg font-semibold"
+                  className="w-full btn-primary text-center py-3 hover:bg-green-600 hover:text-black text-lg font-semibold"
                 >
                   Proceder al Pago
                 </Link>
                 <Link
                   href="/productos"
-                  className="w-full btn-secondary text-center py-3"
+                  className="w-full btn-secondary hover:bg-gray-500 hover:font-bold text-center py-3"
                 >
                   Continuar Comprando
                 </Link>
               </div>
 
               {/* Shipping Info */}
-              <div className="mt-6 p-4 bg-primary-50 rounded-lg border border-primary-100">
-                <h3 className="font-medium text-title mb-2">Información de Envío</h3>
-                <p className="text-sm text-body">
-                  Envío gratuito en pedidos superiores a $100
+              <div className="mt-6 p-4 bg-primary-50 rounded-lg border font-bold border-primary-100">
+                <h3 className="font-bold font- text-title mb-2">Información de Envío</h3>
+                <p className="text-sm text-body font-semibold">
+                  Envío gratuito en pedidos superiores a $1500
                 </p>
-                <p className="text-sm text-body mt-1">
+                <p className="text-sm text-body font-semibold mt-1">
                   Entrega en 3-5 días hábiles
                 </p>
               </div>

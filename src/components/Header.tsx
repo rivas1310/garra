@@ -209,7 +209,6 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Inicio</Link>
-            <Link href="/productos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Productos</Link>
             <CategoriesButton />
             <Link href="/ofertas" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Ofertas</Link>
             <Link href="/quienes-somos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">¿Quiénes somos?</Link>
@@ -224,9 +223,6 @@ export default function Header() {
             >
               <Search size={20} />
             </button>
-            <Link href="/favoritos" className="p-2 text-gray-700 hover:text-blue-600 transition-colors">
-              <Heart size={20} />
-            </Link>
             <button
               onClick={handleProfileClick}
               className="p-2 text-gray-700 hover:text-blue-600 transition-colors relative"
@@ -321,9 +317,6 @@ export default function Header() {
             <nav className="py-4 space-y-4">
               <Link href="/" className="block text-gray-800 hover:text-blue-600 transition-colors">
                 Inicio
-              </Link>
-              <Link href="/productos" className="block text-gray-800 hover:text-blue-600 transition-colors">
-                Productos
               </Link>
               <Link href="/categorias" className="block text-gray-800 hover:text-blue-600 transition-colors">
                 Categorías

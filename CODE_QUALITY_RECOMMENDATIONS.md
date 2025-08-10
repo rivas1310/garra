@@ -57,12 +57,6 @@ export const API_CONFIGS = {
       getRates: '/shipping/rates',
       trackShipment: '/track',
     }
-  },
-  skyDropX: {
-    baseUrl: process.env.NODE_ENV === 'production'
-      ? 'https://api.skydropx.com/v1'
-      : 'https://api-demo.skydropx.com/v1',
-    // ...
   }
 };
 ```
@@ -344,7 +338,6 @@ export async function GET() {
   const checks = {
     database: await checkDatabase(),
     envioClick: await checkEnvioClickAPI(),
-    skyDropX: await checkSkyDropXAPI(),
   };
   
   const allHealthy = Object.values(checks).every(check => check.status === 'healthy');

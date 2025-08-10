@@ -64,13 +64,17 @@ export async function updateProductVariantStock(variantId: string, newStock: num
     // No sumamos el stock principal al total para evitar duplicación
     const isProductActive = totalStock > 0;
 
-    // Actualizar el estado activo del producto basado solo en el stock de variantes
+    // Actualizar tanto el stock como el estado activo del producto principal
     await prisma.product.update({
       where: { id: variant.productId },
       data: {
-        isActive: isProductActive,
+        stock: totalStock, // Actualizar el stock del producto principal
+        isActive: totalStock > 0, // Activar/desactivar basado en el stock total
       },
     });
+
+    console.log(`✅ Stock de variante actualizado: ${variantId}, nuevo stock: ${newStock}`);
+    console.log(`✅ Stock total del producto actualizado: ${variant.productId}, nuevo stock total: ${totalStock}`);
 
     return variant;
   } catch (error) {

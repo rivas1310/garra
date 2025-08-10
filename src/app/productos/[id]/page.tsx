@@ -184,7 +184,9 @@ export default function DetalleProducto() {
             <Star size={18} className="text-yellow-400 fill-current" />
             <span className="ml-1 text-body">{producto.rating ?? 0} ({producto.reviewCount ?? 0} reseñas)</span>
           </div>
+          
           <div className="flex items-center gap-4 mb-6">
+            
             <span className="text-2xl font-bold text-title">${producto.price}</span>
             {producto.originalPrice && (
               <span className="text-lg text-muted line-through">${producto.originalPrice}</span>
@@ -217,7 +219,7 @@ export default function DetalleProducto() {
                     <div
                       key={color}
                       className={`px-4 py-2 rounded-lg border-2 ${selectedColor === color 
-                        ? "border-primary-500 bg-primary-500 text-white shadow-md" 
+                        ? "border-primary-500 bg-black text-white shadow-md" 
                         : "border-gray-200 bg-white text-gray-800 hover:border-primary-300"} 
                         cursor-pointer transition-all duration-200 flex items-center justify-center relative`}
                       onClick={() => {
@@ -249,7 +251,7 @@ export default function DetalleProducto() {
                       {color}
                       {selectedColor === color && (
                         <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
@@ -264,45 +266,54 @@ export default function DetalleProducto() {
           )}
           
           {/* Tallas */}
-          {selectedColor && producto.variants && (
+          {producto.variants && (
             <div className="mb-6">
               <h4 className="font-medium mb-2">Talla:</h4>
               <div className="flex flex-wrap gap-2">
-                {/* Filtrar tallas disponibles para el color seleccionado */}
-                {(producto.variants
-                  .filter((v: any) => v.color === selectedColor)
+                {/* Mostrar todas las tallas disponibles */}
+                {(Array.from(new Set(producto.variants
                   .map((v: any) => v.size)
-                  .filter(Boolean) as string[])
-                  .map((size) => {
-                    // Verificar si hay stock para esta combinación de color y talla
-                    const variant = producto.variants.find(
-                      (v: any) => v.color === selectedColor && v.size === size
+                  .filter(Boolean)
+                )) as string[]).map((size) => {
+                    // Verificar si hay stock para esta talla (cualquier color)
+                    const variantsForSize = producto.variants.filter(
+                      (v: any) => v.size === size && v.stock > 0
                     );
-                    // Considerar solo el stock de la variante específica
-                    const hasStock = variant && variant.stock > 0;
+                    const hasStock = variantsForSize.length > 0;
+                    
+                    // Si hay un color seleccionado, verificar que la combinación específica exista
+                    let hasStockForSelectedColor;
+                    if (selectedColor) {
+                      const specificVariant = producto.variants.find(
+                        (v: any) => v.color === selectedColor && v.size === size
+                      );
+                      hasStockForSelectedColor = specificVariant ? specificVariant.stock > 0 : false;
+                    } else {
+                      hasStockForSelectedColor = hasStock;
+                    }
                     
                     return (
                       <div
                         key={size}
                         className={`px-4 py-2 rounded-lg border-2 
                           ${selectedSize === size 
-                            ? "border-primary-500 bg-primary-500 text-white shadow-md" 
+                            ? "border-primary-500 bg-black text-white shadow-md" 
                             : "border-gray-200 bg-white text-gray-800 hover:border-primary-300"}
-                          ${!hasStock 
+                          ${!hasStockForSelectedColor 
                             ? "opacity-50 cursor-not-allowed border-gray-200 bg-gray-100 text-gray-600" 
                             : "cursor-pointer transition-all duration-200"} 
                           flex items-center justify-center min-w-[60px] relative`}
-                        onClick={() => hasStock && setSelectedSize(size)}
+                        onClick={() => hasStockForSelectedColor && setSelectedSize(size)}
                         role="button"
-                        tabIndex={hasStock ? 0 : -1}
+                        tabIndex={hasStockForSelectedColor ? 0 : -1}
                         aria-pressed={selectedSize === size}
-                        aria-label={`Talla ${size}${!hasStock ? ", agotado" : ""}`}
-                        aria-disabled={!hasStock}
+                        aria-label={`Talla ${size}${!hasStockForSelectedColor ? ", agotado" : ""}`}
+                        aria-disabled={!hasStockForSelectedColor}
                       >
-                        {size} {!hasStock && "(Agotado)"}
-                        {selectedSize === size && hasStock && (
+                        {size} {!hasStockForSelectedColor && "(Agotado)"}
+                        {selectedSize === size && hasStockForSelectedColor && (
                           <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
@@ -319,7 +330,7 @@ export default function DetalleProducto() {
           
           {/* Mostrar stock disponible */}
           <div 
-            className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-100 text-yellow-800 border-2 border-yellow-300 hover:border-yellow-400 cursor-pointer shadow-sm transition-all duration-200 relative"
+            className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-lg bg-green-100 text-black border-2 border-green-300 hover:border-green-400 cursor-pointer shadow-sm transition-all duration-200 relative"
             role="button"
             tabIndex={0}
             onClick={() => {
@@ -347,33 +358,34 @@ export default function DetalleProducto() {
             <AlertCircle size={18} className="text-yellow-800" />
             <span className="text-sm font-medium">
               {(() => {
-                // Si hay color y talla seleccionados, mostrar stock de esa variante específica
+                // Siempre mostrar el stock total del producto
+                const cantidadEnCarrito = getItemQuantity(producto.id);
+                const stockTotalDisponible = Math.max(0, (producto.calculatedStock || 0) - cantidadEnCarrito);
+                
+                // Si hay color y talla seleccionados, verificar disponibilidad de esa variante
                 if (selectedColor && selectedSize) {
                   const selectedVariant = producto.variants.find(
                     (v: any) => v.color === selectedColor && v.size === selectedSize
                   );
                   
-                  if (selectedVariant) {
-                    const stockVariante = selectedVariant.stock;
-                    const cantidadEnCarrito = getItemQuantity(producto.id);
-                    const stockDisponibleReal = Math.max(0, stockVariante - cantidadEnCarrito);
-                    
+                  if (selectedVariant && selectedVariant.stock > 0) {
+                    // Variante específica disponible
                     if (cantidadEnCarrito > 0) {
-                      return `${stockDisponibleReal} disponibles (${cantidadEnCarrito} en carrito)`;
+                      return `${stockTotalDisponible} disponibles en total (${cantidadEnCarrito} en carrito)`;
                     } else {
-                      return stockVariante > 0 ? `Solo ${stockVariante} disponibles` : "Sin stock disponible";
+                      return `${producto.calculatedStock || 0} disponibles en total`;
                     }
+                  } else {
+                    // Variante específica no disponible
+                    return `Esta combinación no está disponible (${stockTotalDisponible} disponibles en otras variantes)`;
                   }
                 }
                 
-                // Si no hay variante seleccionada, mostrar stock total
-                const cantidadEnCarrito = getItemQuantity(producto.id);
-                const stockDisponibleReal = Math.max(0, (producto.calculatedStock || 0) - cantidadEnCarrito);
-                
+                // Sin variante seleccionada, mostrar stock total
                 if (cantidadEnCarrito > 0) {
-                  return `${stockDisponibleReal} disponibles (${cantidadEnCarrito} en carrito)`;
+                  return `${stockTotalDisponible} disponibles (${cantidadEnCarrito} en carrito)`;
                 } else {
-                  return (producto.calculatedStock || 0) > 0 ? `Solo ${producto.calculatedStock || 0} disponibles` : "Sin stock disponible";
+                  return (producto.calculatedStock || 0) > 0 ? `${producto.calculatedStock || 0} disponibles` : "Sin stock disponible";
                 }
               })()}
             </span>
@@ -384,7 +396,7 @@ export default function DetalleProducto() {
             </div>
           </div>
           <div className="mt-2 text-sm text-blue-700 font-medium">
-            ↑ Haz clic para ver detalles del stock
+            
           </div>
           
           {/* Mensaje de selección */}
@@ -429,9 +441,8 @@ export default function DetalleProducto() {
                 return;
               }
               
-              // Verificar stock (usar solo el stock de la variante seleccionada)
-              // No considerar el stock total del producto para evitar duplicación
-              const stockDisponible = selectedVariant.stock;
+              // Usar el stock total del producto, no solo de la variante
+              const stockDisponible = producto.calculatedStock || 0;
               
               if (stockDisponible <= 0) {
                 setAddToCartMessage({
@@ -454,7 +465,7 @@ export default function DetalleProducto() {
               }
               
               // Agregar al carrito (ahora es asíncrono)
-              // Agregar todas las unidades disponibles de una vez
+              // Usar el stock total del producto
               addToCart({
                 id: producto.id,
                 name: producto.name,

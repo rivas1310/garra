@@ -57,13 +57,13 @@ export async function POST(req: Request) {
           <p>Hola ${user.name},</p>
           <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para crear una nueva contraseña:</p>
           <p style="margin: 20px 0;">
-            <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+            <a href="${resetUrl}" style="background-color: #d4a574; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
               Restablecer contraseña
             </a>
           </p>
           <p>Este enlace expirará en 1 hora.</p>
           <p>Si no solicitaste este cambio, puedes ignorar este correo y tu contraseña permanecerá sin cambios.</p>
-          <p>Saludos,<br>El equipo de Bazar</p>
+          <p>Saludos,<br>🐾 El equipo de Garras Felinas 🐾</p>
         </div>
       `
     })

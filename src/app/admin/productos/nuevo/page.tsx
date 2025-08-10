@@ -22,16 +22,16 @@ const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
   mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas", "Sacos", "Abrigos", "Tops", "Overoles", "Faldas", "Shorts"],
-  hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts"],
-  accesorios: ["Joyas", "Relojes", "Cinturones", "Bolsos"],
+  hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts","Sudaderas"],
+  accesorios: ["Joyeria Para Dama", "Joyeria Para Caballero","Cinturones de Dama", "Cinturones de Hombre",],
   calzado: ["Zapatos", "Zapatillas", "Botas"],
   "calzado-mujer": ["Tacones", "Zapatillas", "Zapatos", "Sneakers", "Botas", "Huaraches", "Sandalias"],
   "calzado-hombre": ["Zapatos", "Sneakers", "Botas", "Sandalias"],
   "calzado-nino": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
   "calzado-nina": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
-  ninas: ["Vestidos", "Blusas", "Pantalones", "Faldas", "Shorts"],
-  ninos: ["Camisetas", "Pantalones", "Shorts", "Sudaderas", "Chamarras"],
-  bolsos: ["Carteras", "Mochilas", "Bolsos de mano"],
+  ninas: ["Vestidos", "Blusas", "Pantalones", "Faldas", "Shorts","Playeras","Sudaderas","Chamarras"],
+  ninos: ["Camisetas", "Pantalones", "Shorts", "Sudaderas", "Chamarras","Playeras"],
+  bolsos: ["Carteras de Dama","Carteras de Cabalalero","Bolso de mano", "Mochilas de Dama", "Mochilas de Caballero"],
   deportes: ["Ropa deportiva", "Zapatillas", "Accesorios deportivos"],
 };
 
@@ -120,7 +120,7 @@ export default function NuevoProductoPage() {
       const subcategory = formData.subcategoria.toLowerCase();
       
       // Palabras clave para identificar género
-      const womenKeywords = ['mujer', 'femenino', 'dama', 'damas', 'femenina', 'mujeres'];
+      const womenKeywords = ['mujer', 'femenino', 'dama', 'damas', 'femenina', 'mujeres','niñas','niños','bebes'];
       const menKeywords = ['hombre', 'masculino', 'caballero', 'caballeros', 'masculina', 'hombres'];
       
       // Verificar en el nombre de la categoría

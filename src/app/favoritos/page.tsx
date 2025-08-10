@@ -135,9 +135,9 @@ export default function FavoritosPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <Heart className="mx-auto h-16 w-16 text-primary-400 mb-6" />
-          <h1 className="text-3xl font-bold text-title mb-4">Mis Favoritos</h1>
-          <p className="text-body">
+          <Heart className="mx-auto h-16 w-16 text-red-700 mb-6" />
+          <h1 className="text-3xl font-bold text-white text-title mb-4">Mis Favoritos</h1>
+          <p className="text-body text-white font-bold">
             {favorites.length > 0 
               ? `Tienes ${favorites.length} producto${favorites.length !== 1 ? 's' : ''} en tus favoritos`
               : 'Aún no tienes productos favoritos'
@@ -249,11 +249,11 @@ export default function FavoritosPage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Heart className="mx-auto h-16 w-16 text-gray-300 mb-6" />
-            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+            <Heart className="mx-auto h-16 w-16 text-red-700 mb-6" />
+            <h2 className="text-xl font-semibold text-white mb-4">
               No tienes favoritos aún
             </h2>
-            <p className="text-gray-500 mb-8">
+            <p className="text-white mb-8">
               Explora nuestros productos y agrega los que más te gusten a tus favoritos
             </p>
             <Link href="/productos" className="btn-primary">

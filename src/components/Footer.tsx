@@ -71,9 +71,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/nuevos" className="text-gray-300 hover:text-blue-400 transition-colors">
-                  Nuevos Productos
-                </Link>
+                
               </li>
             </ul>
           </div>
@@ -117,17 +115,18 @@ export default function Footer() {
               <div className="flex items-start space-x-3">
                 <MapPin size={20} className="text-blue-400 mt-0.5" />
                 <p className="text-gray-300">
-                  123 Calle Principal<br />
-                  Ciudad de México, CDMX 12345
+                  prolongacion 20 de noviembre 
+                  
+                  zapopan jalisco
                 </p>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone size={20} className="text-blue-400" />
-                <span className="text-gray-300">+52 (55) 1234-5678</span>
+                <span className="text-gray-300">+52 33 5193 5392</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail size={20} className="text-blue-400" />
-                <span className="text-gray-300">info@bazarfashion.com</span>
+                <span className="text-gray-300">info@garrasfelinas.com</span>
               </div>
             </div>
           </div>

@@ -318,7 +318,7 @@ export default function PerfilPage() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden">
           {/* Header mejorado */}
-          <div className="bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800 px-8 py-12 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-red-700 via-primary-700 to-blue-700 px-8 py-12 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between">
@@ -452,13 +452,13 @@ export default function PerfilPage() {
                     <button
                       onClick={updateProfile}
                       disabled={loading}
-                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
+                      className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-green-600 disabled:opacity-50 transition-all duration-200 shadow-sm"
                     >
                       <FaSave /> {loading ? 'Guardando...' : 'Guardar cambios'}
                     </button>
                     <button
                       onClick={() => setEditingProfile(false)}
-                      className="px-6 py-3 rounded-lg font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-all duration-200"
+                      className="px-6 py-3 rounded-lg font-medium bg-black text-white hover:bg-red-600 transition-all duration-200"
                     >
                       Cancelar
                     </button>
@@ -570,7 +570,7 @@ export default function PerfilPage() {
                  </div>
                  <button
                    onClick={() => setShowAddAddress(true)}
-                   className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-primary-600 text-white hover:bg-primary-700 transition-all duration-200 shadow-sm"
+                   className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium bg-red-600 text-white hover:bg-primary-700 transition-all duration-200 shadow-sm"
                  >
                    <FaPlus /> Agregar dirección
                  </button>
@@ -659,13 +659,13 @@ export default function PerfilPage() {
                      <button
                        onClick={saveAddress}
                        disabled={loading}
-                       className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
+                       className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-green-600 text-white hover:bg-primary-700 disabled:opacity-50 transition-all duration-200 shadow-sm"
                      >
                        <FaSave /> {loading ? 'Guardando...' : 'Guardar dirección'}
                      </button>
                      <button
                        onClick={() => setShowAddAddress(false)}
-                       className="px-6 py-3 rounded-lg font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-all duration-200"
+                       className="px-6 py-3 rounded-lg font-medium bg-black text-white hover:bg-red-600 transition-all duration-200"
                      >
                        Cancelar
                      </button>
@@ -682,7 +682,7 @@ export default function PerfilPage() {
                    <p className="text-neutral-500 mb-6">Agrega tu primera dirección para facilitar tus compras</p>
                    <button
                      onClick={() => setShowAddAddress(true)}
-                     className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+                     className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium bg-red-600 text-white hover:bg-primary-700 transition-colors"
                    >
                      <FaPlus /> Agregar dirección
                    </button>

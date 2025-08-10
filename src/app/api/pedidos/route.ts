@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { sendOrderConfirmationEmail, type OrderData } from '@/lib/email'
 
 export async function GET() {
   try {
@@ -112,6 +113,50 @@ export async function POST(req: Request) {
     })
 
     console.log('Pedido creado exitosamente:', order.id)
+    
+    // Enviar correo de confirmación
+    try {
+      const orderData: OrderData = {
+        orderId: order.id,
+        customerName: customer.nombre,
+        customerEmail: customer.email,
+        items: items.map((item: any) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          size: item.size || undefined,
+          color: item.color || undefined,
+        })),
+        subtotal: totals.subtotal,
+        discount: totals.discount || 0,
+        shipping: totals.shipping,
+        tax: totals.tax,
+        total: totals.total,
+        couponCode: coupon?.code || undefined,
+        shippingAddress: {
+          direccion: customer.direccion,
+          numeroExterior: customer.numeroExterior,
+          numeroInterior: customer.numeroInterior || undefined,
+          colonia: customer.colonia,
+          ciudad: customer.ciudad,
+          estado: customer.estado,
+          codigoPostal: customer.codigoPostal,
+          pais: customer.pais,
+          referencias: customer.referencias || undefined,
+        }
+      }
+      
+      const emailSent = await sendOrderConfirmationEmail(orderData)
+      if (emailSent) {
+        console.log('✅ Correo de confirmación enviado exitosamente')
+      } else {
+        console.log('⚠️ No se pudo enviar el correo de confirmación')
+      }
+    } catch (emailError) {
+      console.error('❌ Error al enviar correo de confirmación:', emailError)
+      // No fallar la creación del pedido por error de email
+    }
+    
     return NextResponse.json({ success: true, order })
 
   } catch (error) {

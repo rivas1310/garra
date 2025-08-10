@@ -73,8 +73,22 @@ export async function POST(req: Request) {
         })
         console.log(`✅ Stock de variante reservado: ${variantId}, nuevo stock: ${updatedVariant.stock}`)
         
-        // Actualizar el stock total se maneja en otro proceso
-        // No es necesario actualizar totalStock aquí
+        // Actualizar el stock total del producto principal
+        const allVariants = await prisma.productVariant.findMany({
+          where: { productId: productId }
+        })
+        
+        const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0)
+        
+        await prisma.product.update({
+          where: { id: productId },
+          data: { 
+            stock: totalStock,
+            isActive: totalStock > 0
+          }
+        })
+        
+        console.log(`✅ Stock total del producto actualizado: ${productId}, nuevo stock total: ${totalStock}`)
       } else {
         // Actualizar el producto
         const updatedProduct = await prisma.product.update({
@@ -144,8 +158,22 @@ export async function PUT(req: Request) {
         })
         console.log(`✅ Stock de variante liberado: ${variantId}, nuevo stock: ${updatedVariant.stock}`)
         
-        // Actualizar el stock total se maneja en otro proceso
-        // No es necesario actualizar totalStock aquí
+        // Actualizar el stock total del producto principal
+        const allVariants = await prisma.productVariant.findMany({
+          where: { productId: productId }
+        })
+        
+        const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0)
+        
+        await prisma.product.update({
+          where: { id: productId },
+          data: { 
+            stock: totalStock,
+            isActive: totalStock > 0
+          }
+        })
+        
+        console.log(`✅ Stock total del producto actualizado: ${productId}, nuevo stock total: ${totalStock}`)
       } else {
         // Actualizar el producto
         const updatedProduct = await prisma.product.update({

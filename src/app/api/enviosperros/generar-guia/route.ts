@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
         description: "papeles"
       },
       origin: {
-        company_origin: limitText(originAddress.company || "Bazar Fashion", 50),
+        company_origin: limitText(originAddress.company || "Garras Felinas", 50),
         street_origin: limitText(originAddress.street || "Prolongación 20 de Noviembre", 100),
         interior_number_origin: limitText(originAddress.interiorNumber || "", 20),
         outdoor_number_origin: limitText(originAddress.exteriorNumber || "224", 20),
@@ -129,10 +129,10 @@ export async function POST(req: NextRequest) {
         neighborhood_origin: limitText(originAddress.neighborhood || "Zapopan Centro", 50),
         city_origin: limitText(originAddress.city || "Zapopan", 50),
         state_origin: limitText(originAddress.state || "Jalisco", 50),
-        references_origin: "entre 29 enero y 5 mayo",
-        name_origin: limitText(originAddress.name || "Bazar Fashion", 50),
-        email_origin: limitText(originAddress.email || "bazar@garrasfelinas.com", 100),
-        phone_origin: limitText(originAddress.phone || "3329663778", 20),
+        references_origin: "Tienda Garras Felinas",
+        name_origin: limitText(originAddress.name || "Garras Felinas", 50),
+        email_origin: limitText(originAddress.email || "envios@garrasfelinas.com", 100),
+        phone_origin: limitText(originAddress.phone || "3327432497", 20),
         save_origin: "false"
       },
       destination: {

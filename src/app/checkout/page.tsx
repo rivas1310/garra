@@ -47,7 +47,7 @@ export default function CheckoutPage() {
   }, [isHydrated])
 
   const subtotal = getTotal()
-  const shipping = subtotal > 100 ? 0 : 10
+  const shipping = subtotal >= 1500 ? 0 : 200 // Envío gratis para compras de $1500 o más, $200 para menores
   const discount = coupon ? coupon.discountAmount : 0
   const tax = (subtotal - discount) * 0.16 // Aplicar IVA después del descuento
   const total = subtotal + shipping + tax - discount
@@ -218,6 +218,29 @@ export default function CheckoutPage() {
                   <span>${total.toFixed(2)}</span>
                 </div>
               </div>
+              
+              {/* Mensaje de envío gratis */}
+              {subtotal < 1500 && (
+                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-orange-700">
+                    <span className="text-sm">🚚</span>
+                    <span className="text-sm font-medium">
+                      ¡Agrega ${(1500 - subtotal).toFixed(2)} más y obtén envío GRATIS!
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {subtotal >= 1500 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <span className="text-sm">✅</span>
+                    <span className="text-sm font-medium">
+                      ¡Felicidades! Tu envío es GRATIS
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
             {/* Formulario de envío */}
             <form onSubmit={handleSubmit} className="space-y-4">

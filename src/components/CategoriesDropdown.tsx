@@ -12,14 +12,14 @@ const categoriesData = {
     { name: 'Pantalones', href: '/categorias/mujer?subcat=pantalones' },
     { name: 'Faldas', href: '/categorias/mujer?subcat=faldas' },
     { name: 'Chaquetas', href: '/categorias/mujer?subcat=chaquetas' },
-    { name: 'Accesorios', href: '/categorias/mujer?subcat=accesorios' }
+    
   ],
   hombre: [
     { name: 'Camisas', href: '/categorias/hombre?subcat=camisas' },
     { name: 'Camisetas', href: '/categorias/hombre?subcat=camisetas' },
     { name: 'Pantalones', href: '/categorias/hombre?subcat=pantalones' },
     { name: 'Chaquetas', href: '/categorias/hombre?subcat=chaquetas' },
-    { name: 'Accesorios', href: '/categorias/hombre?subcat=accesorios' }
+    
   ],
   calzado: [
     { name: 'Calzado de Hombre', href: '/categorias/calzado-hombre' },
@@ -36,6 +36,18 @@ const categoriesData = {
     { name: 'Ropa Gym', href: '/categorias/deportes?subcat=gym' },
     { name: 'Zapatillas', href: '/categorias/deportes?subcat=gym' },
     { name: 'Accesorios Deportivos', href: '/categorias/deportes?subcat=accesorios' }
+  ],
+  bolsos: [
+    { name: 'Carteras de Dama', href: '/categorias/bolsos?subcat=carterasdedama' },
+    { name: 'Carteras de Caballero', href: '/categorias/bolsos?subcat=carterasdecaballero' },
+    { name: 'Mochilas de Dama', href: '/categorias/bolsos?subcat=mochilasdedama' },
+    { name: 'Mochilas de Caballero', href: '/categorias/bolsos?subcat=mochilasdecaballero' },
+    { name: 'Bolsos de Mano', href: '/categorias/bolsos?subcat=bolsodemano' }
+  ],
+  accesorios: [
+    { name: 'joyeria', href: '/categorias/accesorios?subcat=joyeria' },
+    { name: 'cinturones', href: '/categorias/accesorios?subcat=cinturones' },
+    
   ]
 }
 
@@ -159,6 +171,47 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
           </h3>
           <ul className="space-y-2">
             {categoriesData.ninos.map((item) => (
+              <li key={item.name}>
+                <Link 
+                  href={item.href}
+                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  onClick={onClose}
+                >
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        {/* Accesorios */}
+        <div>
+          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
+            <span className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></span>
+            Accesorios
+          </h3>
+          <ul className="space-y-2">
+            {categoriesData.accesorios.map((item) => (
+              <li key={item.name}>
+                <Link 
+                  href={item.href}
+                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  onClick={onClose}
+                >
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Bolsos */}
+        <div>
+          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
+            <span className="w-2 h-2 bg-cyan-500 rounded-full mr-3"></span>
+            Bolsos
+          </h3>
+          <ul className="space-y-2">
+            {categoriesData.bolsos.map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}

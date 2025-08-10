@@ -18,22 +18,22 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Vestidos',
       image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Elegantes vestidos para toda ocasión',
+      description: '',
       isTrending: true,
       count: 12,
       color: 'from-pink-500 to-rose-500'
     },
     {
       name: 'Blusas',
-      image: 'https://images.unsplash.com/photo-1564257631407-3deb25e91aa1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Blusas versátiles y cómodas',
+      image: '/img/subcategorias/blusa.png',
+      description: '',
       count: 8,
       color: 'from-blue-500 to-indigo-500'
     },
     {
       name: 'Pantalones',
       image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Pantalones modernos y elegantes',
+      description: '',
       discount: '15% OFF',
       count: 15,
       color: 'from-gray-600 to-gray-800'
@@ -41,59 +41,59 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Chamarras',
       image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Chamarras y abrigos de temporada',
+      description: '',
       isNew: true,
       count: 6,
       color: 'from-black to-gray-900'
     },
     {
       name: 'Sudaderas',
-      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sudaderas cómodas y casuales',
+      image: '/img/subcategorias/sudaderamujer.png',
+      description: '',
       count: 10,
       color: 'from-purple-500 to-violet-500'
     },
     {
       name: 'Sacos',
-      image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sacos elegantes para la oficina',
+      image: '/img/subcategorias/sacomujer.png',
+      description: '',
       count: 7,
       color: 'from-slate-600 to-slate-800'
     },
     {
       name: 'Abrigos',
-      image: 'https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Abrigos de invierno y otoño',
+      image: '/img/subcategorias/abrigomujer.png',
+      description: '',
       isTrending: true,
       count: 9,
       color: 'from-amber-600 to-orange-600'
     },
     {
       name: 'Tops',
-      image: 'https://images.unsplash.com/photo-1588359348347-9bc6cbbb689e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Tops modernos y versátiles',
+      image: '/img/subcategorias/tops.png',
+      description: '',
       count: 11,
       color: 'from-emerald-500 to-teal-500'
     },
     {
       name: 'Overoles',
       image: '/img/subcategorias/overolverde.png',
-      description: 'Overoles casuales y elegantes',
+      description: '',
       isNew: true,
       count: 4,
       color: 'from-green-500 to-emerald-600'
     },
     {
       name: 'Faldas',
-      image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Faldas para toda ocasión',
+      image: '/img/subcategorias/falda.png',
+      description: '',
       count: 13,
       color: 'from-rose-400 to-pink-500'
     },
     {
       name: 'Shorts',
-      image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Shorts cómodos para el verano',
+      image: '/img/subcategorias/shortmujer.png',
+      description: '',
       discount: '20% OFF',
       count: 8,
       color: 'from-cyan-500 to-blue-500'
@@ -103,7 +103,7 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Chamarras',
       image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Chamarras modernas y elegantes',
+      description: '',
       isTrending: true,
       count: 8,
       color: 'from-gray-700 to-black'
@@ -111,14 +111,14 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Camisas',
       image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Camisas formales y casuales',
+      description: '',
       count: 12,
       color: 'from-blue-600 to-indigo-700'
     },
     {
       name: 'Playeras',
       image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Playeras cómodas y estilosas',
+      description: '',
       discount: '10% OFF',
       count: 15,
       color: 'from-slate-500 to-gray-600'
@@ -126,14 +126,14 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Pantalones',
       image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Pantalones elegantes y cómodos',
+      description: '',
       count: 10,
       color: 'from-neutral-600 to-neutral-800'
     },
     {
       name: 'Shorts',
-      image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Shorts casuales para el verano',
+      image: '/img/subcategorias/shorthombre.png',
+      description: '',
       isNew: true,
       count: 6,
       color: 'from-amber-500 to-orange-500'
@@ -141,66 +141,67 @@ const subcategoriasData: Record<string, Array<{
   ],
   accesorios: [
     {
-      name: 'Joyas',
-      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Joyas elegantes y únicas',
+      name: 'Joyeria Para Dama',
+      image: '/img/subcategorias/joyeriamujer.png',
+      description: '',
       isTrending: true,
       count: 20,
       color: 'from-yellow-400 to-amber-500'
     },
     {
-      name: 'Relojes',
-      image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Relojes de lujo y casuales',
-      count: 12,
-      color: 'from-slate-700 to-gray-900'
+      name: 'Joyeria Para Caballero',
+      image: '/img/subcategorias/joyeriahombre.png',
+      description: '',
+      isTrending: true,
+      count: 20,
+      color: 'from-yellow-400 to-amber-500'
     },
     {
-      name: 'Cinturones',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Cinturones de cuero y tela',
+      name: 'Cinturones de Dama',
+      image: '/img/subcategorias/cinturonmujer.png',
+      description: '',
       count: 8,
       color: 'from-amber-700 to-brown-800'
     },
     {
-      name: 'Bolsos',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Bolsos y carteras elegantes',
-      isNew: true,
-      count: 15,
-      color: 'from-red-500 to-rose-600'
-    }
+      name: 'Cinturones de Caballero',
+      image: '/img/subcategorias/cinturonhombre.png',
+      description: '',
+      count: 8,
+      color: 'from-amber-700 to-brown-800'
+    },
+    
   ],
   // Calzado de Hombre
   'calzado-hombre': [
     {
       name: 'Zapatos',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Zapatos formales y casuales para hombres',
+      image: '/img/subcategorias/zapatohombre.png',
+      description: '',
       isTrending: true,
       count: 8,
       color: 'from-brown-600 to-brown-800'
     },
     {
       name: 'Sneakers',
-      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sneakers deportivos y casuales',
+      image: '/img/subcategorias/tenishombre.jfif',
+      description: '',
       discount: '20% OFF',
       count: 15,
       color: 'from-blue-500 to-indigo-600'
     },
     {
       name: 'Botas',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Botas de trabajo y moda',
+      image: '/img/subcategorias/botashombre.png',
+      description: '',
       isNew: true,
       count: 6,
       color: 'from-black to-gray-900'
     },
     {
       name: 'Sandalias',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sandalias casuales para hombres',
+      image: '/img/subcategorias/sandaliahombre.png',
+      description: '',
       count: 12,
       color: 'from-amber-500 to-orange-600'
     }
@@ -209,53 +210,53 @@ const subcategoriasData: Record<string, Array<{
   'calzado-mujer': [
     {
       name: 'Tacones',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Tacones elegantes para mujeres',
+      image: '/img/subcategorias/tacones.png',
+      description: '',
       isTrending: true,
       count: 10,
       color: 'from-pink-500 to-rose-600'
     },
     {
       name: 'Zapatillas',
-      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Zapatillas deportivas para mujeres',
+      image: '/img/subcategorias/zapatillasmujer.png',
+      description: '',
       discount: '25% OFF',
       count: 18,
       color: 'from-purple-500 to-violet-600'
     },
     {
       name: 'Zapatos',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Zapatos de oficina y casuales',
+      image: '/img/subcategorias/zapatosmujer.png',
+      description: '',
       count: 14,
       color: 'from-gray-600 to-gray-800'
     },
     {
       name: 'Sneakers',
-      image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sneakers casuales para mujeres',
+      image: '/img/subcategorias/tenismujer.jfif',
+      description: '',
       count: 20,
       color: 'from-blue-500 to-indigo-600'
     },
     {
       name: 'Botas',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Botas elegantes para mujeres',
+      image: '/img/subcategorias/botasmujer.png',
+      description: '',
       isNew: true,
       count: 8,
       color: 'from-black to-gray-900'
     },
     {
       name: 'Huaraches',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Huaraches artesanales',
+      image: '/img/subcategorias/huarachesmujer.png',
+      description: '',
       count: 25,
       color: 'from-amber-600 to-orange-700'
     },
     {
       name: 'Sandalias',
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sandalias de playa y casuales',
+      image: '/img/subcategorias/sandaliasmujer.png',
+      description: '',
       count: 30,
       color: 'from-yellow-400 to-amber-500'
     }
@@ -264,31 +265,31 @@ const subcategoriasData: Record<string, Array<{
   'calzado-nino': [
     {
       name: 'Zapatos',
-      image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Zapatos escolares y deportivos',
+      image: '/img/subcategorias/zapatonino.png',
+      description: '',
       isTrending: true,
       count: 12,
       color: 'from-blue-600 to-indigo-700'
     },
     {
       name: 'Botas',
-      image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Botas de lluvia e invierno',
+      image: '/img/subcategorias/botasnino.png',
+      description: '',
       count: 15,
       color: 'from-green-600 to-emerald-700'
     },
     {
       name: 'Sneakers',
-      image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sneakers con luces y deportivos',
+      image: '/img/subcategorias/tenisnino.jfif',
+      description: '',
       discount: '15% OFF',
       count: 18,
       color: 'from-red-500 to-red-600'
     },
     {
       name: 'Sandalias',
-      image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sandalias de playa para niños',
+      image: '/img/subcategorias/sandaliasnino.png',
+      description: '',
       count: 22,
       color: 'from-cyan-500 to-blue-500'
     }
@@ -297,31 +298,31 @@ const subcategoriasData: Record<string, Array<{
   'calzado-nina': [
     {
       name: 'Zapatos',
-      image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Zapatos de fiesta y ballet',
+      image: '/img/subcategorias/zapatonina.png',
+      description: '',
       isTrending: true,
       count: 10,
       color: 'from-pink-500 to-rose-600'
     },
     {
       name: 'Botas',
-      image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Botas de invierno y lluvia',
+      image: '/img/subcategorias/botasnina.png',
+      description: '',
       count: 8,
       color: 'from-purple-500 to-violet-600'
     },
     {
       name: 'Sneakers',
-      image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sneakers brillantes y deportivos',
+      image: '/img/subcategorias/tenisnina.jfif',
+      description: '',
       discount: '20% OFF',
       count: 16,
       color: 'from-indigo-500 to-purple-600'
     },
     {
       name: 'Sandalias',
-      image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Sandalias de playa para niñas',
+      image: '/img/subcategorias/sandalianina.png',
+      description: '',
       count: 25,
       color: 'from-yellow-400 to-amber-500'
     }
@@ -347,7 +348,7 @@ const subcategoriasData: Record<string, Array<{
     {
       name: 'Botas',
       image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Botas de moda y trabajo',
+      description: '',
       isNew: true,
       count: 14,
       color: 'from-black to-gray-900'
@@ -355,24 +356,39 @@ const subcategoriasData: Record<string, Array<{
   ],
   bolsos: [
     {
-      name: 'Carteras',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Carteras elegantes y funcionales',
+      name: 'Carteras de Dama',
+      image: '/img/subcategorias/carteramujer.png',
+      description: '',
       isTrending: true,
       count: 16,
       color: 'from-purple-500 to-violet-600'
     },
     {
-      name: 'Mochilas',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Mochilas modernas y cómodas',
+      name: 'Carteras de Caballero',
+      image: '/img/subcategorias/carterahombre.png',
+      description: '',
+      isTrending: true,
+      count: 16,
+      color: 'from-purple-500 to-violet-600'
+    },
+    {
+      name: 'Mochilas de Dama',
+      image: '/img/subcategorias/mochilamujer.png',
+      description: '',
+      count: 12,
+      color: 'from-green-600 to-emerald-700'
+    },
+    {
+      name: 'Mochilas de Caballero',
+      image: '/img/subcategorias/mochilahombre.png',
+      description: '',
       count: 12,
       color: 'from-green-600 to-emerald-700'
     },
     {
       name: 'Bolsos de mano',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Bolsos de mano elegantes',
+      image: '/img/subcategorias/bolsodemano.png',
+      description: '',
       isNew: true,
       count: 10,
       color: 'from-pink-500 to-rose-600'
@@ -382,39 +398,63 @@ const subcategoriasData: Record<string, Array<{
    ninas: [
      {
        name: 'Vestidos',
-       image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Vestidos elegantes para niñas',
+       image: '/img/subcategorias/vestidonina.png',
+       description: '',
        isTrending: true,
        count: 15,
        color: 'from-pink-500 to-rose-600'
      },
      {
        name: 'Blusas',
-       image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Blusas cómodas para niñas',
+       image: '/img/subcategorias/blusanina.png',
+       description: '',
        count: 12,
        color: 'from-purple-500 to-violet-600'
      },
      {
        name: 'Pantalones',
-       image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Pantalones modernos para niñas',
+       image: '/img/subcategorias/pantalonnina.png',
+       description: '',
        discount: '20% OFF',
        count: 18,
        color: 'from-indigo-500 to-purple-600'
      },
      {
        name: 'Faldas',
-       image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Faldas elegantes para niñas',
+       image: '/img/subcategorias/faldanina.png',
+       description: '',
        isNew: true,
        count: 10,
        color: 'from-rose-400 to-pink-500'
      },
      {
+      name: 'Sudaderas',
+      image: '/img/subcategorias/sudaderanina.png',
+      description: '',
+      isNew: true,
+      count: 10,
+      color: 'from-rose-400 to-pink-500'
+    },
+    {
+      name: 'Chamarras',
+      image: '/img/subcategorias/chamarranina.png',
+      description: '',
+      isNew: true,
+      count: 10,
+      color: 'from-rose-400 to-pink-500'
+    },
+    {
+      name: 'Playeras',
+      image: '/img/subcategorias/playeranina.png',
+      description: '',
+      isNew: true,
+      count: 10,
+      color: 'from-rose-400 to-pink-500'
+    },
+     {
        name: 'Shorts',
-       image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Shorts cómodos para niñas',
+       image: '/img/subcategorias/shortnina.png',
+       description: '',
        count: 14,
        color: 'from-cyan-500 to-blue-500'
      }
@@ -423,39 +463,47 @@ const subcategoriasData: Record<string, Array<{
    ninos: [
      {
        name: 'Camisetas',
-       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Camisetas cómodas para niños',
+       image: '/img/subcategorias/camisanino.png',
+       description: '',
        isTrending: true,
        count: 20,
        color: 'from-blue-600 to-indigo-700'
      },
      {
        name: 'Pantalones',
-       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Pantalones resistentes para niños',
+       image: '/img/subcategorias/pantalonnino.png',
+       description: '',
        count: 16,
        color: 'from-green-600 to-emerald-700'
      },
      {
        name: 'Shorts',
-       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Shorts deportivos para niños',
+       image: '/img/subcategorias/shortnino.png',
+       description: '',
        discount: '15% OFF',
        count: 12,
        color: 'from-red-500 to-red-600'
      },
      {
+      name: 'Playeras',
+      image: '/img/subcategorias/playeranino.png',
+      description: '',
+      isNew: true,
+      count: 10,
+      color: 'from-rose-400 to-pink-500'
+    },
+     {
        name: 'Sudaderas',
-       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Sudaderas cómodas para niños',
+       image: '/img/subcategorias/sudaderanino.png',
+       description: '',
        isNew: true,
        count: 18,
        color: 'from-amber-500 to-orange-600'
      },
      {
        name: 'Chamarras',
-       image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Chamarras abrigadas para niños',
+       image: '/img/subcategorias/chamarranino.png',
+       description: '',
        count: 8,
        color: 'from-gray-600 to-gray-800'
      }
@@ -463,24 +511,24 @@ const subcategoriasData: Record<string, Array<{
    deportes: [
      {
        name: 'Ropa deportiva',
-       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Ropa para entrenamiento',
+       image: '/img/subcategorias/ropagym.png',
+       description: '',
        isTrending: true,
        count: 25,
        color: 'from-red-500 to-red-600'
      },
      {
        name: 'Zapatillas',
-       image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Zapatillas deportivas y casuales',
+       image: '/img/subcategorias/tenisgym.png',
+       description: '',
        discount: '25% OFF',
        count: 22,
        color: 'from-blue-500 to-indigo-600'
      },
      {
        name: 'Accesorios deportivos',
-       image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-       description: 'Accesorios para deporte',
+       image: '/img/subcategorias/accesoriosgym.png',
+       description: '',
        count: 15,
        color: 'from-orange-500 to-orange-600'
      }
@@ -505,18 +553,18 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
       {/* Header mejorado */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-3">
-          <Filter className="h-6 w-6 text-primary-400 mr-2" />
+          
           <h3 className="text-2xl font-bold text-white">
-            Explora por Subcategorías
+            
           </h3>
         </div>
         <p className="text-white/80 text-sm max-w-2xl mx-auto">
-          Encuentra exactamente lo que buscas en nuestra colección cuidadosamente seleccionada
+          
         </p>
       </div>
 
       {/* Subcategorías Grid mejorado */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
         {/* Botón "Todas" mejorado */}
         <button
           onClick={() => onSubcatChange("")}
@@ -610,10 +658,10 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
       {/* Información adicional mejorada */}
       <div className="mt-6 text-center">
         <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/80">
-          <Filter className="h-3 w-3 mr-2" />
-          <p className="text-xs font-medium">
-            Haz clic en una subcategoría para filtrar los productos
-          </p>
+          
+          
+            
+         
         </div>
       </div>
     </div>

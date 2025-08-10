@@ -16,6 +16,8 @@ export async function GET(
             name: true
           }
         },
+        shippingAddress: true,
+        billingAddress: true,
         items: {
           include: {
             product: {
@@ -39,6 +41,15 @@ export async function GET(
     if (!order) {
       return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
     }
+
+    // Debug: Verificar qué datos estamos devolviendo
+    console.log("🔍 Pedido encontrado:", {
+      id: order.id,
+      hasShippingAddress: !!order.shippingAddress,
+      hasUser: !!order.user,
+      shippingAddress: order.shippingAddress,
+      user: order.user
+    });
 
     return NextResponse.json(order)
   } catch (error) {

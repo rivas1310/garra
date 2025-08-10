@@ -202,7 +202,7 @@ function CheckoutSuccessContent() {
         )}
         
         <div className="space-y-2 mt-6">
-          <Link href="/productos" className="btn-primary block text-center">
+          <Link href="/ofertas" className="btn-primary block text-center">
             Seguir comprando
           </Link>
           <Link href="/perfil" className="btn-secondary block text-center">

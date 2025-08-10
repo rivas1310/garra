@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     
     // Calcular impuestos y envío
     const tax = (subtotal - discountAmount) * 0.16 // 16% IVA
-    const shipping = subtotal > 100 ? 0 : 10
+    const shipping = subtotal >= 1500 ? 0 : 200 // Envío gratis para compras de $1500 o más, $200 para menores
     const total = subtotal + shipping + tax - discountAmount
     
     // Crear objeto de descuento para Stripe si hay cupón
@@ -113,6 +113,7 @@ export async function POST(req: Request) {
       customer_email: customer?.email,
       metadata: {
         nombre: customer?.nombre || '',
+        email: customer?.email || '', // Agregar email a los metadatos
         telefono: customer?.telefono || '',
         direccion: customer?.direccion || '',
         numeroExterior: customer?.numeroExterior || '',
@@ -157,6 +158,19 @@ export async function POST(req: Request) {
           status: 'PENDING',
           paymentStatus: 'PENDING',
           notes: `Cliente: ${customer?.nombre} - Email: ${customer?.email}`,
+          // Guardar datos del cliente para la etiqueta de envío
+          customerName: customer?.nombre || null,
+          customerEmail: customer?.email || null,
+          customerPhone: customer?.telefono || null,
+          customerStreet: customer?.direccion || null,
+          customerNumberExterior: customer?.numeroExterior || null,
+          customerNumberInterior: customer?.numeroInterior || null,
+          customerColonia: customer?.colonia || null,
+          customerCity: customer?.ciudad || null,
+          customerState: customer?.estado || null,
+          customerPostalCode: customer?.codigoPostal || null,
+          customerCountry: customer?.pais || null,
+          customerReferences: customer?.referencias || null,
           // Crear los OrderItems
           items: {
             create: items.map((item: any) => ({
@@ -189,22 +203,25 @@ export async function POST(req: Request) {
             });
             console.log(`✅ Stock de variante descontado: ${item.variantId}, nuevo stock: ${updatedVariant.stock}`);
             
-            // Si el stock de la variante llega a 0, verificar si desactivar el producto
-            if (updatedVariant.stock <= 0) {
-              // Verificar si todas las variantes del producto tienen stock 0
-              const allVariants = await prisma.productVariant.findMany({
-                where: { productId: item.productId }
-              });
-              
-              const allOutOfStock = allVariants.every(v => v.stock <= 0);
-              
-              if (allOutOfStock) {
-                await prisma.product.update({
-                  where: { id: item.productId },
-                  data: { isActive: false }
-                });
-                console.log(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
+            // Actualizar el stock total del producto principal
+            const allVariants = await prisma.productVariant.findMany({
+              where: { productId: item.productId }
+            });
+            
+            const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
+            
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: { 
+                stock: totalStock,
+                isActive: totalStock > 0
               }
+            });
+            
+            console.log(`✅ Stock total del producto actualizado: ${item.name}, nuevo stock total: ${totalStock}`);
+            
+            if (totalStock <= 0) {
+              console.log(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
             }
           } else {
             // Si no tiene variante, descontar del stock principal del producto
