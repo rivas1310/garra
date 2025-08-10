@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba de Impresión Bluetooth - Bazar Envíos Perros</title>
+    <title>Prueba de Impresión Bluetooth</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
@@ -18,389 +18,533 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-        }
         .status {
             padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
+            border-radius: 8px;
+            margin: 15px 0;
             font-weight: bold;
         }
-        .status.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .status.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .status.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        .status.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
         .button {
             background-color: #007bff;
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
             margin: 5px;
-            transition: background-color 0.3s;
+            font-size: 14px;
         }
-        .button:hover { background-color: #0056b3; }
-        .button:disabled { background-color: #6c757d; cursor: not-allowed; }
-        .button.success { background-color: #28a745; }
-        .button.success:hover { background-color: #218838; }
-        .button.danger { background-color: #dc3545; }
-        .button.danger:hover { background-color: #c82333; }
-        
-        .ticket-preview {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 20px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow-y: auto;
+        .button:hover {
+            background-color: #0056b3;
         }
-        
+        .button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .button.success {
+            background-color: #28a745;
+        }
+        .button.success:hover {
+            background-color: #218838;
+        }
+        .button.danger {
+            background-color: #dc3545;
+        }
+        .button.danger:hover {
+            background-color: #c82333;
+        }
         .log {
             background-color: #f8f9fa;
             border: 1px solid #dee2e6;
-            border-radius: 5px;
+            border-radius: 6px;
             padding: 15px;
-            margin: 20px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-height: 300px;
+            height: 300px;
             overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 15px 0;
         }
-        
+        .config-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .config-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin: 5px;
+            font-size: 14px;
+        }
         .device-info {
             background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
             padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
+            margin: 15px 0;
+        }
+        .device-info h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .device-info p {
+            margin: 5px 0;
+            font-family: monospace;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🖨️ Prueba de Impresión Bluetooth</h1>
-            <p>Bazar - Envíos Perros</p>
+        <h1>🖨️ Prueba de Impresión Bluetooth</h1>
+        
+        <div id="status" class="status info">
+            Estado: Verificando compatibilidad...
         </div>
 
-        <!-- Estado de compatibilidad -->
-        <div id="compatibility-status" class="status info">
-            Verificando compatibilidad con Web Bluetooth...
+        <div class="config-section">
+            <h3>⚙️ Configuración de Detección</h3>
+            <label for="detectionMode">Modo de detección:</label>
+            <select id="detectionMode">
+                <option value="auto">Automático (Recomendado)</option>
+                <option value="thermal">Térmica</option>
+                <option value="serial">Serial</option>
+                <option value="spp">SPP</option>
+                <option value="custom">Personalizado</option>
+            </select>
+            
+            <label for="customService">Servicio personalizado (UUID):</label>
+            <input type="text" id="customService" placeholder="0000ffe0-0000-1000-8000-00805f9b34fb" style="width: 300px;">
+            
+            <br><br>
+            <button class="button" onclick="testConnection()">🔍 Probar Conexión</button>
+            <button class="button" onclick="scanDevices()">📡 Escanear Dispositivos</button>
         </div>
 
-        <!-- Información del dispositivo -->
-        <div id="device-info" class="device-info" style="display: none;">
-            <h3>📱 Información del Dispositivo</h3>
-            <div id="device-details"></div>
-        </div>
-
-        <!-- Botones de control -->
-        <div style="text-align: center; margin: 20px 0;">
-            <button id="connect-btn" class="button" onclick="connectToPrinter()">
+        <div class="config-section">
+            <h3>🎯 Acciones</h3>
+            <button id="connectBtn" class="button" onclick="connectToPrinter()" disabled>
                 🔗 Conectar Impresora
             </button>
-            <button id="print-btn" class="button success" onclick="printTicket()" disabled>
-                🖨️ Imprimir Ticket de Prueba
+            <button id="printBtn" class="button success" onclick="printTest()" disabled>
+                🖨️ Imprimir Test
             </button>
-            <button id="disconnect-btn" class="button danger" onclick="disconnectPrinter()" disabled>
+            <button id="disconnectBtn" class="button danger" onclick="disconnect()" disabled>
                 ❌ Desconectar
             </button>
         </div>
 
-        <!-- Vista previa del ticket -->
-        <div>
-            <h3>📄 Vista Previa del Ticket</h3>
-            <div id="ticket-preview" class="ticket-preview">
-                Generando vista previa...
-            </div>
+        <div id="deviceInfo" class="device-info" style="display: none;">
+            <h4>📱 Información del Dispositivo</h4>
+            <p><strong>Nombre:</strong> <span id="deviceName">-</span></p>
+            <p><strong>ID:</strong> <span id="deviceId">-</span></p>
+            <p><strong>Servicio:</strong> <span id="serviceId">-</span></p>
+            <p><strong>Característica:</strong> <span id="characteristicId">-</span></p>
+            <p><strong>Propiedades:</strong> <span id="properties">-</span></p>
         </div>
 
-        <!-- Log de eventos -->
-        <div>
-            <h3>📋 Log de Eventos</h3>
+        <div class="config-section">
+            <h3>📝 Datos de Prueba</h3>
+            <textarea id="testData" rows="6" style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; font-family: monospace;">=== TICKET DE PRUEBA ===
+Fecha: 2024-01-15
+Hora: 14:30:25
+========================
+Producto: Test Item
+Precio: $10.00
+========================
+Total: $10.00
+========================
+¡Gracias por su compra!
+========================</textarea>
+        </div>
+
+        <div class="config-section">
+            <h3>📊 Log de Actividad</h3>
             <div id="log" class="log"></div>
+            <button class="button" onclick="clearLog()">🧹 Limpiar Log</button>
         </div>
     </div>
 
     <script>
-        // Variables globales
-        let bluetoothDevice = null;
-        let gattServer = null;
-        let writeCharacteristic = null;
+        let currentDevice = null;
+        let currentCharacteristic = null;
         let isConnected = false;
 
-        // Datos de prueba para el ticket
-        const testTicketData = {
-            storeName: 'Bazar - Envíos Perros',
-            address: 'Av. Principal 123, Ciudad',
-            phone: '(555) 123-4567',
-            ticketNumber: 'TKT-' + Date.now(),
-            date: new Date().toLocaleString('es-MX'),
-            items: [
-                { name: 'Producto de Prueba 1', quantity: 2, price: 150.00, total: 300.00 },
-                { name: 'Producto de Prueba 2', quantity: 1, price: 250.00, total: 250.00 },
-                { name: 'Producto de Prueba 3', quantity: 3, price: 75.00, total: 225.00 }
-            ],
-            subtotal: 775.00,
-            tax: 124.00,
-            total: 899.00,
-            paymentMethod: 'Efectivo',
-            cashier: 'Admin'
+        // Servicios comunes de impresoras
+        const printerServices = {
+            thermal: '000018f0-0000-1000-8000-00805f9b34fb',
+            serial: '0000ffe0-0000-1000-8000-00805f9b34fb',
+            spp: '00001101-0000-1000-8000-00805f9b34fb',
+            custom: '0000ffe0-0000-1000-8000-00805f9b34fb'
         };
 
-        // Función para generar contenido del ticket
-        function generateTicketContent(data) {
-            const lines = [
-                '='.repeat(32),
-                `    ${data.storeName}`,
-                '='.repeat(32),
-                `Dirección: ${data.address}`,
-                `Teléfono: ${data.phone}`,
-                `Ticket: ${data.ticketNumber}`,
-                `Fecha: ${data.date}`,
-                '-'.repeat(32),
-                'PRODUCTOS:',
-                '-'.repeat(32)
-            ];
+        // Características comunes
+        const writeCharacteristics = [
+            '00002af1-0000-1000-8000-00805f9b34fb',
+            '0000ffe1-0000-1000-8000-00805f9b34fb',
+            '0000ffe2-0000-1000-8000-00805f9b34fb'
+        ];
 
-            data.items.forEach(item => {
-                lines.push(`${item.name}`);
-                lines.push(`${item.quantity} x $${item.price.toFixed(2)} = $${item.total.toFixed(2)}`);
-            });
+        // Verificar compatibilidad al cargar
+        window.addEventListener('load', function() {
+            checkCompatibility();
+        });
 
-            lines.push(
-                '-'.repeat(32),
-                `Subtotal: $${data.subtotal.toFixed(2)}`,
-                `IVA: $${data.tax.toFixed(2)}`,
-                `TOTAL: $${data.total.toFixed(2)}`,
-                '-'.repeat(32),
-                `Método de pago: ${data.paymentMethod}`,
-                `Cajero: ${data.cashier}`,
-                '='.repeat(32),
-                '¡Gracias por su compra!',
-                '='.repeat(32),
-                '\n\n\n\n' // Espacio para cortar
-            );
-
-            return lines.join('\n');
-        }
-
-        // Función para actualizar el log
-        function log(message, type = 'info') {
+        function log(message) {
             const logElement = document.getElementById('log');
             const timestamp = new Date().toLocaleTimeString();
-            const logEntry = `[${timestamp}] ${message}\n`;
-            logElement.textContent += logEntry;
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
             logElement.scrollTop = logElement.scrollHeight;
-            console.log(message);
         }
 
-        // Función para actualizar el estado
-        function updateStatus(message, type) {
-            const statusElement = document.getElementById('compatibility-status');
-            statusElement.textContent = message;
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = `Estado: ${message}`;
             statusElement.className = `status ${type}`;
         }
 
-        // Función para actualizar la vista previa del ticket
-        function updateTicketPreview() {
-            const previewElement = document.getElementById('ticket-preview');
-            previewElement.textContent = generateTicketContent(testTicketData);
-        }
-
-        // Función para actualizar información del dispositivo
-        function updateDeviceInfo() {
-            const deviceInfoElement = document.getElementById('device-info');
-            const deviceDetailsElement = document.getElementById('device-details');
-            
-            if (bluetoothDevice) {
-                deviceInfoElement.style.display = 'block';
-                deviceDetailsElement.innerHTML = `
-                    <p><strong>Nombre:</strong> ${bluetoothDevice.name || 'N/A'}</p>
-                    <p><strong>ID:</strong> ${bluetoothDevice.id}</p>
-                    <p><strong>Estado:</strong> ${isConnected ? 'Conectado' : 'Desconectado'}</p>
-                `;
-            } else {
-                deviceInfoElement.style.display = 'none';
-            }
-        }
-
-        // Función para actualizar botones
-        function updateButtons() {
-            const connectBtn = document.getElementById('connect-btn');
-            const printBtn = document.getElementById('print-btn');
-            const disconnectBtn = document.getElementById('disconnect-btn');
-
-            connectBtn.disabled = isConnected;
-            printBtn.disabled = !isConnected;
-            disconnectBtn.disabled = !isConnected;
-        }
-
-        // Verificar compatibilidad al cargar la página
-        window.addEventListener('load', function() {
-            log('🚀 Iniciando prueba de integración Bluetooth...');
-            
-            // Verificar compatibilidad con Web Bluetooth
+        function checkCompatibility() {
             if (!navigator.bluetooth) {
-                updateStatus('❌ Web Bluetooth no está soportado en este navegador', 'error');
-                log('❌ Web Bluetooth no disponible');
-                return;
+                updateStatus('Web Bluetooth no está soportado en este navegador', 'disconnected');
+                log('❌ Web Bluetooth no está disponible');
+                return false;
+            }
+            
+            updateStatus('Web Bluetooth está disponible', 'connected');
+            log('✅ Web Bluetooth está disponible');
+            document.getElementById('connectBtn').disabled = false;
+            return true;
+        }
+
+        function getFilters() {
+            const mode = document.getElementById('detectionMode').value;
+            const customService = document.getElementById('customService').value;
+
+            if (mode === 'custom' && customService) {
+                return [
+                    { services: [customService] }
+                ];
             }
 
-            updateStatus('✅ Web Bluetooth está disponible', 'success');
-            log('✅ Web Bluetooth disponible');
-            
-            // Actualizar vista previa del ticket
-            updateTicketPreview();
-            
-            log('📄 Vista previa del ticket generada');
-        });
+            if (mode === 'auto') {
+                return [
+                    // Por nombre
+                    { namePrefix: 'Printer' },
+                    { namePrefix: 'POS' },
+                    { namePrefix: 'Thermal' },
+                    { namePrefix: 'Receipt' },
+                    { namePrefix: 'Ticket' },
+                    { namePrefix: 'BT' },
+                    { namePrefix: 'Bluetooth' },
+                    // Por servicios conocidos
+                    { services: [printerServices.thermal] },
+                    { services: [printerServices.serial] },
+                    { services: [printerServices.spp] }
+                ];
+            }
 
-        // Función para conectar a la impresora
-        async function connectToPrinter() {
+            const serviceId = printerServices[mode];
+            return [{ services: [serviceId] }];
+        }
+
+        function getOptionalServices() {
+            const mode = document.getElementById('detectionMode').value;
+            const customService = document.getElementById('customService').value;
+
+            if (mode === 'custom' && customService) {
+                return [customService];
+            }
+
+            if (mode === 'auto') {
+                return Object.values(printerServices);
+            }
+
+            return [printerServices[mode]];
+        }
+
+        async function testConnection() {
+            log('🔍 Probando conexión...');
+            
             try {
-                log('🔗 Iniciando conexión con impresora...');
-                updateStatus('🔗 Conectando con impresora...', 'info');
+                const filters = getFilters();
+                const optionalServices = getOptionalServices();
+                
+                log(`📡 Filtros configurados: ${JSON.stringify(filters)}`);
+                log(`📡 Servicios opcionales: ${JSON.stringify(optionalServices)}`);
 
-                // Solicitar dispositivo Bluetooth
-                bluetoothDevice = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        { namePrefix: 'Printer' },
-                        { namePrefix: 'POS' },
-                        { namePrefix: 'Thermal' },
-                        { namePrefix: 'TM-T88VI' },
-                        { namePrefix: 'BT' },
-                        { namePrefix: 'ZJ' },
-                        { namePrefix: 'GP' },
-                        { namePrefix: 'SP' }
-                    ],
-                    optionalServices: [
-                        '000018f0-0000-1000-8000-00805f9b34fb',
-                        '0000ffe0-0000-1000-8000-00805f9b34fb',
-                        '0000ffe5-0000-1000-8000-00805f9b34fb'
-                    ]
+                const device = await navigator.bluetooth.requestDevice({
+                    filters,
+                    optionalServices
                 });
 
-                log(`📱 Dispositivo seleccionado: ${bluetoothDevice.name}`);
+                log(`✅ Dispositivo encontrado: ${device.name || 'Sin nombre'} (${device.id})`);
+                
+                // No conectar, solo mostrar que se encontró
+                updateStatus(`Dispositivo encontrado: ${device.name}`, 'connected');
+                
+            } catch (error) {
+                log(`❌ Error en prueba: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, 'disconnected');
+            }
+        }
 
-                // Escuchar eventos de desconexión
-                bluetoothDevice.addEventListener('gattserverdisconnected', () => {
+        async function scanDevices() {
+            log('📡 Iniciando escaneo de dispositivos...');
+            
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: Object.values(printerServices)
+                });
+
+                log(`📱 Dispositivo escaneado: ${device.name || 'Sin nombre'}`);
+                log(`📱 ID: ${device.id}`);
+                
+                // Intentar conectar para obtener más información
+                const server = await device.gatt?.connect();
+                if (server) {
+                    const services = await server.getPrimaryServices();
+                    log(`🔧 Servicios encontrados: ${services.length}`);
+                    
+                    for (const service of services) {
+                        log(`  - Servicio: ${service.uuid}`);
+                        const characteristics = await service.getCharacteristics();
+                        log(`    Características: ${characteristics.length}`);
+                        for (const char of characteristics) {
+                            log(`      * ${char.uuid} - Propiedades: ${JSON.stringify(char.properties)}`);
+                        }
+                    }
+                    
+                    server.disconnect();
+                }
+                
+            } catch (error) {
+                log(`❌ Error en escaneo: ${error.message}`);
+            }
+        }
+
+        async function connectToPrinter() {
+            if (!checkCompatibility()) return;
+
+            log('🔗 Conectando a impresora...');
+            updateStatus('Conectando...', 'info');
+
+            try {
+                const filters = getFilters();
+                const optionalServices = getOptionalServices();
+
+                const device = await navigator.bluetooth.requestDevice({
+                    filters,
+                    optionalServices
+                });
+
+                currentDevice = device;
+                log(`📱 Dispositivo seleccionado: ${device.name}`);
+
+                // Escuchar desconexión
+                device.addEventListener('gattserverdisconnected', () => {
                     log('❌ Dispositivo desconectado');
+                    updateStatus('Dispositivo desconectado', 'disconnected');
                     isConnected = false;
-                    updateStatus('❌ Dispositivo desconectado', 'error');
-                    updateDeviceInfo();
                     updateButtons();
+                    hideDeviceInfo();
                 });
 
                 // Conectar al servidor GATT
-                log('🔗 Conectando al servidor GATT...');
-                gattServer = await bluetoothDevice.gatt.connect();
-                log('✅ Conectado al servidor GATT');
+                const server = await device.gatt?.connect();
+                if (!server) {
+                    throw new Error('No se pudo conectar al servidor GATT');
+                }
 
-                // Buscar servicio compatible
-                const serviceUUIDs = [
-                    '000018f0-0000-1000-8000-00805f9b34fb',
-                    '0000ffe0-0000-1000-8000-00805f9b34fb',
-                    '0000ffe5-0000-1000-8000-00805f9b34fb'
-                ];
+                log('🔧 Conectado al servidor GATT');
 
+                // Buscar servicio
                 let service = null;
-                for (const uuid of serviceUUIDs) {
-                    try {
-                        service = await gattServer.getPrimaryService(uuid);
-                        log(`✅ Servicio encontrado: ${uuid}`);
-                        break;
-                    } catch (e) {
-                        log(`⚠️ Servicio no disponible: ${uuid}`);
-                        continue;
+                const mode = document.getElementById('detectionMode').value;
+                
+                if (mode === 'auto') {
+                    for (const serviceId of Object.values(printerServices)) {
+                        try {
+                            service = await server.getPrimaryService(serviceId);
+                            log(`✅ Servicio encontrado: ${serviceId}`);
+                            break;
+                        } catch (e) {
+                            log(`❌ Servicio ${serviceId} no encontrado`);
+                        }
                     }
+                } else if (mode === 'custom') {
+                    const customService = document.getElementById('customService').value;
+                    if (customService) {
+                        service = await server.getPrimaryService(customService);
+                        log(`✅ Servicio personalizado encontrado: ${customService}`);
+                    }
+                } else {
+                    const serviceId = printerServices[mode];
+                    service = await server.getPrimaryService(serviceId);
+                    log(`✅ Servicio ${mode} encontrado: ${serviceId}`);
                 }
 
                 if (!service) {
-                    throw new Error('No se encontró un servicio compatible');
+                    throw new Error('No se encontró ningún servicio compatible');
                 }
 
-                // Buscar característica de escritura
-                log('📝 Buscando característica de escritura...');
-                const characteristics = await service.getCharacteristics();
-                writeCharacteristic = characteristics.find(char => 
-                    char.properties.write || char.properties.writeWithoutResponse
-                );
+                // Buscar característica
+                let characteristic = null;
+                for (const charId of writeCharacteristics) {
+                    try {
+                        characteristic = await service.getCharacteristic(charId);
+                        log(`✅ Característica encontrada: ${charId}`);
+                        break;
+                    } catch (e) {
+                        log(`❌ Característica ${charId} no encontrada`);
+                    }
+                }
 
-                if (!writeCharacteristic) {
+                if (!characteristic) {
+                    // Buscar cualquier característica de escritura
+                    const characteristics = await service.getCharacteristics();
+                    characteristic = characteristics.find(char => 
+                        char.properties.write || char.properties.writeWithoutResponse
+                    );
+                    
+                    if (characteristic) {
+                        log(`✅ Característica de escritura encontrada: ${characteristic.uuid}`);
+                    }
+                }
+
+                if (!characteristic) {
                     throw new Error('No se encontró característica de escritura');
                 }
 
-                log('✅ Característica de escritura encontrada');
+                currentCharacteristic = characteristic;
                 isConnected = true;
-                updateStatus(`✅ Conectado a: ${bluetoothDevice.name}`, 'success');
-                updateDeviceInfo();
+
+                // Mostrar información del dispositivo
+                showDeviceInfo(device, service, characteristic);
+
+                log('✅ Conexión exitosa');
+                updateStatus(`Conectado a: ${device.name}`, 'connected');
                 updateButtons();
 
             } catch (error) {
-                log(`❌ Error al conectar: ${error.message}`);
-                updateStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Error de conexión: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, 'disconnected');
                 isConnected = false;
-                updateDeviceInfo();
                 updateButtons();
             }
         }
 
-        // Función para imprimir ticket
-        async function printTicket() {
-            if (!isConnected || !writeCharacteristic) {
+        function showDeviceInfo(device, service, characteristic) {
+            document.getElementById('deviceName').textContent = device.name || 'Sin nombre';
+            document.getElementById('deviceId').textContent = device.id;
+            document.getElementById('serviceId').textContent = service.uuid;
+            document.getElementById('characteristicId').textContent = characteristic.uuid;
+            document.getElementById('properties').textContent = JSON.stringify(characteristic.properties);
+            document.getElementById('deviceInfo').style.display = 'block';
+        }
+
+        function hideDeviceInfo() {
+            document.getElementById('deviceInfo').style.display = 'none';
+        }
+
+        async function printTest() {
+            if (!isConnected || !currentCharacteristic) {
                 log('❌ No hay conexión con la impresora');
                 return;
             }
 
+            const testData = document.getElementById('testData').value;
+            if (!testData) {
+                log('❌ No hay datos para imprimir');
+                return;
+            }
+
+            log('🖨️ Imprimiendo...');
+            updateStatus('Imprimiendo...', 'info');
+
             try {
-                log('🖨️ Iniciando impresión...');
-                updateStatus('🖨️ Imprimiendo...', 'info');
-
-                // Generar contenido del ticket
-                const ticketContent = generateTicketContent(testTicketData);
-                log('📄 Contenido del ticket generado');
-
-                // Convertir a bytes y enviar
                 const encoder = new TextEncoder();
-                const data = encoder.encode(ticketContent);
-                
-                await writeCharacteristic.writeValue(data);
-                
-                log(`✅ Ticket enviado exitosamente (${data.length} bytes)`);
-                updateStatus('✅ Ticket impreso correctamente', 'success');
+                const data = encoder.encode(testData);
+
+                if (currentCharacteristic.properties.writeWithoutResponse) {
+                    await currentCharacteristic.writeValueWithoutResponse(data);
+                    log('✅ Datos enviados sin respuesta');
+                } else {
+                    await currentCharacteristic.writeValue(data);
+                    log('✅ Datos enviados con respuesta');
+                }
+
+                log('✅ Impresión completada');
+                updateStatus(`Conectado a: ${currentDevice.name}`, 'connected');
 
             } catch (error) {
-                log(`❌ Error al imprimir: ${error.message}`);
-                updateStatus(`❌ Error de impresión: ${error.message}`, 'error');
+                log(`❌ Error de impresión: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, 'disconnected');
             }
         }
 
-        // Función para desconectar
-        function disconnectPrinter() {
-            if (gattServer && gattServer.connected) {
-                gattServer.disconnect();
+        function disconnect() {
+            if (currentDevice?.gatt?.connected) {
+                currentDevice.gatt.disconnect();
             }
             
-            bluetoothDevice = null;
-            gattServer = null;
-            writeCharacteristic = null;
+            currentDevice = null;
+            currentCharacteristic = null;
             isConnected = false;
             
-            log('❌ Dispositivo desconectado');
-            updateStatus('❌ Dispositivo desconectado', 'error');
-            updateDeviceInfo();
+            log('❌ Desconectado');
+            updateStatus('Desconectado', 'disconnected');
             updateButtons();
+            hideDeviceInfo();
         }
+
+        function updateButtons() {
+            document.getElementById('connectBtn').disabled = isConnected;
+            document.getElementById('printBtn').disabled = !isConnected;
+            document.getElementById('disconnectBtn').disabled = !isConnected;
+        }
+
+        // Configurar evento para cambio de modo
+        document.getElementById('detectionMode').addEventListener('change', function() {
+            const mode = this.value;
+            const customInput = document.getElementById('customService');
+            
+            if (mode === 'custom') {
+                customInput.style.display = 'inline-block';
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+            }
+            
+            log(`⚙️ Modo de detección cambiado a: ${mode}`);
+        });
+
+        // Inicializar
+        document.getElementById('customService').style.display = 'none';
     </script>
 </body>
 </html>

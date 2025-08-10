@@ -1,74 +1,86 @@
 import { useState, useRef, useCallback } from 'react'
 
-interface BluetoothPrinterState {
+interface UseBluetoothPrinterReturn {
   isConnected: boolean
   isPrinting: boolean
   error: string | null
   deviceName: string | null
-}
-
-interface UseBluetoothPrinterReturn extends BluetoothPrinterState {
   connect: () => Promise<void>
   disconnect: () => void
   print: (data: string) => Promise<void>
-  clearError: () => void
+  isSupported: boolean
 }
 
 export function useBluetoothPrinter(): UseBluetoothPrinterReturn {
-  const [state, setState] = useState<BluetoothPrinterState>({
-    isConnected: false,
-    isPrinting: false,
-    error: null,
-    deviceName: null
-  })
-
+  const [isConnected, setIsConnected] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [deviceName, setDeviceName] = useState<string | null>(null)
   const deviceRef = useRef<BluetoothDevice | null>(null)
   const characteristicRef = useRef<BluetoothRemoteGATTCharacteristic | null>(null)
 
-  // Verificar compatibilidad
+  // Verificar si Web Bluetooth está disponible
   const isSupported = useCallback(() => {
     return 'bluetooth' in navigator && navigator.bluetooth !== undefined
   }, [])
 
-  // Conectar a la impresora
+  // Servicios comunes de impresoras Bluetooth
+  const printerServices = {
+    thermal: '000018f0-0000-1000-8000-00805f9b34fb', // Servicio térmico común
+    serial: '0000ffe0-0000-1000-8000-00805f9b34fb', // Servicio serial
+    spp: '00001101-0000-1000-8000-00805f9b34fb', // Serial Port Profile
+    custom: '0000ffe0-0000-1000-8000-00805f9b34fb' // Servicio personalizado
+  }
+
+  // Características comunes para escritura
+  const writeCharacteristics = [
+    '00002af1-0000-1000-8000-00805f9b34fb', // Característica común
+    '0000ffe1-0000-1000-8000-00805f9b34fb', // Característica serial
+    '0000ffe2-0000-1000-8000-00805f9b34fb'  // Característica alternativa
+  ]
+
+  // Conectar a la impresora Bluetooth
   const connect = useCallback(async () => {
     if (!isSupported()) {
-      setState(prev => ({ ...prev, error: 'Web Bluetooth no está soportado' }))
+      setError('Web Bluetooth no está soportado en este navegador')
       return
     }
 
     try {
-      setState(prev => ({ ...prev, isPrinting: true, error: null }))
+      setIsPrinting(true)
+      setError(null)
 
-      // Solicitar dispositivo
+      // Detección automática con múltiples filtros
+      const filters = [
+        // Por nombre
+        { namePrefix: 'Printer' },
+        { namePrefix: 'POS' },
+        { namePrefix: 'Thermal' },
+        { namePrefix: 'Receipt' },
+        { namePrefix: 'Ticket' },
+        { namePrefix: 'BT' },
+        { namePrefix: 'Bluetooth' },
+        // Por servicios conocidos
+        { services: [printerServices.thermal] },
+        { services: [printerServices.serial] },
+        { services: [printerServices.spp] }
+      ]
+
+      const optionalServices = Object.values(printerServices)
+
+      // Solicitar dispositivo Bluetooth
       const device = await navigator.bluetooth!.requestDevice({
-        filters: [
-          // Filtros comunes para impresoras térmicas
-          { namePrefix: 'Printer' },
-          { namePrefix: 'POS' },
-          { namePrefix: 'Thermal' },
-          { namePrefix: 'BT' },
-          { namePrefix: 'ZJ' },
-          { namePrefix: 'GP' },
-          { namePrefix: 'SP' }
-        ],
-        optionalServices: [
-          '000018f0-0000-1000-8000-00805f9b34fb', // Servicio común
-          '0000ffe0-0000-1000-8000-00805f9b34fb', // Servicio alternativo
-          '0000ffe5-0000-1000-8000-00805f9b34fb'  // Otro servicio común
-        ]
+        filters,
+        optionalServices
       })
 
       deviceRef.current = device
 
-      // Manejar desconexión
+      // Escuchar eventos de desconexión
       device.addEventListener('gattserverdisconnected', () => {
-        setState(prev => ({
-          ...prev,
-          isConnected: false,
-          deviceName: null,
-          error: 'Dispositivo desconectado'
-        }))
+        setIsConnected(false)
+        setDeviceName(null)
+        setError('Dispositivo desconectado')
       })
 
       // Conectar al servidor GATT
@@ -77,111 +89,121 @@ export function useBluetoothPrinter(): UseBluetoothPrinterReturn {
         throw new Error('No se pudo conectar al servidor GATT')
       }
 
-      // Buscar servicio compatible
+      // Buscar el servicio correcto
       let service = null
-      const serviceUUIDs = [
-        '000018f0-0000-1000-8000-00805f9b34fb',
-        '0000ffe0-0000-1000-8000-00805f9b34fb',
-        '0000ffe5-0000-1000-8000-00805f9b34fb'
-      ]
-
-      for (const uuid of serviceUUIDs) {
+      for (const serviceId of Object.values(printerServices)) {
         try {
-          service = await server.getPrimaryService(uuid)
+          service = await server.getPrimaryService(serviceId)
           break
         } catch (e) {
-          continue
+          console.log(`Servicio ${serviceId} no encontrado, intentando siguiente...`)
         }
       }
 
       if (!service) {
-        throw new Error('No se encontró un servicio compatible')
+        throw new Error('No se encontró ningún servicio de impresora compatible')
       }
 
-      // Buscar característica de escritura
-      const characteristics = await service.getCharacteristics()
-      const writeCharacteristic = characteristics.find(char => 
-        char.properties.write || char.properties.writeWithoutResponse
-      )
-
-      if (!writeCharacteristic) {
-        throw new Error('No se encontró característica de escritura')
+      // Buscar la característica de escritura correcta
+      let characteristic = null
+      for (const charId of writeCharacteristics) {
+        try {
+          characteristic = await service.getCharacteristic(charId)
+          break
+        } catch (e) {
+          console.log(`Característica ${charId} no encontrada, intentando siguiente...`)
+        }
       }
 
-      characteristicRef.current = writeCharacteristic
+      if (!characteristic) {
+        // Si no encontramos las características conocidas, intentar con todas las disponibles
+        const characteristics = await service.getCharacteristics()
+        characteristic = characteristics.find(char => 
+          char.properties.write || char.properties.writeWithoutResponse
+        ) || null
+      }
 
-      setState(prev => ({
-        ...prev,
-        isConnected: true,
-        deviceName: device.name || 'Impresora Bluetooth',
-        error: null,
-        isPrinting: false
-      }))
+      if (!characteristic) {
+        throw new Error('No se encontró una característica de escritura compatible')
+      }
+
+      characteristicRef.current = characteristic
+
+      setIsConnected(true)
+      setDeviceName(device.name || 'Impresora Bluetooth')
+      setError(null)
+
+      console.log('Conectado exitosamente:', {
+        deviceName: device.name,
+        serviceId: service.uuid,
+        characteristicId: characteristic.uuid,
+        properties: characteristic.properties
+      })
 
     } catch (err) {
       console.error('Error al conectar:', err)
-      setState(prev => ({
-        ...prev,
-        error: err instanceof Error ? err.message : 'Error al conectar',
-        isPrinting: false
-      }))
+      setError(err instanceof Error ? err.message : 'Error al conectar')
+      setIsConnected(false)
+    } finally {
+      setIsPrinting(false)
     }
   }, [isSupported])
+
+  // Imprimir datos
+  const print = useCallback(async (data: string) => {
+    if (!isConnected || !characteristicRef.current) {
+      setError('No hay conexión con la impresora')
+      return
+    }
+
+    if (!data) {
+      setError('No hay datos para imprimir')
+      return
+    }
+
+    try {
+      setIsPrinting(true)
+      setError(null)
+
+      // Convertir texto a bytes (UTF-8)
+      const encoder = new TextEncoder()
+      const bytes = encoder.encode(data)
+
+      // Enviar datos a la impresora
+      if (characteristicRef.current.properties.writeWithoutResponse) {
+        await characteristicRef.current.writeValueWithoutResponse(bytes)
+      } else {
+        await characteristicRef.current.writeValue(bytes)
+      }
+
+    } catch (err) {
+      console.error('Error al imprimir:', err)
+      setError(err instanceof Error ? err.message : 'Error al imprimir')
+    } finally {
+      setIsPrinting(false)
+    }
+  }, [isConnected])
 
   // Desconectar
   const disconnect = useCallback(() => {
     if (deviceRef.current?.gatt?.connected) {
       deviceRef.current.gatt.disconnect()
     }
+    setIsConnected(false)
+    setDeviceName(null)
     deviceRef.current = null
     characteristicRef.current = null
-    setState(prev => ({
-      ...prev,
-      isConnected: false,
-      deviceName: null
-    }))
-  }, [])
-
-  // Imprimir
-  const print = useCallback(async (data: string) => {
-    if (!state.isConnected || !characteristicRef.current) {
-      setState(prev => ({ ...prev, error: 'No hay conexión con la impresora' }))
-      return
-    }
-
-    try {
-      setState(prev => ({ ...prev, isPrinting: true, error: null }))
-
-      // Convertir texto a bytes
-      const encoder = new TextEncoder()
-      const bytes = encoder.encode(data)
-
-      // Enviar datos
-      await characteristicRef.current.writeValue(bytes)
-
-      setState(prev => ({ ...prev, isPrinting: false }))
-
-    } catch (err) {
-      console.error('Error al imprimir:', err)
-      setState(prev => ({
-        ...prev,
-        error: err instanceof Error ? err.message : 'Error al imprimir',
-        isPrinting: false
-      }))
-    }
-  }, [state.isConnected])
-
-  // Limpiar error
-  const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }))
   }, [])
 
   return {
-    ...state,
+    isConnected,
+    isPrinting,
+    error,
+    deviceName,
     connect,
     disconnect,
     print,
-    clearError
+    isSupported: isSupported()
   }
 }
 
