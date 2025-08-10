@@ -8,21 +8,21 @@ export default function Hero() {
     <section className="relative bg-gradient-elegant overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary-200/30 to-primary-300/20"></div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-32">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Content */}
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-blanco mb-6">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-blanco mb-4 md:mb-6">
               Descubre tu
               <span className="text-blanco block">Estilo Único</span>
             </h1>
-            <p className="text-lg md:text-xl text-blanco mb-4 max-w-2xl font-semibold">
+            <p className="text-base md:text-lg lg:text-xl text-blanco mb-3 md:mb-4 max-w-2xl font-semibold">
               Moda circular, apoya local, viste con causa.
             </p>
-            <p className="text-lg md:text-xl text-blanco mb-8 max-w-2xl">
+            <p className="text-base md:text-lg lg:text-xl text-blanco mb-6 md:mb-8 max-w-2xl">
               En <span className="font-bold">Garras Felinas</span> damos nueva vida a la moda, apoyamos el talento mexicano y promovemos el consumo responsable. Cada prenda cuenta una historia, ¡sé parte del cambio!
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Link 
                 href="/productos" 
                 className="btn-primary inline-flex items-center justify-center group"

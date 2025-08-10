@@ -171,11 +171,11 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-elegant py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-elegant p-8">
-          <h1 className="text-2xl font-bold text-neutral-700 mb-6">Finalizar compra</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <main className="min-h-screen bg-gradient-elegant py-8 md:py-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-xl shadow-elegant p-6 md:p-8">
+          <h1 className="text-xl md:text-2xl font-bold text-neutral-700 mb-4 md:mb-6">Finalizar compra</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {/* Resumen del pedido */}
             <div>
               <h2 className="text-lg font-semibold mb-4">Resumen del pedido</h2>

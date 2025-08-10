@@ -110,9 +110,9 @@ export default function CarritoPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2">
+          <div className="md:col-span-2 lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm border border-primary-100">
               <div className="p-6 border-b border-primary-100">
                 <div className="flex items-center justify-between">
@@ -206,7 +206,7 @@ export default function CarritoPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
+          <div className="md:col-span-1 lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24 border border-primary-100">
               <h2 className="text-lg font-semibold text-title mb-4">
                 Resumen del Pedido

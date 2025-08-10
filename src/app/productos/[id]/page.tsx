@@ -110,8 +110,8 @@ export default function DetalleProducto() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
         {/* Imagen con slider */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <div className="relative">

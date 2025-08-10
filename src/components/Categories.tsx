@@ -165,27 +165,27 @@ export default function Categories() {
     <section className="py-16 bg-gradient-elegant">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+        <div className="text-center mb-8 md:mb-12">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-3 md:mb-4">
             Explora por Categorías
           </h2>
-          <p className="text-lg text-white max-w-2xl mx-auto mb-2">
+          <p className="text-base md:text-lg text-white max-w-2xl mx-auto mb-2">
             Encuentra exactamente lo que buscas en nuestras categorías .
           </p>
-          <p className="text-base text-white/80 font-bold max-w-9xl mx-auto">
+          <p className="text-sm md:text-base text-white/80 font-bold max-w-9xl mx-auto">
             ✅ Selección de calidad • 🇲🇽 Apoyo a emprendedores mexicanos • ♻️ Consumo responsable
           </p>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Categories Grid - Optimizado para tablet */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
           {categories.map((category) => (
             <Link
               key={category.id}
               href={category.href}
               className="group bg-white rounded-xl shadow-elegant overflow-hidden hover:shadow-premium transition-all duration-300 hover:scale-105"
             >
-              <div className="relative h-64 overflow-hidden">
+              <div className="relative h-48 md:h-56 lg:h-64 overflow-hidden">
                 <img
                   src={category.image}
                   alt={category.name}

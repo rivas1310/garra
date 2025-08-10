@@ -202,21 +202,21 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <img src="/logos/diseno-sin-titulo-5.png" alt="Logo Garras Felinas" className="w-10 h-10 object-contain rounded-lg shadow-azulrey group-hover:scale-105 transition-transform" />
-            <span className="text-2xl font-extrabold text-azulrey drop-shadow-sm tracking-tight group-hover:text-azuloscuro transition-colors">Garras Felinas</span>
+            <img src="/logos/diseno-sin-titulo-5.png" alt="Logo Garras Felinas" className="w-8 h-8 md:w-10 md:h-10 object-contain rounded-lg shadow-azulrey group-hover:scale-105 transition-transform" />
+            <span className="text-lg md:text-2xl font-extrabold text-azulrey drop-shadow-sm tracking-tight group-hover:text-azuloscuro transition-colors">Garras Felinas</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Inicio</Link>
+          {/* Tablet & Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-8">
+            <Link href="/" className="text-gray-800 hover:text-blue-600 font-medium transition-colors text-sm lg:text-base">Inicio</Link>
             <CategoriesButton />
-            <Link href="/ofertas" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Ofertas</Link>
-            <Link href="/quienes-somos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">¿Quiénes somos?</Link>
-            <Link href="/contacto" className="text-gray-800 hover:text-blue-600 font-medium transition-colors">Contacto</Link>
+            <Link href="/ofertas" className="text-gray-800 hover:text-blue-600 font-medium transition-colors text-sm lg:text-base">Ofertas</Link>
+            <Link href="/quienes-somos" className="text-gray-800 hover:text-blue-600 font-medium transition-colors text-sm lg:text-base hidden lg:block">¿Quiénes somos?</Link>
+            <Link href="/contacto" className="text-gray-800 hover:text-blue-600 font-medium transition-colors text-sm lg:text-base">Contacto</Link>
           </nav>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Tablet & Desktop Actions */}
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <button
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className="p-2 text-gray-700 hover:text-blue-600 transition-colors"
