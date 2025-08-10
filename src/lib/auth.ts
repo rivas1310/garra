@@ -71,7 +71,7 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     signOut: '/',
     error: '/login',
-    newUser: '/registro',
+    newUser: '/perfil', // Cambiado de '/registro' a '/perfil'
   },
   callbacks: {
     async jwt({ token, user, account }) {
@@ -117,6 +117,18 @@ export const authOptions: NextAuthOptions = {
       }
       
       return true
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirección personalizada después del login
+      if (url.startsWith('/')) {
+        // Si es una ruta relativa, agregar la base URL
+        return `${baseUrl}${url}`
+      } else if (new URL(url).origin === baseUrl) {
+        // Si es la misma URL base, permitir
+        return url
+      }
+      // Por defecto, redirigir al perfil
+      return `${baseUrl}/perfil`
     }
   }
 }

@@ -98,7 +98,7 @@ function LoginContent() {
           <div className="flex-1 h-px bg-neutral-200" />
         </div>
         <button
-          onClick={() => signIn('google')}
+          onClick={() => signIn('google', { callbackUrl: '/perfil' })}
           className="w-full flex items-center justify-center gap-3 border border-neutral-200 rounded-lg py-2 font-medium hover:bg-neutral-50 transition-colors text-sm"
         >
           <FcGoogle className="h-5 w-5" /> Iniciar sesión con Google
