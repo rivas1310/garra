@@ -24,7 +24,6 @@ import {
 import toast from 'react-hot-toast'
 import dynamic from 'next/dynamic'
 import { useBluetoothPrinter } from '@/hooks/useBluetoothPrinter'
-import AndroidThermalPrinter from '@/components/AndroidThermalPrinter'
 
 // Importar el escáner de códigos de barras de forma dinámica (solo en el cliente)
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), {
@@ -44,7 +43,7 @@ export default function VentaFisicaPage() {
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'tarjeta'>('efectivo')
   const [lastSale, setLastSale] = useState<any>(null)
   const [showBluetoothModal, setShowBluetoothModal] = useState(false)
-  const [showAndroidModal, setShowAndroidModal] = useState(false)
+
   
   // Hook de impresión Bluetooth
   const {
@@ -1338,14 +1337,7 @@ garantias y devoluciones
                   {isPrinterConnected ? 'Imprimir Bluetooth' : 'Conectar Impresora'}
                 </button>
                 
-                {/* Botón de impresión Android */}
-                <button
-                  onClick={() => setShowAndroidModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
-                >
-                  <Printer className="h-3 w-3" />
-                  Imprimir con Plugin Android
-                </button>
+
                 
                 {/* Botón alternativo de impresión */}
                 <button
@@ -1460,33 +1452,7 @@ garantias y devoluciones
         </div>
       )}
 
-      {/* Modal para impresión con Plugin Android */}
-      {showAndroidModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">🖨️ Impresión con Plugin Android</h3>
-              <button
-                onClick={() => setShowAndroidModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <AndroidThermalPrinter 
-              lastSale={lastSale} 
-              onPrint={(success, message) => {
-                if (success) {
-                  toast.success(message || 'Ticket impreso correctamente');
-                } else {
-                  toast.error(message || 'Error al imprimir');
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
+
     </div>
   )
 }
