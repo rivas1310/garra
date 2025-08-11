@@ -1581,35 +1581,7 @@ garantias y devoluciones
         paymentMethod={paymentMethod}
       />
 
-      {/* Función para imprimir con Bluetooth Print App */}
-      {lastSale && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            onClick={() => {
-              console.log('🖨️ Imprimiendo con Bluetooth Print App...')
-              console.log('📋 Datos de la venta:', lastSale)
-              
-              // Obtener la URL base del sitio
-              const baseUrl = window.location.origin
-              const responseUrl = `${baseUrl}/api/bluetooth-print?id=${lastSale.id}`
-              
-              // Crear el enlace para Bluetooth Print App
-              const bluetoothPrintUrl = `my.bluetoothprint.scheme://${responseUrl}`
-              
-              console.log('🔗 URL de Bluetooth Print:', bluetoothPrintUrl)
-              
-              // Abrir el enlace
-              window.location.href = bluetoothPrintUrl
-              
-              toast.success('Enviando a Bluetooth Print App...')
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 shadow-lg"
-          >
-            <Bluetooth className="h-4 w-4" />
-            Bluetooth Print
-          </button>
-        </div>
-      )}
+
 
     </div>
   )
