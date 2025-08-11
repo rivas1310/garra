@@ -11,7 +11,13 @@ El tipo Operacion tiene 2 propiedades:
 
 nombre: string, el nombre de la operación
 argumentos: arreglo de tipo dinámico (o genérico, ya que puede tener datos de cualquier tipo), los argumentos de la operación
-Veamos un ejemplo muy simple del payload que se debe enviar. En este caso el JSON está formateado para que su lectura sea fácil, cuando tú hagas pruebas envía el JSON codificado normalmente.
+Veamos un ejemplo muy simple del payload que se debe enviar. En este caso el JSON está formateado para que su lectura sea fácil, 
+cuando tú hagas pruebas envía el JSON codificado normalmente.
+
+
+
+
+
 
 {
 	"operaciones": [

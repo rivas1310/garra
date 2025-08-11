@@ -53,7 +53,7 @@ export default function TicketModal({ isOpen, onClose, lastSale, paymentMethod }
           <div className="font-mono text-xs bg-white p-4 rounded-lg border-2 border-gray-600 w-full mx-auto" style={{fontFamily: 'Courier New, monospace', maxWidth: '100%', overflowX: 'auto'}}>
             {/* Logo y Header */}
             <div className="text-center mb-4">
-              <div className="text-3xl mb-2">🐱</div>
+              <div className="text-3xl mb-2"><img src="/logos/diseno-sin-titulo-5.png" alt="" /></div>
               <div className="text-lg font-bold mb-1" style={{fontFamily: 'serif'}}>Garras Felinas</div>
               <div className="text-base font-bold mb-2">GARRAS FELINAS</div>
               <div className="text-xs text-gray-600">Venta Física</div>
