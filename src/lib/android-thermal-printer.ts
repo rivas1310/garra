@@ -1,7 +1,7 @@
 /**
  * Cliente para el plugin de impresoras térmicas Bluetooth en Android
- * Se comunica con el servidor localhost:8000
- * Compatible con el patrón del conector original de Parzibyte
+ * 100% compatible con el ConectorEscposAndroid original de Parzibyte
+ * Se comunica directamente con localhost:8000 (sin proxy)
  */
 
 export interface Operacion {
@@ -15,19 +15,13 @@ export interface PrintPayload {
   operaciones: Operacion[];
 }
 
-export interface PrintResponse {
-  success: boolean;
-  message?: string;
-}
-
 export class ConectorEscposAndroid {
   private ruta: string;
   private operaciones: Operacion[];
   private serial: string;
-  private phoneIp?: string;
 
-  // Constantes estáticas
-  static URL_PLUGIN_POR_DEFECTO = "/api/android-printer";
+  // Constantes estáticas (idénticas al original)
+  static URL_PLUGIN_POR_DEFECTO = "http://localhost:8000";
   static TAMAÑO_IMAGEN_NORMAL = 0;
   static TAMAÑO_IMAGEN_DOBLE_ANCHO = 1;
   static TAMAÑO_IMAGEN_DOBLE_ALTO = 2;
@@ -40,141 +34,136 @@ export class ConectorEscposAndroid {
   static RECUPERACION_QR_ALTA = 2;
   static RECUPERACION_QR_MEJOR = 3;
 
-  constructor(serial: string = "", ruta: string = ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO, phoneIp?: string) {
+  constructor(serial: string = "", ruta: string = ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO) {
+    if (!serial) serial = "";
+    if (!ruta) ruta = ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     this.ruta = ruta;
     this.operaciones = [];
     this.serial = serial;
-    this.phoneIp = phoneIp;
-  }
-
-  // Método para establecer la IP del teléfono
-  setPhoneIp(phoneIp: string): ConectorEscposAndroid {
-    this.phoneIp = phoneIp;
-    return this;
   }
 
   // ===== OPERACIONES BÁSICAS =====
 
   Iniciar(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'Iniciar', argumentos: [] });
+    this.operaciones.push({ nombre: 'Iniciar', argumentos: Array.from(arguments) });
     return this;
   }
 
   EscribirTexto(texto: string): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EscribirTexto', argumentos: [texto] });
+    this.operaciones.push({ nombre: 'EscribirTexto', argumentos: Array.from(arguments) });
     return this;
   }
 
   Feed(lineas: number = 1): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'Feed', argumentos: [lineas] });
+    this.operaciones.push({ nombre: 'Feed', argumentos: Array.from(arguments) });
     return this;
   }
 
   Corte(lineas: number = 1): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'Corte', argumentos: [lineas] });
+    this.operaciones.push({ nombre: 'Corte', argumentos: Array.from(arguments) });
     return this;
   }
 
   CorteParcial(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'CorteParcial', argumentos: [] });
+    this.operaciones.push({ nombre: 'CorteParcial', argumentos: Array.from(arguments) });
     return this;
   }
 
   CorteCompletoUno(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'CorteCompletoUno', argumentos: [] });
+    this.operaciones.push({ nombre: 'CorteCompletoUno', argumentos: Array.from(arguments) });
     return this;
   }
 
   CorteCompletoDos(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'CorteCompletoDos', argumentos: [] });
+    this.operaciones.push({ nombre: 'CorteCompletoDos', argumentos: Array.from(arguments) });
     return this;
   }
 
   Pulso(pin: number = 48, tiempoEncendido: number = 60, tiempoApagado: number = 120): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'Pulso', argumentos: [pin, tiempoEncendido, tiempoApagado] });
+    this.operaciones.push({ nombre: 'Pulso', argumentos: Array.from(arguments) });
     return this;
   }
 
   // ===== FORMATO DE TEXTO =====
 
   EstablecerAlineacion(alineacion: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerAlineacion', argumentos: [alineacion] });
+    this.operaciones.push({ nombre: 'EstablecerAlineacion', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerTamañoFuente(multiplicadorAncho: number, multiplicadorAlto: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerTamañoFuente', argumentos: [multiplicadorAncho, multiplicadorAlto] });
+    this.operaciones.push({ nombre: 'EstablecerTamañoFuente', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerEnfatizado(enfatizado: boolean): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerEnfatizado', argumentos: [enfatizado] });
+    this.operaciones.push({ nombre: 'EstablecerEnfatizado', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerSubrayado(subrayado: boolean): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerSubrayado', argumentos: [subrayado] });
+    this.operaciones.push({ nombre: 'EstablecerSubrayado', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerFuente(fuente: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerFuente', argumentos: [fuente] });
+    this.operaciones.push({ nombre: 'EstablecerFuente', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerImpresionBlancoYNegroInversa(invertir: boolean): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerImpresionBlancoYNegroInversa', argumentos: [invertir] });
+    this.operaciones.push({ nombre: 'EstablecerImpresionBlancoYNegroInversa', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerImpresionAlReves(alReves: boolean): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerImpresionAlReves', argumentos: [alReves] });
+    this.operaciones.push({ nombre: 'EstablecerImpresionAlReves', argumentos: Array.from(arguments) });
     return this;
   }
 
   EstablecerRotacionDe90Grados(rotar: boolean): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'EstablecerRotacionDe90Grados', argumentos: [rotar] });
+    this.operaciones.push({ nombre: 'EstablecerRotacionDe90Grados', argumentos: Array.from(arguments) });
     return this;
   }
 
   // ===== IMÁGENES =====
 
   DescargarImagenDeInternetEImprimir(url: string, tamaño: number, maximoAncho: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'DescargarImagenDeInternetEImprimir', argumentos: [url, tamaño, maximoAncho] });
+    this.operaciones.push({ nombre: 'DescargarImagenDeInternetEImprimir', argumentos: Array.from(arguments) });
     return this;
   }
 
   CargarImagenLocalEImprimir(ruta: string, tamaño: number, maximoAncho: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'CargarImagenLocalEImprimir', argumentos: [ruta, tamaño, maximoAncho] });
+    this.operaciones.push({ nombre: 'CargarImagenLocalEImprimir', argumentos: Array.from(arguments) });
     return this;
   }
 
   ImprimirImagenEnBase64(imagenBase64: string, tamaño: number, maximoAncho: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'ImprimirImagenEnBase64', argumentos: [imagenBase64, tamaño, maximoAncho] });
+    this.operaciones.push({ nombre: 'ImprimirImagenEnBase64', argumentos: Array.from(arguments) });
     return this;
   }
 
   // ===== CÓDIGOS =====
 
   ImprimirCodigoDeBarras(tipo: string, datos: string, tamaño: number, ancho: number, alto: number): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'ImprimirCodigoDeBarras', argumentos: [tipo, datos, tamaño, ancho, alto] });
+    this.operaciones.push({ nombre: 'ImprimirCodigoDeBarras', argumentos: Array.from(arguments) });
     return this;
   }
 
   TextoSegunPaginaDeCodigos(numeroPagina: number, pagina: string, texto: string): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'TextoSegunPaginaDeCodigos', argumentos: [numeroPagina, pagina, texto] });
+    this.operaciones.push({ nombre: 'TextoSegunPaginaDeCodigos', argumentos: Array.from(arguments) });
     return this;
   }
 
   // ===== CARACTERES CHINOS =====
 
   HabilitarElModoDeCaracteresChinos(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'HabilitarElModoDeCaracteresChinos', argumentos: [] });
+    this.operaciones.push({ nombre: 'HabilitarElModoDeCaracteresChinos', argumentos: Array.from(arguments) });
     return this;
   }
 
   DeshabilitarElModoDeCaracteresChinos(): ConectorEscposAndroid {
-    this.operaciones.push({ nombre: 'DeshabilitarElModoDeCaracteresChinos', argumentos: [] });
+    this.operaciones.push({ nombre: 'DeshabilitarElModoDeCaracteresChinos', argumentos: Array.from(arguments) });
     return this;
   }
 
@@ -182,33 +171,21 @@ export class ConectorEscposAndroid {
 
   /**
    * Imprimir en la impresora especificada
+   * Compatible 100% con el original del desarrollador
    */
-  async imprimirEn(macImpresora: string): Promise<boolean | string> {
+  async imprimirEn(macImpresora: string): Promise<any> {
     const payload: PrintPayload = {
+      operaciones: this.operaciones,
       impresora: macImpresora,
       serial: this.serial,
-      operaciones: this.operaciones
     };
 
     try {
-      // Construir URL con phoneIp si está disponible
-      const url = this.phoneIp ? `${this.ruta}?phoneIp=${encodeURIComponent(this.phoneIp)}` : this.ruta;
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+      const response = await fetch(this.ruta + "/imprimir", {
+        method: "POST",
+        body: JSON.stringify(payload),
       });
-
-      const result = await response.json();
-      
-      if (response.ok && result.success) {
-        return true;
-      } else {
-        return result.message || 'Error desconocido';
-      }
+      return await response.json();
     } catch (error) {
       return `Error de conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`;
     }
@@ -216,18 +193,13 @@ export class ConectorEscposAndroid {
 
   /**
    * Obtener lista de impresoras disponibles
+   * Compatible 100% con el original del desarrollador
    */
-  static async obtenerImpresoras(ruta?: string, phoneIp?: string): Promise<string[]> {
-    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async obtenerImpresoras(ruta?: string): Promise<string[]> {
+    if (ruta) ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO = ruta;
     try {
-      const params = new URLSearchParams({ endpoint: 'impresoras' });
-      if (phoneIp) {
-        params.append('phoneIp', phoneIp);
-      }
-      
-      const response = await fetch(`${baseUrl}?${params.toString()}`);
-      const result = await response.json();
-      return Array.isArray(result) ? result : [];
+      const response = await fetch(ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO + "/impresoras");
+      return await response.json();
     } catch (error) {
       console.warn('No se pudieron obtener las impresoras:', error);
       return [];
@@ -237,15 +209,10 @@ export class ConectorEscposAndroid {
   /**
    * Probar conexión con el plugin
    */
-  static async testConnection(ruta?: string, phoneIp?: string): Promise<boolean> {
-    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async testConnection(ruta?: string): Promise<boolean> {
+    const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const params = new URLSearchParams({ endpoint: 'impresoras' });
-      if (phoneIp) {
-        params.append('phoneIp', phoneIp);
-      }
-      
-      const response = await fetch(`${baseUrl}?${params.toString()}`);
+      const response = await fetch(url + "/impresoras");
       return response.ok;
     } catch (error) {
       return false;
