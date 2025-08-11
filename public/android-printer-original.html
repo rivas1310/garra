@@ -16,14 +16,24 @@
                     <h1 class="is-size-1">🖨️ Impresora Térmica - Original</h1>
                     <div class="notification is-info">
                         <h4 class="is-size-4">📋 IMPORTANTE:</h4>
-                        <p><strong>Esta página debe abrirse en el navegador del teléfono Android donde está ejecutándose el plugin.</strong></p>
-                        <p>No funcionará si la abres desde otro dispositivo o desde un dominio web.</p>
+                        <p><strong>Esta página puede abrirse desde cualquier dispositivo.</strong></p>
+                        <p>Si el plugin está en el mismo dispositivo, usa <code>localhost:8000</code></p>
+                        <p>Si el plugin está en otro dispositivo, usa la IP del teléfono Android (ej: <code>192.168.1.76:8000</code>)</p>
                     </div>
                 </div>
             </div>
             
             <div class="columns">
                 <div class="column">
+                    <div class="field">
+                        <label class="label">URL del plugin Android:</label>
+                        <div class="control">
+                            <input id="urlPlugin" class="input" type="text" 
+                                placeholder="Ej: localhost:8000 o 192.168.1.76:8000" value="localhost:8000">
+                        </div>
+                        <p class="help">Si el plugin está en el mismo dispositivo: localhost:8000 | Si está en otro: IP:8000</p>
+                    </div>
+                    
                     <div class="field">
                         <label class="label">MAC de la impresora térmica:</label>
                         <div class="control">
@@ -60,21 +70,22 @@
                     <div class="notification is-danger">
                         <h4 class="is-size-4">⚠️ Si no funciona:</h4>
                         <ol>
-                            <li>Verifica que estés en el navegador del teléfono Android</li>
-                            <li>Asegúrate de que el plugin esté ejecutándose en el puerto 8000</li>
-                            <li>Usa la aplicación original del desarrollador</li>
+                            <li>Verifica que el plugin Android esté ejecutándose</li>
+                            <li>Asegúrate de que esté escuchando en el puerto 8000</li>
+                            <li>Verifica que la IP sea correcta</li>
+                            <li>Ambos dispositivos deben estar en la misma red Wi-Fi</li>
                         </ol>
                     </div>
                 </div>
                 
                 <div class="column">
                     <div class="notification is-warning">
-                        <h4 class="is-size-4">📱 Cómo usar correctamente:</h4>
+                        <h4 class="is-size-4">📱 Configuración:</h4>
                         <ol>
-                            <li>Ejecuta el plugin Android en tu teléfono</li>
-                            <li>Abre esta página en el navegador del mismo teléfono</li>
-                            <li>Ingresa la MAC de tu impresora</li>
-                            <li>Haz clic en "Probar Conexión"</li>
+                            <li><strong>Mismo dispositivo:</strong> Usa <code>localhost:8000</code></li>
+                            <li><strong>Dispositivo diferente:</strong> Usa la IP del teléfono Android</li>
+                            <li>Obtén la IP desde Configuración > Wi-Fi > Tu red > IP</li>
+                            <li>Ejemplo: <code>192.168.1.76:8000</code></li>
                         </ol>
                     </div>
                     
@@ -95,14 +106,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // Usar exactamente el plugin original del desarrollador
-            const URLPlugin = "http://localhost:8000"; // Plugin corriendo en el mismo dispositivo
-            
             const $btnProbar = document.querySelector("#btnProbar");
             const $btnImprimir = document.querySelector("#btnImprimir");
             const $btnImprimirVenta = document.querySelector("#btnImprimirVenta");
             const $licencia = document.querySelector("#licencia");
             const $impresora = document.querySelector("#impresora");
+            const $urlPlugin = document.querySelector("#urlPlugin");
             const $resultado = document.querySelector("#resultado");
             const $mensajeResultado = document.querySelector("#mensajeResultado");
 
@@ -112,10 +121,25 @@
                 $mensajeResultado.textContent = mensaje;
             }
 
+            function obtenerURLPlugin() {
+                const url = $urlPlugin.value.trim();
+                if (!url) {
+                    throw new Error("Por favor ingresa la URL del plugin Android");
+                }
+                // Asegurar que tenga el protocolo http://
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    return `http://${url}`;
+                }
+                return url;
+            }
+
             // Probar conexión usando el método original
             $btnProbar.addEventListener("click", async () => {
                 try {
+                    const URLPlugin = obtenerURLPlugin();
                     console.log("🔗 Probando conexión usando método original...");
+                    console.log("🌐 URL del plugin:", URLPlugin);
+                    
                     const impresoras = await ConectorEscposAndroid.obtenerImpresoras(URLPlugin);
                     mostrarResultado(`✅ Conexión exitosa. Impresoras disponibles: ${impresoras.length}`);
                     console.log("📋 Impresoras encontradas:", impresoras);
@@ -154,6 +178,7 @@
             // Función para imprimir ticket de prueba usando el plugin original
             const imprimirTicketPrueba = async (macImpresora, licencia) => {
                 try {
+                    const URLPlugin = obtenerURLPlugin();
                     // Usar exactamente el plugin original del desarrollador
                     const conector = new ConectorEscposAndroid(licencia, URLPlugin);
                     
@@ -192,6 +217,7 @@
             // Función para imprimir ticket de venta usando el plugin original
             const imprimirTicketVenta = async (macImpresora, licencia) => {
                 try {
+                    const URLPlugin = obtenerURLPlugin();
                     // Usar exactamente el plugin original del desarrollador
                     const conector = new ConectorEscposAndroid(licencia, URLPlugin);
                     
