@@ -811,7 +811,7 @@ export default function VentaFisicaPage() {
       </head>
       <body>
         <table>
-          <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></td></tr>
+          <tr><td class="center bold" colspan="2">🐱 Garras Felinas🐱</td></td></tr>
           <tr><td class="center small" colspan="2">Venta Física</td></tr>
           <tr><td class="divider" colspan="2"></td></tr>
           
