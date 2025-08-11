@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ConectorEscposAndroid } from '@/lib/android-thermal-printer';
+// Importar el ConectorEscposAndroid funcional del ejemplo original
+const ConectorEscposAndroid = require('@/utils/ConectorEscposAndroid.js');
 
 interface AndroidThermalPrinterProps {
   sale?: any;
@@ -16,6 +17,7 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
   const [error, setError] = useState('');
   const [availablePrinters, setAvailablePrinters] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [phoneIp, setPhoneIp] = useState('192.168.0.1'); // IP por defecto basada en la imagen
 
   // Probar conexión al cargar
   useEffect(() => {
@@ -24,19 +26,19 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
 
   const testConnection = async () => {
     try {
-      const connected = await ConectorEscposAndroid.testConnection();
+      const connected = await ConectorEscposAndroid.testConnection(undefined, phoneIp);
       setIsConnected(connected);
       if (connected) {
         setError('');
         // Intentar obtener impresoras disponibles
-        const printers = await ConectorEscposAndroid.obtenerImpresoras();
+        const printers = await ConectorEscposAndroid.obtenerImpresorasConIp(phoneIp);
         setAvailablePrinters(printers);
       } else {
-        setError('No se puede conectar al plugin de Android. Verifica que esté ejecutándose en el puerto 8000.');
+        setError(`No se puede conectar al plugin de Android en ${phoneIp}:8000. Verifica que esté ejecutándose y que la IP sea correcta.`);
       }
     } catch (error) {
       setIsConnected(false);
-      setError('Error al conectar con el plugin de Android');
+      setError(`Error al conectar con el plugin de Android en ${phoneIp}:8000`);
     }
   };
 
@@ -74,6 +76,9 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
         new Date().toLocaleString(),
         serial
       );
+      
+      // Configurar IP del teléfono
+      conector.setPhoneIp(phoneIp);
 
       // Imprimir ticket
       const result = await conector.imprimirEn(printerMac);
@@ -95,13 +100,8 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
   };
 
   const printTicketWithLogo = async () => {
-    if (!sale) {
-      setError('No hay datos de venta para imprimir');
-      return;
-    }
-
     if (!printerMac) {
-      setError('Debes especificar la dirección MAC de la impresora');
+      setError('Por favor ingresa la MAC de la impresora');
       return;
     }
 
@@ -109,33 +109,49 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
     setError('');
 
     try {
-      // Preparar datos del ticket
-      const items = sale.items?.map((item: any) => ({
-        nombre: item.product?.name || item.name || 'Producto',
-        precio: item.price || 0,
-        cantidad: item.quantity || 1
-      })) || [];
-
-      const subtotal = sale.subtotal || items.reduce((sum: number, item: any) => sum + (item.precio * item.cantidad), 0);
-      const total = sale.total || subtotal;
-
-      // URL del logo (puedes cambiar esto por tu logo)
-      const logoUrl = 'https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png';
-
-      // Generar ticket con logo usando method chaining
-      const conector = ConectorEscposAndroid.generarTicketConLogo(
-        'BAZAR - ENVÍOS PERROS',
-        items,
-        subtotal,
-        total,
-        logoUrl,
-        new Date().toLocaleString(),
-        serial
-      );
-
-      // Imprimir ticket
+      // Crear el conector con la URL personalizada
+      const urlPlugin = phoneIp ? `http://${phoneIp}:8000` : 'http://localhost:8000';
+      const conector = new ConectorEscposAndroid(serial, urlPlugin);
+      
+      // Generar ticket con logo usando el patrón del ejemplo funcional
+      conector
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .DescargarImagenDeInternetEImprimir('https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png', 0, 200)
+        .Iniciar()
+        .Feed(1)
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .EscribirTexto('BAZAR - ENVÍOS PERROS\n')
+        .EscribirTexto('Sistema de envíos\n')
+        .EscribirTexto('Teléfono: 123456789\n')
+        .EscribirTexto('Fecha: ' + new Date().toLocaleString() + '\n')
+        .Feed(1)
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+        .EscribirTexto('____________________\n')
+        .EscribirTexto('Producto 1 (x2)\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+        .EscribirTexto('$21.00\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+        .EscribirTexto('Producto 2 (x1)\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+        .EscribirTexto('$25.00\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+        .EscribirTexto('Envío\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+        .EscribirTexto('$5.00\n')
+        .EscribirTexto('____________________\n')
+        .EscribirTexto('TOTAL: $51.00\n')
+        .EscribirTexto('____________________\n')
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .EstablecerEnfatizado(true)
+        .EstablecerTamañoFuente(1, 1)
+        .EscribirTexto('¡Gracias por su compra!\n')
+        .Feed(2)
+        .Corte(1);
+      
       const result = await conector.imprimirEn(printerMac);
-
+      
       if (result === true) {
         setError('');
         onPrint?.(true, 'Ticket con logo impreso exitosamente');
@@ -154,7 +170,7 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
 
   const printTest = async () => {
     if (!printerMac) {
-      setError('Debes especificar la dirección MAC de la impresora');
+      setError('Por favor ingresa la MAC de la impresora');
       return;
     }
 
@@ -162,11 +178,30 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
     setError('');
 
     try {
-      // Generar ticket de prueba usando method chaining
-      const conector = ConectorEscposAndroid.generarTicketPrueba(serial);
-
+      // Crear el conector con la URL personalizada
+      const urlPlugin = phoneIp ? `http://${phoneIp}:8000` : 'http://localhost:8000';
+      const conector = new ConectorEscposAndroid(serial, urlPlugin);
+      
+      // Generar ticket de prueba usando el patrón del ejemplo funcional
+      conector
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .EscribirTexto('TICKET DE PRUEBA\n')
+        .EscribirTexto('Bazar - EnviosPerros\n')
+        .EscribirTexto('Fecha: ' + new Date().toLocaleString() + '\n')
+        .Feed(1)
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+        .EscribirTexto('Prueba de impresión\n')
+        .EscribirTexto('Plugin funcionando correctamente\n')
+        .Feed(1)
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .EscribirTexto('¡Impresión exitosa!\n')
+        .Feed(2)
+        .Corte(1);
+      
       const result = await conector.imprimirEn(printerMac);
-
+      
       if (result === true) {
         setError('');
         onPrint?.(true, 'Prueba de impresión exitosa');
@@ -185,7 +220,7 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
 
   const printCustomTicket = async () => {
     if (!printerMac) {
-      setError('Debes especificar la dirección MAC de la impresora');
+      setError('Por favor ingresa la MAC de la impresora');
       return;
     }
 
@@ -193,48 +228,53 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
     setError('');
 
     try {
-      // Ejemplo de ticket personalizado usando method chaining
-      const conector = new ConectorEscposAndroid(serial);
+      // Crear el conector con la URL personalizada
+      const urlPlugin = phoneIp ? `http://${phoneIp}:8000` : 'http://localhost:8000';
+      const conector = new ConectorEscposAndroid(serial, urlPlugin);
       
+      // Crear ticket personalizado siguiendo el patrón del ejemplo funcional
       conector
         .Iniciar()
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
         .Feed(1)
-        .DescargarImagenDeInternetEImprimir(
-          "https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png", 
-          ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 
-          216
-        )
-        .Iniciar() // En algunas impresoras se debe invocar Iniciar después de una imagen
+        .DescargarImagenDeInternetEImprimir('https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png', 0, 200)
+        .Iniciar()
         .Feed(1)
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-        .EscribirTexto("BAZAR - ENVÍOS PERROS\n")
-        .EscribirTexto("Venta física\n")
-        .EscribirTexto("Fecha y hora: " + (new Intl.DateTimeFormat("es-MX").format(new Date())))
+        .EscribirTexto('Bazar - EnviosPerros\n')
+        .EscribirTexto('Demostración completa\n')
+        .EscribirTexto('Teléfono: 123456789\n')
+        .EscribirTexto('Fecha: ' + new Date().toLocaleString() + '\n')
         .Feed(1)
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
-        .EscribirTexto("____________________\n")
-        .EscribirTexto("Ticket personalizado\n")
+        .EscribirTexto('____________________\n')
+        .EscribirTexto('Producto ejemplo\n')
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
-        .EscribirTexto("$0.00\n")
-        .EscribirTexto("____________________\n")
+        .EscribirTexto('$25.00\n')
+        .EscribirTexto('____________________\n')
+        .EscribirTexto('TOTAL: $25.00\n')
+        .EscribirTexto('____________________\n')
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
         .EstablecerEnfatizado(true)
         .EstablecerTamañoFuente(1, 1)
-        .EscribirTexto("¡Gracias por su compra!\n")
+        .EscribirTexto('¡Gracias por su compra!\n')
         .Feed(1)
-        .ImprimirCodigoDeBarras("qr", "https://bazar-enviosperros.com", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
+        .ImprimirCodigoDeBarras('qr', 'https://bazar-enviosperros.com', ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .ImprimirCodigoDeBarras('code128', 'bazar-enviosperros', ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 200, 50)
         .Iniciar()
         .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
         .Feed(1)
         .EstablecerTamañoFuente(1, 1)
-        .EscribirTexto("bazar-enviosperros.com\n")
+        .EscribirTexto('bazar-enviosperros.com\n')
         .Feed(2)
         .Corte(1)
         .Pulso(48, 60, 120);
-
+      
       const result = await conector.imprimirEn(printerMac);
-
+      
       if (result === true) {
         setError('');
         onPrint?.(true, 'Ticket personalizado impreso exitosamente');
@@ -278,6 +318,22 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
           />
           <p className="text-xs text-gray-500 mt-1">
             Obtén la MAC desde el plugin Android en "Ver impresoras disponibles"
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            IP del Teléfono Android *
+          </label>
+          <input
+            type="text"
+            value={phoneIp}
+            onChange={(e) => setPhoneIp(e.target.value)}
+            placeholder="192.168.0.1"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            IP del teléfono Android donde está ejecutándose el plugin (puerto 8000)
           </p>
         </div>
 
@@ -383,11 +439,12 @@ export default function AndroidThermalPrinter({ sale, onPrint }: AndroidThermalP
       <div className="mt-6 p-4 bg-blue-50 rounded">
         <h4 className="font-medium text-blue-900 mb-2">📋 Instrucciones:</h4>
         <ul className="text-sm text-blue-800 space-y-1">
+          <li>• Configura la IP del teléfono Android (ej: 192.168.0.1)</li>
           <li>• Asegúrate de que el plugin de Android esté ejecutándose en el puerto 8000</li>
           <li>• Obtén la dirección MAC de tu impresora desde el plugin Android</li>
           <li>• Verifica que la impresora esté encendida y conectada por Bluetooth</li>
-          <li>• Usa "Imprimir Prueba" para verificar la conexión</li>
-          <li>• El plugin usa method chaining para mayor flexibilidad</li>
+          <li>• Usa "Probar Conexión" para verificar la conectividad</li>
+          <li>• Usa "Imprimir Prueba" para verificar la impresión</li>
         </ul>
       </div>
     </div>
