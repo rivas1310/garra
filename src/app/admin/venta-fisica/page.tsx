@@ -317,6 +317,7 @@ export default function VentaFisicaPage() {
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
               font-size: 12px; 
+              font-weight: bold;
               line-height: 1.3;
               margin: 0; 
               padding: 4px; 
@@ -350,6 +351,7 @@ export default function VentaFisicaPage() {
               text-align: center;
               margin-bottom: 6px;
               font-size: 9px;
+              font-weight: bold;
               color: #333;
             }
             .divider { 
@@ -364,6 +366,7 @@ export default function VentaFisicaPage() {
             }
             .transaction-info {
               font-size: 10px;
+              font-weight: bold;
               margin-bottom: 4px;
             }
             .transaction-row {
@@ -382,6 +385,7 @@ export default function VentaFisicaPage() {
             }
             .product-details {
               font-size: 9px;
+              font-weight: bold;
               color: #666;
               margin-left: 4px;
               margin-bottom: 2px;
@@ -394,6 +398,7 @@ export default function VentaFisicaPage() {
               justify-content: space-between;
               margin: 1px 0;
               font-size: 11px;
+              font-weight: bold;
             }
             .total-final {
               font-weight: bold;
@@ -406,16 +411,19 @@ export default function VentaFisicaPage() {
               text-align: center;
               margin: 4px 0;
               font-size: 10px;
+              font-weight: bold;
             }
             .footer { 
               text-align: center; 
               margin-top: 6px; 
               font-size: 9px; 
+              font-weight: bold;
               border-top: 1px dotted #000;
               padding-top: 4px;
             }
             .footer-title {
               font-weight: bold;
+              font-size: 10px;
               margin-bottom: 2px;
             }
             @media print { 
@@ -436,7 +444,7 @@ export default function VentaFisicaPage() {
         <body>
           <!-- Header con Logo -->
           <div class="header">
-            <div class="logo">🐱</div>
+            <div class="logo"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></div>
             <div class="title">Garras Felinas</div>
             <div class="subtitle">GARRAS FELINAS</div>
             <div class="subtitle">Venta Física</div>
