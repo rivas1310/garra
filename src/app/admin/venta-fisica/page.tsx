@@ -24,6 +24,7 @@ import {
 import toast from 'react-hot-toast'
 import dynamic from 'next/dynamic'
 import { useBluetoothPrinter } from '@/hooks/useBluetoothPrinter'
+import AndroidThermalPrinter from '@/components/AndroidThermalPrinter'
 
 // Importar el escáner de códigos de barras de forma dinámica (solo en el cliente)
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), {
@@ -43,6 +44,7 @@ export default function VentaFisicaPage() {
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'tarjeta'>('efectivo')
   const [lastSale, setLastSale] = useState<any>(null)
   const [showBluetoothModal, setShowBluetoothModal] = useState(false)
+  const [showAndroidModal, setShowAndroidModal] = useState(false)
   
   // Hook de impresión Bluetooth
   const {
@@ -1336,6 +1338,15 @@ garantias y devoluciones
                   {isPrinterConnected ? 'Imprimir Bluetooth' : 'Conectar Impresora'}
                 </button>
                 
+                {/* Botón de impresión Android */}
+                <button
+                  onClick={() => setShowAndroidModal(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <Printer className="h-3 w-3" />
+                  Imprimir con Plugin Android
+                </button>
+                
                 {/* Botón alternativo de impresión */}
                 <button
                   onClick={printTicketAlternative}
@@ -1444,6 +1455,39 @@ garantias y devoluciones
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Plugin Android */}
+      {showAndroidModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Printer className="h-6 w-6 text-green-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Plugin Android - Impresión Térmica</h3>
+                </div>
+                <button
+                  onClick={() => setShowAndroidModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              <AndroidThermalPrinter 
+                sale={lastSale}
+                onPrint={(success, message) => {
+                  if (success) {
+                    toast.success(message || 'Ticket impreso exitosamente');
+                  } else {
+                    toast.error(message || 'Error al imprimir');
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

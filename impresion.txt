@@ -1,0 +1,149 @@
+Documentación del plugin para impresoras térmicas Bluetooth en Android
+Documentación del servidor del plugin
+El plugin inicia un servidor en localhost:8000 (si en el futuro el puerto cambia lo anunciaré en mi blog).
+
+En la ruta /imprimir recibe peticiones POST que deben contener un JSON con la siguiente estructura:
+
+impresora: string, dirección mac de la  impresora
+serial: string, serial o licencia si es que cuentas con ella. Si no la tienes puedes omitirla o enviar una cadena vacía
+operaciones: arreglo de tipo Operacion
+El tipo Operacion tiene 2 propiedades:
+
+nombre: string, el nombre de la operación
+argumentos: arreglo de tipo dinámico (o genérico, ya que puede tener datos de cualquier tipo), los argumentos de la operación
+Veamos un ejemplo muy simple del payload que se debe enviar. En este caso el JSON está formateado para que su lectura sea fácil, cuando tú hagas pruebas envía el JSON codificado normalmente.
+
+{
+	"operaciones": [
+		{
+			"nombre": "Iniciar",
+			"argumentos": []
+		},
+		{
+			"nombre": "EstablecerAlineacion",
+			"argumentos": [
+				1
+			]
+		},
+		{
+			"nombre": "DescargarImagenDeInternetEImprimir",
+			"argumentos": [
+				"http://assets.stickpng.com/thumbs/587e32259686194a55adab73.png",
+				0,
+				216
+			]
+		},
+		{
+			"nombre": "EstablecerTamañoFuente",
+			"argumentos": [
+				1,
+				1
+			]
+		},
+		{
+			"nombre": "EscribirTexto",
+			"argumentos": [
+				"parzibyte.me\n"
+			]
+		},
+		{
+			"nombre": "Feed",
+			"argumentos": [
+				2
+			]
+		},
+		{
+			"nombre": "Corte",
+			"argumentos": [
+				1
+			]
+		},
+		{
+			"nombre": "Pulso",
+			"argumentos": [
+				48,
+				60,
+				120
+			]
+		}
+	],
+	"impresora": "FF:FF:FF:FF:FF",
+	"serial": "123"
+}
+
+Internamente el plugin tiene varias funciones a las que llama por su nombre (por ejemplo, Pulso) y les pasa los argumentos dependiendo de la función, por ello es que algunas acciones tienen un argumento, algunos ninguno, etcétera.
+
+Fíjate también en la impresora y el serial del JSON de arriba.
+
+Sea como sea, mientras envíes un JSON válido el plugin va a imprimirlo en la impresora térmica. Y esto puedes hacerlo desde cualquier lenguaje usando cualquier librería siempre y cuando sea capaz de codificar ese JSON y enviarlo por HTTP.
+Solo para que quede claro, si quisieras imprimir el JSON de arriba deberías hacer una petición POST a http://localhost:8000/imprimir enviando el JSON codificado correctamente.
+
+Respuesta del servidor
+El servidor va a responder con un true codificado como JSON o con una cadena de error.
+
+Descripción de todas las operaciones
+Anteriormente te mostré un JSON con algunas operaciones. Igualmente puedes ver las operaciones desde algún conector que yo haya programado, pero para que quede claro y documentado a continuación mostraré todas las funciones que puede hacer el plugin en la impresora térmica Bluetooth desde Android
+Primero veamos los nombres de todas las operaciones. Fíjate que una cosa es el nombre de la operación y otra cosa es el nombre de la función real, el cambio es mínimo (por ejemplo, solo la primera letra es minúscula o se omite la ñ) .
+
+Todas las operaciones soportadas al momento son:
+
+CargarImagenLocalEImprimir
+Corte
+CorteParcial
+DescargarImagenDeInternetEImprimir
+DeshabilitarElModoDeCaracteresChinos
+EscribirTexto
+EstablecerAlineacion
+EstablecerEnfatizado
+EstablecerFuente
+EstablecerImpresionBlancoYNegroInversa
+EstablecerModoDeImpresionAlReves
+EstablecerRotacionDe90Grados
+EstablecerSubrayado
+EstablecerTamañoFuente
+Feed
+HabilitarElModoDeCaracteresChinos
+ImprimirCodigoDeBarras
+ImprimirImagenEnBase64
+Iniciar
+Pulso
+TextoSegunPaginaDeCodigos
+Ahora veamos las funciones y los argumentos de cada una. Dependiendo de la acción se invocará a su función correspondiente:
+
+cargarImagenLocalEImprimir(String ubicacionImagen, int tamano, int anchoMaximo)
+corte(int lineas)
+corteParcial()
+descargarImagenDeInternetEImprimir(String urlImagen, int tamano, int anchoMaximo)
+deshabilitarElModoDeCaracteresChinos()
+escribirTexto(String texto)
+establecerAlineacion(int alineacion)
+establecerEnfatizado(bool enfatizado)
+establecerFuente(int fuente)
+establecerImpresionBlancoYNegroInversa(bool invertir)
+establecerModoDeImpresionAlReves(bool alReves)
+establecerRotacionDe90Grados(bool rotar)
+establecerSubrayado(bool subrayado)
+establecerTamanoFuente(int multiplicadorAncho, int multiplicadorAlto)
+feed(int lineas)
+habilitarElModoDeCaracteresChinos()
+imprimirCodigoDeBarras(String tipo, String datos, int tamano, int ancho, int alto)
+imprimirImagenEnBase64(String imagenCodificadaEnBase64, int tamano, int anchoMaximo)
+iniciar()
+pulso(int pin, int tiempoEncendido, int tiempoApagado)
+textoSegunPaginaDeCodigos(int numeroPagina, String pagina, String texto)
+Entonces por ejemplo la acción EstablecerTamañoFuente va a invocar a establecerTamanoFuente, y el arreglo de argumentos debe tener 2 valores de tipo int que serán pasados a la función.
+
+Obtener impresoras
+Si invocas a http://localhost:8000/impresoras puede que obtengas la lista de  impresoras disponibles, pero no lo recomiendo pues varias veces se queda esperando por siempre.
+
+Lo recomendado es que averigües la MAC de la impresora desde el plugin en Ver impresoras disponibles.
+
+Algunas otras cosas importantes
+En mi impresora PT-210 debo invocar a Iniciar cada vez que imprimo una imagen. En esa misma impresora tampoco puedo definir caracteres personalizados.
+
+Este plugin para Android está basado (pero no es compatible de ningún modo) en mi plugin para impresoras térmicas USB versión 3, mucha documentación de ahí ayudará a entender lo mostrado aqui
+El ancho de las imágenes siempre debe ser múltiplo de 8.
+
+Los métodos que imprimen imágenes, códigos QR, códigos de barras, imágenes locales, de internet y en base64 usan la misma función de impresión de imágenes, así que procura que el ancho siempre sea múltiplo de 8.
+
+El tamaño de la imagen no se refiere a los pixeles, sino a una redimensión de la imagen al ser impresa. Revisa la documentación del plugin versión 3 pues ahí hay más información
