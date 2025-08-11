@@ -316,9 +316,9 @@ export default function VentaFisicaPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 14px; 
+              font-size: 12px; 
               font-weight: bold;
-              line-height: 1.4;
+              line-height: 1.3;
               margin: 0; 
               padding: 4px; 
               background: white;
@@ -337,20 +337,20 @@ export default function VentaFisicaPage() {
               margin-bottom: 2px;
             }
             .title { 
-              font-size: 18px; 
+              font-size: 16px; 
               font-weight: bold; 
               margin-bottom: 2px; 
               text-transform: uppercase;
             }
             .subtitle { 
-              font-size: 12px; 
+              font-size: 10px; 
               margin-bottom: 1px;
               font-weight: bold;
             }
             .business-info {
               text-align: center;
               margin-bottom: 6px;
-              font-size: 11px;
+              font-size: 9px;
               font-weight: bold;
               color: #333;
             }
@@ -359,13 +359,13 @@ export default function VentaFisicaPage() {
               margin: 3px 0; 
             }
             .section-title {
-              font-size: 13px;
+              font-size: 11px;
               font-weight: bold;
               margin: 4px 0 2px 0;
               text-align: center;
             }
             .transaction-info {
-              font-size: 12px;
+              font-size: 10px;
               font-weight: bold;
               margin-bottom: 4px;
             }
@@ -384,7 +384,7 @@ export default function VentaFisicaPage() {
               font-weight: bold;
             }
             .product-details {
-              font-size: 11px;
+              font-size: 9px;
               font-weight: bold;
               color: #666;
               margin-left: 4px;
@@ -397,12 +397,12 @@ export default function VentaFisicaPage() {
               display: flex;
               justify-content: space-between;
               margin: 1px 0;
-              font-size: 13px;
+              font-size: 11px;
               font-weight: bold;
             }
             .total-final {
               font-weight: bold;
-              font-size: 14px;
+              font-size: 12px;
               border-top: 1px solid #000;
               padding-top: 2px;
               margin-top: 2px;
@@ -410,20 +410,20 @@ export default function VentaFisicaPage() {
             .payment-info {
               text-align: center;
               margin: 4px 0;
-              font-size: 12px;
+              font-size: 10px;
               font-weight: bold;
             }
             .footer { 
               text-align: center; 
               margin-top: 6px; 
-              font-size: 11px; 
+              font-size: 9px; 
               font-weight: bold;
               border-top: 1px dotted #000;
               padding-top: 4px;
             }
             .footer-title {
               font-weight: bold;
-              font-size: 12px;
+              font-size: 10px;
               margin-bottom: 2px;
             }
             @media print { 
@@ -523,7 +523,7 @@ export default function VentaFisicaPage() {
           <!-- Información de Pago -->
           <div class="payment-info">
             <div><strong>Método de pago:</strong> ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</div>
-                          <div style="font-size: 10px; margin-top: 2px;">Este documento es un comprobante fiscal</div>
+                          <div style="font-size: 8px; margin-top: 2px;">Este documento es un comprobante fiscal</div>
           </div>
           
           <div class="divider"></div>
@@ -532,7 +532,7 @@ export default function VentaFisicaPage() {
           <div class="footer">
             <div class="footer-title">¡Gracias por su compra!</div>
             <div>www.garrasfelinas.com</div>
-                          <div style="margin-top: 4px; font-size: 10px;">
+                          <div style="margin-top: 4px; font-size: 8px;">
                 Conserve este ticket para garantías y devoluciones
               </div>
           </div>
