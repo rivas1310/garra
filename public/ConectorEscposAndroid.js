@@ -8,10 +8,17 @@
  */
 
 class ConectorEscposAndroid {
-  constructor(serial = "", ruta = "/api/android-printer") {
+  constructor(serial = "", ruta = "/api/android-printer", phoneIp = null) {
     this.ruta = ruta;
     this.operaciones = [];
     this.serial = serial;
+    this.phoneIp = phoneIp;
+  }
+
+  // Método para establecer la IP del teléfono
+  setPhoneIp(phoneIp) {
+    this.phoneIp = phoneIp;
+    return this;
   }
 
   // ===== CONSTANTES ESTÁTICAS =====
@@ -158,7 +165,10 @@ class ConectorEscposAndroid {
     };
 
     try {
-      const response = await fetch(this.ruta, {
+      // Construir URL con phoneIp si está disponible
+      const url = this.phoneIp ? `${this.ruta}?phoneIp=${encodeURIComponent(this.phoneIp)}` : this.ruta;
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,10 +195,15 @@ class ConectorEscposAndroid {
    * @param {string} ruta - Ruta del endpoint (opcional)
    * @returns {Promise<string[]>} - Array de direcciones MAC de impresoras
    */
-  static async obtenerImpresoras(ruta) {
-    const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async obtenerImpresoras(ruta, phoneIp) {
+    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}?endpoint=impresoras`);
+      const params = new URLSearchParams({ endpoint: 'impresoras' });
+      if (phoneIp) {
+        params.append('phoneIp', phoneIp);
+      }
+      
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       const result = await response.json();
       return Array.isArray(result) ? result : [];
     } catch (error) {
@@ -202,10 +217,15 @@ class ConectorEscposAndroid {
    * @param {string} ruta - Ruta del endpoint (opcional)
    * @returns {Promise<boolean>} - true si la conexión es exitosa
    */
-  static async testConnection(ruta) {
-    const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async testConnection(ruta, phoneIp) {
+    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}?endpoint=impresoras`);
+      const params = new URLSearchParams({ endpoint: 'impresoras' });
+      if (phoneIp) {
+        params.append('phoneIp', phoneIp);
+      }
+      
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       return response.ok;
     } catch (error) {
       return false;

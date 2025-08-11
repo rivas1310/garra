@@ -24,6 +24,7 @@ export class ConectorEscposAndroid {
   private ruta: string;
   private operaciones: Operacion[];
   private serial: string;
+  private phoneIp?: string;
 
   // Constantes estáticas
   static URL_PLUGIN_POR_DEFECTO = "/api/android-printer";
@@ -39,10 +40,17 @@ export class ConectorEscposAndroid {
   static RECUPERACION_QR_ALTA = 2;
   static RECUPERACION_QR_MEJOR = 3;
 
-  constructor(serial: string = "", ruta: string = ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO) {
+  constructor(serial: string = "", ruta: string = ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO, phoneIp?: string) {
     this.ruta = ruta;
     this.operaciones = [];
     this.serial = serial;
+    this.phoneIp = phoneIp;
+  }
+
+  // Método para establecer la IP del teléfono
+  setPhoneIp(phoneIp: string): ConectorEscposAndroid {
+    this.phoneIp = phoneIp;
+    return this;
   }
 
   // ===== OPERACIONES BÁSICAS =====
@@ -183,7 +191,10 @@ export class ConectorEscposAndroid {
     };
 
     try {
-      const response = await fetch(this.ruta, {
+      // Construir URL con phoneIp si está disponible
+      const url = this.phoneIp ? `${this.ruta}?phoneIp=${encodeURIComponent(this.phoneIp)}` : this.ruta;
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -206,10 +217,15 @@ export class ConectorEscposAndroid {
   /**
    * Obtener lista de impresoras disponibles
    */
-  static async obtenerImpresoras(ruta?: string): Promise<string[]> {
-    const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async obtenerImpresoras(ruta?: string, phoneIp?: string): Promise<string[]> {
+    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}?endpoint=impresoras`);
+      const params = new URLSearchParams({ endpoint: 'impresoras' });
+      if (phoneIp) {
+        params.append('phoneIp', phoneIp);
+      }
+      
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       const result = await response.json();
       return Array.isArray(result) ? result : [];
     } catch (error) {
@@ -221,10 +237,15 @@ export class ConectorEscposAndroid {
   /**
    * Probar conexión con el plugin
    */
-  static async testConnection(ruta?: string): Promise<boolean> {
-    const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
+  static async testConnection(ruta?: string, phoneIp?: string): Promise<boolean> {
+    const baseUrl = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}?endpoint=impresoras`);
+      const params = new URLSearchParams({ endpoint: 'impresoras' });
+      if (phoneIp) {
+        params.append('phoneIp', phoneIp);
+      }
+      
+      const response = await fetch(`${baseUrl}?${params.toString()}`);
       return response.ok;
     } catch (error) {
       return false;

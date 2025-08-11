@@ -140,6 +140,12 @@
         </div>
 
         <div class="form-group">
+            <label for="phoneIp">IP del Teléfono Android:</label>
+            <input type="text" id="phoneIp" placeholder="Ej: 192.168.1.100" value="">
+            <small style="color: #666; font-size: 14px;">Deja vacío para usar localhost (si el plugin está en esta PC)</small>
+        </div>
+
+        <div class="form-group">
             <label for="printerMac">Dirección MAC de la Impresora:</label>
             <input type="text" id="printerMac" placeholder="FF:FF:FF:FF:FF:FF" value="">
             <small style="color: #666; font-size: 14px;">Obtén la MAC desde el plugin Android en "Ver impresoras disponibles"</small>
@@ -184,6 +190,7 @@
         // Función para obtener valores del formulario
         function getFormValues() {
             return {
+                phoneIp: document.getElementById('phoneIp').value.trim(),
                 mac: document.getElementById('printerMac').value.trim(),
                 serial: document.getElementById('serial').value.trim()
             };
@@ -194,7 +201,8 @@
             showStatus('🔍 Probando conexión con el plugin...', 'info');
             
             try {
-                const connected = await ConectorEscposAndroid.testConnection();
+                const { phoneIp } = getFormValues();
+                const connected = await ConectorEscposAndroid.testConnection(undefined, phoneIp || undefined);
                 if (connected) {
                     showStatus('✅ Conexión exitosa con el plugin de Android', 'success');
                 } else {
@@ -210,7 +218,8 @@
             showStatus('📋 Obteniendo lista de impresoras...', 'info');
             
             try {
-                const impresoras = await ConectorEscposAndroid.obtenerImpresoras();
+                const { phoneIp } = getFormValues();
+                const impresoras = await ConectorEscposAndroid.obtenerImpresoras(undefined, phoneIp || undefined);
                 if (impresoras.length > 0) {
                     showStatus(`📋 Impresoras encontradas: ${impresoras.join(', ')}`, 'success');
                     // Auto-llenar la primera impresora si el campo está vacío
@@ -228,7 +237,7 @@
         
         // Imprimir ticket de prueba
         async function imprimirPrueba() {
-            const { mac, serial } = getFormValues();
+            const { phoneIp, mac, serial } = getFormValues();
             
             if (!mac) {
                 showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
@@ -239,6 +248,9 @@
             
             try {
                 const conector = ConectorEscposAndroid.generarTicketPrueba(serial);
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
                 const resultado = await conector.imprimirEn(mac);
                 
                 if (resultado === true) {
@@ -253,7 +265,7 @@
         
         // Imprimir ticket básico
         async function imprimirTicketBasico() {
-            const { mac, serial } = getFormValues();
+            const { phoneIp, mac, serial } = getFormValues();
             
             if (!mac) {
                 showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
@@ -281,6 +293,10 @@
                     serial
                 );
                 
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
+                
                 const resultado = await conector.imprimirEn(mac);
                 
                 if (resultado === true) {
@@ -295,7 +311,7 @@
         
         // Imprimir ticket completo con logo y código QR
         async function imprimirTicketCompleto() {
-            const { mac, serial } = getFormValues();
+            const { phoneIp, mac, serial } = getFormValues();
             
             if (!mac) {
                 showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
@@ -306,6 +322,10 @@
             
             try {
                 const conector = new ConectorEscposAndroid(serial);
+                
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
                 
                 conector
                     .Iniciar()
