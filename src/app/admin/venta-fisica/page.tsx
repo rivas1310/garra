@@ -748,7 +748,7 @@ export default function VentaFisicaPage() {
 
   // Función alternativa de impresión (fallback)
   const printTicketAlternative = () => {
-    console.log('🖨️ Mostrando ticket en modal...')
+    console.log('🖨️ Mostrando ticket en modal... v2.0')
     
     if (!lastSale) {
       toast.error('No hay datos de venta para mostrar')
@@ -1399,7 +1399,7 @@ garantias y devoluciones
         </div>
       )}
 
-      {/* Modal del Ticket */}
+      {/* Modal del Ticket v2.0 */}
       {showTicketModal && lastSale && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
