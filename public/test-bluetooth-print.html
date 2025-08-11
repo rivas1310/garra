@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Bluetooth Print App - Garras Felinas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        .print-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .step-list {
+            list-style-type: decimal;
+            padding-left: 20px;
+        }
+        .step-list li {
+            margin-bottom: 8px;
+        }
+        .url-display {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐱 Test Bluetooth Print App</h1>
+        <h2 style="text-align: center; color: #666;">Garras Felinas</h2>
+
+        <div class="info-box">
+            <strong>📱 Instrucciones:</strong>
+            <ol class="step-list">
+                <li>Instala la app "Bluetooth Print" desde Google Play Store</li>
+                <li>Habilita la función "Browser Print" en la app</li>
+                <li>Conecta tu impresora térmica vía Bluetooth</li>
+                <li>Haz clic en uno de los botones de prueba abajo</li>
+                <li>La app debería abrirse y procesar el ticket</li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ Importante:</strong>
+            <ul>
+                <li>Asegúrate de que tu dispositivo Android tenga Bluetooth habilitado</li>
+                <li>La impresora térmica debe estar emparejada con tu dispositivo</li>
+                <li>Si usas localhost, asegúrate de que tu PC y móvil estén en la misma red</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Pruebas de Impresión</h2>
+            
+            <h3>Prueba 1: Ticket de Ejemplo</h3>
+            <p>Imprime un ticket con datos de ejemplo (ID: TEST123)</p>
+            <a href="my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=TEST123" class="print-button">
+                🖨️ Imprimir Ticket Ejemplo
+            </a>
+            
+            <div class="url-display">
+                URL: my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=TEST123
+            </div>
+
+            <h3>Prueba 2: Ticket con ID Personalizado</h3>
+            <p>Imprime un ticket con un ID específico:</p>
+            <input type="text" id="customId" placeholder="Ingresa un ID (ej: VENTA001)" style="padding: 8px; margin: 10px 0; width: 200px;">
+            <br>
+            <a href="#" id="customPrintBtn" class="print-button">
+                🖨️ Imprimir con ID Personalizado
+            </a>
+            
+            <div id="customUrlDisplay" class="url-display" style="display: none;">
+                URL: <span id="customUrl"></span>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 Verificación del Endpoint</h2>
+            <p>Verifica que el endpoint JSON funciona correctamente:</p>
+            <a href="/api/bluetooth-print?id=TEST123" target="_blank" class="print-button">
+                📄 Ver JSON del Endpoint
+            </a>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Información Técnica</h2>
+            <p><strong>App:</strong> Bluetooth Print (mate.bluetoothprint)</p>
+            <p><strong>URL Scheme:</strong> my.bluetoothprint.scheme://</p>
+            <p><strong>Formato de Respuesta:</strong> JSON con array de objetos de impresión</p>
+            <p><strong>Tipos de Contenido:</strong></p>
+            <ul>
+                <li>0 = Texto</li>
+                <li>1 = Imagen</li>
+                <li>2 = Código de barras</li>
+                <li>3 = Código QR</li>
+                <li>4 = HTML</li>
+                <li>5 = Cortar papel</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Función para actualizar el botón personalizado
+        function updateCustomButton() {
+            const customId = document.getElementById('customId').value;
+            const customPrintBtn = document.getElementById('customPrintBtn');
+            const customUrlDisplay = document.getElementById('customUrlDisplay');
+            const customUrl = document.getElementById('customUrl');
+            
+            if (customId.trim()) {
+                const url = `my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=${encodeURIComponent(customId)}`;
+                customPrintBtn.href = url;
+                customUrl.textContent = url;
+                customUrlDisplay.style.display = 'block';
+            } else {
+                customPrintBtn.href = '#';
+                customUrlDisplay.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('customId').addEventListener('input', updateCustomButton);
+        
+        // Actualizar al cargar la página
+        updateCustomButton();
+    </script>
+</body>
+</html>
