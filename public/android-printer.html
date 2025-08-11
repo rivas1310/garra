@@ -19,8 +19,9 @@
                             <li><strong>Esta página debe abrirse en el navegador del teléfono Android</strong> donde está ejecutándose el plugin</li>
                             <li>Asegúrate de que el plugin de impresión térmica esté ejecutándose en el puerto 8000</li>
                             <li>Verifica que tu impresora térmica esté emparejada con el teléfono Android</li>
+                            <li><strong>Ingresa la IP de tu teléfono Android</strong> (no localhost)</li>
                             <li>Ingresa la dirección MAC de tu impresora térmica</li>
-                            <li>Haz clic en "Imprimir" para probar la conexión</li>
+                            <li>Haz clic en "Probar Conexión" para verificar</li>
                         </ol>
                     </div>
                 </div>
@@ -28,6 +29,15 @@
             
             <div class="columns">
                 <div class="column">
+                    <div class="field">
+                        <label class="label">IP del teléfono Android:</label>
+                        <div class="control">
+                            <input id="ipTelefono" class="input" type="text" 
+                                placeholder="Ej: 192.168.1.100" value="192.168.1.100">
+                        </div>
+                        <p class="help">Obtén la IP desde Configuración > Wi-Fi > Tu red > IP</p>
+                    </div>
+                    
                     <div class="field">
                         <label class="label">MAC de la impresora térmica:</label>
                         <div class="control">
@@ -63,16 +73,22 @@
                     
                     <div class="notification is-danger">
                         <h4 class="is-size-4">⚠️ Posibles errores</h4>
-                        <p><strong>failed to fetch:</strong> El plugin no se está ejecutando o no estás en el dispositivo correcto</p>
+                        <p><strong>failed to fetch:</strong> Verifica la IP del teléfono o que el plugin esté ejecutándose</p>
                         <p><strong>Error de conexión:</strong> Verifica que el plugin esté corriendo en el puerto 8000</p>
+                        <p><strong>IP incorrecta:</strong> Asegúrate de usar la IP correcta de tu teléfono Android</p>
                     </div>
                 </div>
                 
                 <div class="column">
                     <div class="notification is-warning">
-                        <h4 class="is-size-4">📱 Uso correcto:</h4>
-                        <p>Esta página debe abrirse en el navegador del teléfono Android donde está ejecutándose el plugin de impresión térmica.</p>
-                        <p>No funcionará si la abres desde otro dispositivo.</p>
+                        <h4 class="is-size-4">📱 Cómo obtener la IP de tu teléfono:</h4>
+                        <ol>
+                            <li>Ve a <strong>Configuración</strong></li>
+                            <li>Selecciona <strong>Wi-Fi</strong></li>
+                            <li>Toca en tu red Wi-Fi conectada</li>
+                            <li>Busca <strong>Dirección IP</strong></li>
+                            <li>Copia esa IP (ej: 192.168.1.100)</li>
+                        </ol>
                     </div>
                     
                     <div class="notification is-success">
@@ -92,13 +108,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            const URLPlugin = "http://localhost:8000"; // Plugin corriendo en el mismo dispositivo
-            
             const $btnProbar = document.querySelector("#btnProbar");
             const $btnImprimir = document.querySelector("#btnImprimir");
             const $btnImprimirVenta = document.querySelector("#btnImprimirVenta");
             const $licencia = document.querySelector("#licencia");
             const $impresora = document.querySelector("#impresora");
+            const $ipTelefono = document.querySelector("#ipTelefono");
             const $resultado = document.querySelector("#resultado");
             const $mensajeResultado = document.querySelector("#mensajeResultado");
 
@@ -108,17 +123,30 @@
                 $mensajeResultado.textContent = mensaje;
             }
 
+            function obtenerURLPlugin() {
+                const ip = $ipTelefono.value.trim();
+                if (!ip) {
+                    throw new Error("Por favor ingresa la IP de tu teléfono Android");
+                }
+                return `http://${ip}:8000`;
+            }
+
             // Probar conexión
             $btnProbar.addEventListener("click", async () => {
                 try {
+                    const URLPlugin = obtenerURLPlugin();
+                    console.log(`🔗 Probando conexión a: ${URLPlugin}`);
+                    
                     const response = await fetch(URLPlugin + "/impresoras");
                     if (response.ok) {
                         const impresoras = await response.json();
                         mostrarResultado(`✅ Conexión exitosa. Impresoras disponibles: ${impresoras.length}`);
+                        console.log('📋 Impresoras encontradas:', impresoras);
                     } else {
-                        mostrarResultado("❌ Error en la respuesta del servidor", true);
+                        mostrarResultado(`❌ Error en la respuesta del servidor: ${response.status}`, true);
                     }
                 } catch (error) {
+                    console.error('Error de conexión:', error);
                     mostrarResultado(`❌ Error de conexión: ${error.message}`, true);
                 }
             });
@@ -151,29 +179,30 @@
 
             // Función para imprimir ticket de prueba
             const imprimirTicketPrueba = async (macImpresora, licencia) => {
-                const conector = new ConectorEscposAndroid(licencia, URLPlugin);
-                
-                conector
-                    .Iniciar()
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .EstablecerTamañoFuente(2, 2)
-                    .EscribirTexto("BAZAR ENVIOSPERROS\n")
-                    .EstablecerTamañoFuente(1, 1)
-                    .EscribirTexto("Sistema de envíos\n")
-                    .EscribirTexto("Teléfono: 123456789\n")
-                    .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
-                    .Feed(1)
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
-                    .EscribirTexto("____________________\n")
-                    .EscribirTexto("PRUEBA DE IMPRESIÓN\n")
-                    .EscribirTexto("Plugin funcionando correctamente\n")
-                    .EscribirTexto("____________________\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .EscribirTexto("¡Impresión exitosa!\n")
-                    .Feed(2)
-                    .Corte(1);
-
                 try {
+                    const URLPlugin = obtenerURLPlugin();
+                    const conector = new ConectorEscposAndroid(licencia, URLPlugin);
+                    
+                    conector
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EstablecerTamañoFuente(2, 2)
+                        .EscribirTexto("BAZAR ENVIOSPERROS\n")
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("Sistema de envíos\n")
+                        .EscribirTexto("Teléfono: 123456789\n")
+                        .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("PRUEBA DE IMPRESIÓN\n")
+                        .EscribirTexto("Plugin funcionando correctamente\n")
+                        .EscribirTexto("____________________\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EscribirTexto("¡Impresión exitosa!\n")
+                        .Feed(2)
+                        .Corte(1);
+
                     const respuesta = await conector.imprimirEn(macImpresora);
                     if (respuesta === true) {
                         mostrarResultado("✅ Ticket de prueba impreso correctamente");
@@ -181,63 +210,65 @@
                         mostrarResultado(`❌ Error: ${respuesta}`, true);
                     }
                 } catch (e) {
+                    console.error('Error imprimiendo:', e);
                     mostrarResultado(`❌ Error imprimiendo: ${e.message}`, true);
                 }
             };
 
             // Función para imprimir ticket de venta
             const imprimirTicketVenta = async (macImpresora, licencia) => {
-                const conector = new ConectorEscposAndroid(licencia, URLPlugin);
-                
-                conector
-                    .Iniciar()
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .Feed(1)
-                    .DescargarImagenDeInternetEImprimir("https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png", 0, 200)
-                    .Iniciar()
-                    .Feed(1)
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .EscribirTexto("Bazar - EnviosPerros\n")
-                    .EscribirTexto("Sistema de envíos\n")
-                    .EscribirTexto("Teléfono: 123456789\n")
-                    .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
-                    .Feed(1)
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
-                    .EscribirTexto("____________________\n")
-                    .EscribirTexto("Producto 1 (x2)\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
-                    .EscribirTexto("$21.00\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
-                    .EscribirTexto("Producto 2 (x1)\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
-                    .EscribirTexto("$25.00\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
-                    .EscribirTexto("Envío\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
-                    .EscribirTexto("$5.00\n")
-                    .EscribirTexto("____________________\n")
-                    .EscribirTexto("TOTAL: $51.00\n")
-                    .EscribirTexto("____________________\n")
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .EstablecerEnfatizado(true)
-                    .EstablecerTamañoFuente(1, 1)
-                    .EscribirTexto("¡Gracias por su compra!\n")
-                    .Feed(1)
-                    .ImprimirCodigoDeBarras("qr", "https://bazar-enviosperros.com", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
-                    .Iniciar()
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .Feed(1)
-                    .ImprimirCodigoDeBarras("code128", "bazar-enviosperros", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 200, 50)
-                    .Iniciar()
-                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
-                    .Feed(1)
-                    .EstablecerTamañoFuente(1, 1)
-                    .EscribirTexto("bazar-enviosperros.com\n")
-                    .Feed(2)
-                    .Corte(1)
-                    .Pulso(48, 60, 120);
-
                 try {
+                    const URLPlugin = obtenerURLPlugin();
+                    const conector = new ConectorEscposAndroid(licencia, URLPlugin);
+                    
+                    conector
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .DescargarImagenDeInternetEImprimir("https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png", 0, 200)
+                        .Iniciar()
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EscribirTexto("Bazar - EnviosPerros\n")
+                        .EscribirTexto("Sistema de envíos\n")
+                        .EscribirTexto("Teléfono: 123456789\n")
+                        .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("Producto 1 (x2)\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$21.00\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("Producto 2 (x1)\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$25.00\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("Envío\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$5.00\n")
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("TOTAL: $51.00\n")
+                        .EscribirTexto("____________________\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EstablecerEnfatizado(true)
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("¡Gracias por su compra!\n")
+                        .Feed(1)
+                        .ImprimirCodigoDeBarras("qr", "https://bazar-enviosperros.com", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .ImprimirCodigoDeBarras("code128", "bazar-enviosperros", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 200, 50)
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("bazar-enviosperros.com\n")
+                        .Feed(2)
+                        .Corte(1)
+                        .Pulso(48, 60, 120);
+
                     const respuesta = await conector.imprimirEn(macImpresora);
                     if (respuesta === true) {
                         mostrarResultado("✅ Ticket de venta impreso correctamente");
@@ -245,6 +276,7 @@
                         mostrarResultado(`❌ Error: ${respuesta}`, true);
                     }
                 } catch (e) {
+                    console.error('Error imprimiendo:', e);
                     mostrarResultado(`❌ Error imprimiendo: ${e.message}`, true);
                 }
             };
