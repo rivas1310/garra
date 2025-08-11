@@ -284,7 +284,7 @@ export default function VentaFisicaPage() {
   }
 
   // Imprimir ticket
-  const printTicket = () => {
+    const printTicket = () => {
     console.log('🖨️ Iniciando impresión del ticket...')
     console.log('📋 Datos de la venta:', lastSale)
     
@@ -306,248 +306,90 @@ export default function VentaFisicaPage() {
       const tax = subtotal * 0.16
       const realSubtotal = total - tax
 
+      // HTML simplificado para RawBT - solo tablas básicas
       const ticketContent = `
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Ticket de Venta - Garras Felinas</title>
+          <title>Ticket - Garras Felinas</title>
           <meta charset="UTF-8">
           <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
+            @page {
+              size: 48mm auto;
+              margin: 0;
+            }
             body { 
-              font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 12px; 
-              font-weight: bold;
-              line-height: 1.3;
-              margin: 0; 
-              padding: 4px; 
-              background: white;
-              color: black;
-              width: 58mm;
-              max-width: 58mm;
-            }
-            .header { 
-              text-align: center; 
-              margin-bottom: 6px; 
-              border-bottom: 2px solid #000;
-              padding-bottom: 4px;
-            }
-            .logo {
-              font-size: 16px;
-              margin-bottom: 2px;
-            }
-            .title { 
-              font-size: 16px; 
-              font-weight: bold; 
-              margin-bottom: 2px; 
-              text-transform: uppercase;
-            }
-            .subtitle { 
+              font-family: monospace; 
               font-size: 10px; 
-              margin-bottom: 1px;
-              font-weight: bold;
+              margin: 0; 
+              padding: 5px;
+              width: 48mm;
+              max-width: 48mm;
+              background: white;
             }
-            .business-info {
-              text-align: center;
-              margin-bottom: 6px;
-              font-size: 9px;
-              font-weight: bold;
-              color: #333;
-            }
-            .divider { 
-              border-top: 1px dotted #000; 
-              margin: 3px 0; 
-            }
-            .section-title {
-              font-size: 11px;
-              font-weight: bold;
-              margin: 4px 0 2px 0;
-              text-align: center;
-            }
-            .transaction-info {
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
               font-size: 10px;
-              font-weight: bold;
-              margin-bottom: 4px;
             }
-            .transaction-row {
-              display: flex;
-              justify-content: space-between;
-              margin: 1px 0;
+            td {
+              padding: 2px 1px;
+              vertical-align: top;
             }
-            .product-item {
-              margin-bottom: 3px;
-            }
-            .product-header {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 1px;
-              font-weight: bold;
-            }
-            .product-details {
-              font-size: 9px;
-              font-weight: bold;
-              color: #666;
-              margin-left: 4px;
-              margin-bottom: 2px;
-            }
-            .totals-section {
-              margin-top: 4px;
-            }
-            .total-row {
-              display: flex;
-              justify-content: space-between;
-              margin: 1px 0;
-              font-size: 11px;
-              font-weight: bold;
-            }
-            .total-final {
-              font-weight: bold;
-              font-size: 12px;
-              border-top: 1px solid #000;
-              padding-top: 2px;
-              margin-top: 2px;
-            }
-            .payment-info {
-              text-align: center;
-              margin: 4px 0;
-              font-size: 10px;
-              font-weight: bold;
-            }
-            .footer { 
-              text-align: center; 
-              margin-top: 6px; 
-              font-size: 9px; 
-              font-weight: bold;
-              border-top: 1px dotted #000;
-              padding-top: 4px;
-            }
-            .footer-title {
-              font-weight: bold;
-              font-size: 10px;
-              margin-bottom: 2px;
-            }
-            @media print { 
+            .center { text-align: center; }
+            .right { text-align: right; }
+            .bold { font-weight: bold; }
+            .divider { border-top: 1px dotted #000; margin: 3px 0; }
+            .small { font-size: 8px; }
+            @media print {
               body { 
                 margin: 0; 
-                padding: 2px; 
-                width: 58mm;
-                max-width: 58mm;
+                padding: 0;
+                width: 48mm;
               }
-              .no-print { display: none; }
-              @page {
-                size: 58mm auto;
-                margin: 0;
+              table {
+                width: 48mm;
               }
             }
           </style>
         </head>
         <body>
-          <!-- Header con Logo -->
-          <div class="header">
-            <div class="logo"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></div>
-            <div class="title">Garras Felinas</div>
-            <div class="subtitle">GARRAS FELINAS</div>
-            <div class="subtitle">Venta Física</div>
-          </div>
-          
-          <!-- Información del Negocio -->
-          <div class="business-info">
-            <div>andador 20 de noviembre, Zapopan</div>
-            <div>Tel: +52 (555) 123-4567</div>
-            <div>info@garrasfelinas.com</div>
-            <div>RFC: GAR-123456-ABC</div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- Información de la Transacción -->
-          <div class="section-title">DETALLES DE LA TRANSACCIÓN</div>
-          <div class="transaction-info">
-            <div class="transaction-row">
-              <span>Fecha:</span>
-              <span>${new Date().toLocaleString('es-MX', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}</span>
-            </div>
-            <div class="transaction-row">
-              <span>Ticket #:</span>
-              <span>${lastSale.id}</span>
-            </div>
-            <div class="transaction-row">
-              <span>Cajero:</span>
-              <span>Admin</span>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- Productos -->
-          <div class="section-title">PRODUCTOS</div>
-          ${lastSale.items.map((item: any) => `
-            <div class="product-item">
-              <div class="product-header">
-                <span>${item.product?.name || 'Producto'} x${item.quantity}</span>
-                <span>$${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-              <div class="product-details">
-                SKU: ${item.product?.sku || 'N/A'} | $${item.price.toFixed(2)} c/u
-              </div>
-            </div>
-          `).join('')}
-          
-          <div class="divider"></div>
-          
-          <!-- Totales -->
-          <div class="section-title">RESUMEN FINANCIERO</div>
-          <div class="totals-section">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span>$${realSubtotal.toFixed(2)}</span>
-            </div>
-            <div class="total-row">
-              <span>IVA (16%):</span>
-              <span>$${tax.toFixed(2)}</span>
-            </div>
-            <div class="total-row total-final">
-              <span>TOTAL:</span>
-              <span>$${total.toFixed(2)}</span>
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- Información de Pago -->
-          <div class="payment-info">
-            <div><strong>Método de pago:</strong> ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</div>
-                          <div style="font-size: 8px; margin-top: 2px;">Este documento es un comprobante fiscal</div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <!-- Footer -->
-          <div class="footer">
-            <div class="footer-title">¡Gracias por su compra!</div>
-            <div>www.garrasfelinas.com</div>
-                          <div style="margin-top: 4px; font-size: 8px;">
-                Conserve este ticket para garantías y devoluciones
-              </div>
-          </div>
-          
-          <script>
-            // Auto-print cuando se carga la página
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() {
-                  window.close();
-                }, 1000);
-              }, 500);
-            };
-          </script>
+          <table>
+            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></tr>
+            <tr><td class="center small" colspan="2">Venta Física</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="center small" colspan="2">andador 20 de noviembre, Zapopan</td></tr>
+            <tr><td class="center small" colspan="2">Tel: +52 (555) 123-4567</td></tr>
+            <tr><td class="center small" colspan="2">info@garrasfelinas.com</td></tr>
+            <tr><td class="center small" colspan="2">RFC: GAR-123456-ABC</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="small">Fecha:</td><td class="right small">${new Date().toLocaleString('es-MX')}</td></tr>
+            <tr><td class="small">Ticket #:</td><td class="right small">${lastSale.id}</td></tr>
+            <tr><td class="small">Cajero:</td><td class="right small">Admin</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            ${lastSale.items.map((item: any, index: number) => `
+              <tr><td colspan="2" class="small">${item.product?.name || 'Producto'} x${item.quantity}</td></tr>
+              <tr><td class="small">SKU: ${item.product?.sku || 'N/A'}</td><td class="right small">$${(item.price * item.quantity).toFixed(2)}</td></tr>
+              <tr><td class="small">$${item.price.toFixed(2)} c/u</td><td></td></tr>
+            `).join('')}
+            
+            <tr><td class="divider" colspan="2"></td></tr>
+            <tr><td class="small">Subtotal:</td><td class="right small">$${realSubtotal.toFixed(2)}</td></tr>
+            <tr><td class="small">IVA (16%):</td><td class="right small">$${tax.toFixed(2)}</td></tr>
+            <tr><td class="bold">TOTAL:</td><td class="right bold">$${total.toFixed(2)}</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td colspan="2" class="small">Método: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</td></tr>
+            <tr><td class="center small" colspan="2">Comprobante fiscal</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="center bold" colspan="2">¡Gracias por su compra!</td></tr>
+            <tr><td class="center small" colspan="2">www.garrasfelinas.com</td></tr>
+            <tr><td class="center small" colspan="2">Conserve este ticket</td></tr>
+          </table>
         </body>
         </html>
       `
@@ -592,6 +434,12 @@ export default function VentaFisicaPage() {
         toast.error('No se pudo abrir la ventana de impresión. Verifica que el bloqueador de popups esté desactivado.')
         return
       }
+
+      // Calcular valores para el ticket estructurado
+      const subtotal = saleData.subtotal || saleData.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
+      const total = saleData.total || subtotal
+      const tax = subtotal * 0.16
+      const realSubtotal = total - tax
 
       // Información de la empresa
       const companyInfo = {
@@ -728,91 +576,42 @@ export default function VentaFisicaPage() {
           </style>
         </head>
         <body>
-          <div class="header">
-            <img src="${companyInfo.logo}" alt="${companyInfo.name}" class="logo">
-            <div class="title">${companyInfo.name}</div>
-            <div class="subtitle">Venta Física</div>
-            <div class="company-info">
-              ${companyInfo.address}<br>
-              Tel: ${companyInfo.phone}<br>
-              ${companyInfo.email}<br>
-              RFC: ${companyInfo.rfc}
-            </div>
-          </div>
-          
-          <div class="divider"></div>
-          
-          <div class="item">
-            <span class="item-name">Fecha:</span>
-            <span class="item-price">${new Date().toLocaleString('es-MX', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}</span>
-          </div>
-          <div class="item">
-            <span class="item-name">Ticket #:</span>
-            <span class="item-price">${saleData.id}</span>
-          </div>
-          <div class="item">
-            <span class="item-name">Cajero:</span>
-            <span class="item-price">Admin</span>
-          </div>
-          
-          <div class="divider"></div>
-          
-          ${saleData.items.map((item: any) => `
-            <div class="item">
-              <div class="item-row">
-                <span class="item-name">${item.product?.name || 'Producto'} x${item.quantity}</span>
-                <span class="item-price">$${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-              <div class="item-details">
-                SKU: ${item.product?.sku || 'N/A'} | $${item.price.toFixed(2)} c/u
-              </div>
-            </div>
-          `).join('')}
-          
-          <div class="divider"></div>
-          
-          <div class="total">
-            <div class="item">
-              <span class="item-name">Subtotal:</span>
-              <span class="item-price">$${(saleData.total * 0.84).toFixed(2)}</span>
-            </div>
-            <div class="item">
-              <span class="item-name">IVA (16%):</span>
-              <span class="item-price">$${(saleData.total * 0.16).toFixed(2)}</span>
-            </div>
-            <div class="item">
-              <span class="item-name">TOTAL:</span>
-              <span class="item-price">$${saleData.total.toFixed(2)}</span>
-            </div>
-            <div class="payment-method">Método de pago: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</div>
-            <div class="tax-info">Este documento es un comprobante fiscal</div>
-          </div>
-          
-          <div class="footer">
-            <div>¡Gracias por su compra!</div>
-            <div>${companyInfo.website}</div>
-            <div style="margin-top: 5px; font-size: 7px;">
-              Conserve este ticket para garantías y devoluciones
-            </div>
-          </div>
-          
-          <script>
-            // Auto-print cuando se carga la página
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() {
-                  window.close();
-                }, 1000);
-              }, 500);
-            };
-          </script>
+          <table>
+            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></tr>
+            <tr><td class="center small" colspan="2">Venta Física</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="center small" colspan="2">andador 20 de noviembre, Zapopan</td></tr>
+            <tr><td class="center small" colspan="2">Tel: +52 (555) 123-4567</td></tr>
+            <tr><td class="center small" colspan="2">info@garrasfelinas.com</td></tr>
+            <tr><td class="center small" colspan="2">RFC: GAR-123456-ABC</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="small">Fecha:</td><td class="right small">${new Date().toLocaleString('es-MX')}</td></tr>
+            <tr><td class="small">Ticket #:</td><td class="right small">${lastSale.id}</td></tr>
+            <tr><td class="small">Cajero:</td><td class="right small">Admin</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            ${lastSale.items.map((item: any, index: number) => `
+              <tr><td colspan="2" class="small">${item.product?.name || 'Producto'} x${item.quantity}</td></tr>
+              <tr><td class="small">SKU: ${item.product?.sku || 'N/A'}</td><td class="right small">$${(item.price * item.quantity).toFixed(2)}</td></tr>
+              <tr><td class="small">$${item.price.toFixed(2)} c/u</td><td></td></tr>
+            `).join('')}
+            
+            <tr><td class="divider" colspan="2"></td></tr>
+            <tr><td class="small">Subtotal:</td><td class="right small">$${realSubtotal.toFixed(2)}</td></tr>
+            <tr><td class="small">IVA (16%):</td><td class="right small">$${tax.toFixed(2)}</td></tr>
+            <tr><td class="bold">TOTAL:</td><td class="right bold">$${total.toFixed(2)}</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td colspan="2" class="small">Método: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</td></tr>
+            <tr><td class="center small" colspan="2">Comprobante fiscal</td></tr>
+            <tr><td class="divider" colspan="2"></td></tr>
+            
+            <tr><td class="center bold" colspan="2">¡Gracias por su compra!</td></tr>
+            <tr><td class="center small" colspan="2">www.garrasfelinas.com</td></tr>
+            <tr><td class="center small" colspan="2">Conserve este ticket</td></tr>
+          </table>
         </body>
         </html>
       `
