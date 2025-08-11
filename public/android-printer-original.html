@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impresora Térmica - Original - Bazar EnviosPerros</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <!-- Usar el plugin original del desarrollador -->
+    <script src="./ConectorEscposAndroid.js" type="text/javascript"></script>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <div class="columns">
+                <div class="column">
+                    <h1 class="is-size-1">🖨️ Impresora Térmica - Original</h1>
+                    <div class="notification is-info">
+                        <h4 class="is-size-4">📋 IMPORTANTE:</h4>
+                        <p><strong>Esta página debe abrirse en el navegador del teléfono Android donde está ejecutándose el plugin.</strong></p>
+                        <p>No funcionará si la abres desde otro dispositivo o desde un dominio web.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                        <label class="label">MAC de la impresora térmica:</label>
+                        <div class="control">
+                            <input id="impresora" class="input" type="text" 
+                                placeholder="Ej: 00:11:22:33:44:55">
+                        </div>
+                        <p class="help">Obtén la MAC desde el plugin Android en "Ver impresoras disponibles"</p>
+                    </div>
+                    
+                    <div class="field">
+                        <label class="label">Licencia (opcional)</label>
+                        <div class="control">
+                            <input id="licencia" class="input" type="text" 
+                                placeholder="Licencia si cuentas con ella">
+                        </div>
+                    </div>
+                    
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button id="btnProbar" class="button is-info">Probar Conexión</button>
+                        </div>
+                        <div class="control">
+                            <button id="btnImprimir" class="button is-success">Imprimir Ticket</button>
+                        </div>
+                        <div class="control">
+                            <button id="btnImprimirVenta" class="button is-warning">Imprimir Venta</button>
+                        </div>
+                    </div>
+                    
+                    <div id="resultado" class="notification is-hidden">
+                        <p id="mensajeResultado"></p>
+                    </div>
+                    
+                    <div class="notification is-danger">
+                        <h4 class="is-size-4">⚠️ Si no funciona:</h4>
+                        <ol>
+                            <li>Verifica que estés en el navegador del teléfono Android</li>
+                            <li>Asegúrate de que el plugin esté ejecutándose en el puerto 8000</li>
+                            <li>Usa la aplicación original del desarrollador</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="column">
+                    <div class="notification is-warning">
+                        <h4 class="is-size-4">📱 Cómo usar correctamente:</h4>
+                        <ol>
+                            <li>Ejecuta el plugin Android en tu teléfono</li>
+                            <li>Abre esta página en el navegador del mismo teléfono</li>
+                            <li>Ingresa la MAC de tu impresora</li>
+                            <li>Haz clic en "Probar Conexión"</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="notification is-success">
+                        <h4 class="is-size-4">✅ Cuando funcione:</h4>
+                        <p>Deberías ver un ticket impreso con:</p>
+                        <ul>
+                            <li>Logo de Bazar EnviosPerros</li>
+                            <li>Información del negocio</li>
+                            <li>Productos de ejemplo</li>
+                            <li>Códigos QR y de barras</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Usar exactamente el plugin original del desarrollador
+            const URLPlugin = "http://localhost:8000"; // Plugin corriendo en el mismo dispositivo
+            
+            const $btnProbar = document.querySelector("#btnProbar");
+            const $btnImprimir = document.querySelector("#btnImprimir");
+            const $btnImprimirVenta = document.querySelector("#btnImprimirVenta");
+            const $licencia = document.querySelector("#licencia");
+            const $impresora = document.querySelector("#impresora");
+            const $resultado = document.querySelector("#resultado");
+            const $mensajeResultado = document.querySelector("#mensajeResultado");
+
+            function mostrarResultado(mensaje, esError = false) {
+                $resultado.classList.remove("is-hidden", "is-success", "is-danger");
+                $resultado.classList.add(esError ? "is-danger" : "is-success");
+                $mensajeResultado.textContent = mensaje;
+            }
+
+            // Probar conexión usando el método original
+            $btnProbar.addEventListener("click", async () => {
+                try {
+                    console.log("🔗 Probando conexión usando método original...");
+                    const impresoras = await ConectorEscposAndroid.obtenerImpresoras(URLPlugin);
+                    mostrarResultado(`✅ Conexión exitosa. Impresoras disponibles: ${impresoras.length}`);
+                    console.log("📋 Impresoras encontradas:", impresoras);
+                } catch (error) {
+                    console.error("Error de conexión:", error);
+                    mostrarResultado(`❌ Error de conexión: ${error.message}`, true);
+                }
+            });
+
+            // Imprimir ticket de prueba usando el método original
+            $btnImprimir.addEventListener("click", () => {
+                const direccionMacDeLaImpresora = $impresora.value;
+                const licencia = $licencia.value;
+                
+                if (!direccionMacDeLaImpresora) {
+                    mostrarResultado("❌ Por favor escribe la MAC de la impresora", true);
+                    return;
+                }
+                
+                imprimirTicketPrueba(direccionMacDeLaImpresora, licencia);
+            });
+
+            // Imprimir ticket de venta usando el método original
+            $btnImprimirVenta.addEventListener("click", () => {
+                const direccionMacDeLaImpresora = $impresora.value;
+                const licencia = $licencia.value;
+                
+                if (!direccionMacDeLaImpresora) {
+                    mostrarResultado("❌ Por favor escribe la MAC de la impresora", true);
+                    return;
+                }
+                
+                imprimirTicketVenta(direccionMacDeLaImpresora, licencia);
+            });
+
+            // Función para imprimir ticket de prueba usando el plugin original
+            const imprimirTicketPrueba = async (macImpresora, licencia) => {
+                try {
+                    // Usar exactamente el plugin original del desarrollador
+                    const conector = new ConectorEscposAndroid(licencia, URLPlugin);
+                    
+                    conector
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EstablecerTamañoFuente(2, 2)
+                        .EscribirTexto("BAZAR ENVIOSPERROS\n")
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("Sistema de envíos\n")
+                        .EscribirTexto("Teléfono: 123456789\n")
+                        .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("PRUEBA DE IMPRESIÓN\n")
+                        .EscribirTexto("Plugin funcionando correctamente\n")
+                        .EscribirTexto("____________________\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EscribirTexto("¡Impresión exitosa!\n")
+                        .Feed(2)
+                        .Corte(1);
+
+                    const respuesta = await conector.imprimirEn(macImpresora);
+                    if (respuesta === true) {
+                        mostrarResultado("✅ Ticket de prueba impreso correctamente");
+                    } else {
+                        mostrarResultado(`❌ Error: ${respuesta}`, true);
+                    }
+                } catch (e) {
+                    console.error("Error imprimiendo:", e);
+                    mostrarResultado(`❌ Error imprimiendo: ${e.message}`, true);
+                }
+            };
+
+            // Función para imprimir ticket de venta usando el plugin original
+            const imprimirTicketVenta = async (macImpresora, licencia) => {
+                try {
+                    // Usar exactamente el plugin original del desarrollador
+                    const conector = new ConectorEscposAndroid(licencia, URLPlugin);
+                    
+                    conector
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .DescargarImagenDeInternetEImprimir("https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png", 0, 200)
+                        .Iniciar()
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EscribirTexto("Bazar - EnviosPerros\n")
+                        .EscribirTexto("Sistema de envíos\n")
+                        .EscribirTexto("Teléfono: 123456789\n")
+                        .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
+                        .Feed(1)
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("Producto 1 (x2)\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$21.00\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("Producto 2 (x1)\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$25.00\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                        .EscribirTexto("Envío\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                        .EscribirTexto("$5.00\n")
+                        .EscribirTexto("____________________\n")
+                        .EscribirTexto("TOTAL: $51.00\n")
+                        .EscribirTexto("____________________\n")
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .EstablecerEnfatizado(true)
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("¡Gracias por su compra!\n")
+                        .Feed(1)
+                        .ImprimirCodigoDeBarras("qr", "https://bazar-enviosperros.com", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .ImprimirCodigoDeBarras("code128", "bazar-enviosperros", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 200, 50)
+                        .Iniciar()
+                        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                        .Feed(1)
+                        .EstablecerTamañoFuente(1, 1)
+                        .EscribirTexto("bazar-enviosperros.com\n")
+                        .Feed(2)
+                        .Corte(1)
+                        .Pulso(48, 60, 120);
+
+                    const respuesta = await conector.imprimirEn(macImpresora);
+                    if (respuesta === true) {
+                        mostrarResultado("✅ Ticket de venta impreso correctamente");
+                    } else {
+                        mostrarResultado(`❌ Error: ${respuesta}`, true);
+                    }
+                } catch (e) {
+                    console.error("Error imprimiendo:", e);
+                    mostrarResultado(`❌ Error imprimiendo: ${e.message}`, true);
+                }
+            };
+        });
+    </script>
+</body>
+</html>
