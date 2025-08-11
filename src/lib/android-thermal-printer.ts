@@ -26,7 +26,7 @@ export class ConectorEscposAndroid {
   private serial: string;
 
   // Constantes estáticas
-  static URL_PLUGIN_POR_DEFECTO = "http://localhost:8000";
+  static URL_PLUGIN_POR_DEFECTO = "/api/android-printer";
   static TAMAÑO_IMAGEN_NORMAL = 0;
   static TAMAÑO_IMAGEN_DOBLE_ANCHO = 1;
   static TAMAÑO_IMAGEN_DOBLE_ALTO = 2;
@@ -183,7 +183,7 @@ export class ConectorEscposAndroid {
     };
 
     try {
-      const response = await fetch(`${this.ruta}/imprimir`, {
+      const response = await fetch(this.ruta, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,12 +191,12 @@ export class ConectorEscposAndroid {
         body: JSON.stringify(payload)
       });
 
-      const result = await response.text();
+      const result = await response.json();
       
-      if (response.ok && result === 'true') {
+      if (response.ok && result.success) {
         return true;
       } else {
-        return result;
+        return result.message || 'Error desconocido';
       }
     } catch (error) {
       return `Error de conexión: ${error instanceof Error ? error.message : 'Error desconocido'}`;
@@ -209,7 +209,7 @@ export class ConectorEscposAndroid {
   static async obtenerImpresoras(ruta?: string): Promise<string[]> {
     const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}/impresoras`);
+      const response = await fetch(`${url}?endpoint=impresoras`);
       const result = await response.json();
       return Array.isArray(result) ? result : [];
     } catch (error) {
@@ -224,7 +224,7 @@ export class ConectorEscposAndroid {
   static async testConnection(ruta?: string): Promise<boolean> {
     const url = ruta || ConectorEscposAndroid.URL_PLUGIN_POR_DEFECTO;
     try {
-      const response = await fetch(`${url}/impresoras`);
+      const response = await fetch(`${url}?endpoint=impresoras`);
       return response.ok;
     } catch (error) {
       return false;
