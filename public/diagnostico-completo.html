@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Completo - Plugin Android</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <style>
+        .log-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">🔍 Diagnóstico Completo - Plugin Android</h1>
+            
+            <div class="notification is-warning">
+                <h4 class="is-size-4">⚠️ IMPORTANTE:</h4>
+                <p>Esta página debe abrirse en el navegador del teléfono Android donde está ejecutándose el plugin.</p>
+                <p>Si estás viendo esto desde otro dispositivo, el diagnóstico fallará.</p>
+            </div>
+
+            <div class="columns">
+                <div class="column">
+                    <div class="field">
+                        <label class="label">URL del plugin:</label>
+                        <div class="control">
+                            <input id="pluginUrl" class="input" type="text" value="http://localhost:8000" 
+                                placeholder="http://localhost:8000">
+                        </div>
+                        <p class="help">Cambia a IP si es necesario (ej: http://192.168.1.100:8000)</p>
+                    </div>
+                    
+                    <button id="btnDiagnostico" class="button is-info">🔍 Ejecutar Diagnóstico Completo</button>
+                    <button id="btnLimpiar" class="button is-light">🧹 Limpiar Log</button>
+                </div>
+                
+                <div class="column">
+                    <div class="notification is-info">
+                        <h4 class="is-size-4">📋 Qué vamos a probar:</h4>
+                        <ol>
+                            <li>Conectividad básica al plugin</li>
+                            <li>Endpoint /impresoras</li>
+                            <li>Endpoint /imprimir</li>
+                            <li>Diferentes métodos de fetch</li>
+                            <li>Headers y CORS</li>
+                            <li>Timeouts y errores de red</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column">
+                    <h3 class="title is-4">📊 Resultados del Diagnóstico:</h3>
+                    <div id="resultados"></div>
+                </div>
+                
+                <div class="column">
+                    <h3 class="title is-4">📝 Log Detallado:</h3>
+                    <div id="log" class="log-container">Esperando diagnóstico...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let logContent = '';
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent += `[${timestamp}] ${message}\n`;
+            document.getElementById('log').textContent = logContent;
+            document.getElementById('log').scrollTop = document.getElementById('log').scrollHeight;
+        }
+
+        function addResult(title, message, type = 'info') {
+            const resultados = document.getElementById('resultados');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            resultados.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('resultados').innerHTML = '';
+            logContent = '';
+            document.getElementById('log').textContent = 'Esperando diagnóstico...';
+        }
+
+        async function testConnection(url, testName) {
+            log(`🔗 Probando: ${testName}`);
+            log(`   URL: ${url}`);
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    timeout: 5000
+                });
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                log(`   ✅ Respuesta: ${response.status} ${response.statusText}`);
+                log(`   ⏱️ Tiempo: ${duration}ms`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`   📄 Datos: ${JSON.stringify(data, null, 2)}`);
+                    addResult(testName, `✅ Exitoso (${duration}ms)`, 'success');
+                    return { success: true, data, duration };
+                } else {
+                    log(`   ❌ Error HTTP: ${response.status}`);
+                    addResult(testName, `❌ Error HTTP: ${response.status}`, 'error');
+                    return { success: false, error: `HTTP ${response.status}` };
+                }
+            } catch (error) {
+                log(`   ❌ Error: ${error.message}`);
+                addResult(testName, `❌ ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testPrint(url, testName) {
+            log(`🖨️ Probando impresión: ${testName}`);
+            
+            const payload = {
+                operaciones: [
+                    { nombre: 'Iniciar', argumentos: [] },
+                    { nombre: 'EscribirTexto', argumentos: ['Prueba de diagnóstico'] },
+                    { nombre: 'Feed', argumentos: [1] },
+                    { nombre: 'Corte', argumentos: [1] }
+                ],
+                impresora: "FF:FF:FF:FF:FF:FF",
+                serial: ""
+            };
+            
+            try {
+                const response = await fetch(`${url}/imprimir`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                log(`   📤 Payload enviado: ${JSON.stringify(payload, null, 2)}`);
+                log(`   📥 Respuesta: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`   📄 Datos: ${JSON.stringify(data, null, 2)}`);
+                    addResult(testName, `✅ Exitoso`, 'success');
+                    return { success: true, data };
+                } else {
+                    const errorText = await response.text();
+                    log(`   ❌ Error: ${errorText}`);
+                    addResult(testName, `❌ ${response.status}: ${errorText}`, 'error');
+                    return { success: false, error: errorText };
+                }
+            } catch (error) {
+                log(`   ❌ Error: ${error.message}`);
+                addResult(testName, `❌ ${error.message}`, 'error');
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function runCompleteDiagnostic() {
+            clearResults();
+            const baseUrl = document.getElementById('pluginUrl').value.trim();
+            
+            if (!baseUrl) {
+                addResult('Configuración', '❌ URL del plugin no especificada', 'error');
+                return;
+            }
+            
+            log('🚀 INICIANDO DIAGNÓSTICO COMPLETO');
+            log(`📍 URL base: ${baseUrl}`);
+            log('=' * 50);
+            
+            // Test 1: Conectividad básica
+            const basicTest = await testConnection(baseUrl, 'Conectividad Básica');
+            
+            // Test 2: Endpoint /impresoras
+            const impresorasTest = await testConnection(`${baseUrl}/impresoras`, 'Endpoint /impresoras');
+            
+            // Test 3: Endpoint /imprimir (sin payload)
+            const imprimirTest = await testConnection(`${baseUrl}/imprimir`, 'Endpoint /imprimir (GET)');
+            
+            // Test 4: Endpoint /imprimir con payload
+            const printTest = await testPrint(baseUrl, 'Impresión de Prueba');
+            
+            // Test 5: Diferentes métodos de fetch
+            log('🔄 Probando diferentes métodos de fetch...');
+            
+            // Test 5.1: Fetch sin CORS
+            try {
+                const response = await fetch(`${baseUrl}/impresoras`, {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                log(`   📡 Fetch sin CORS: ${response.type}`);
+                addResult('Fetch sin CORS', '✅ Configurado', 'success');
+            } catch (error) {
+                log(`   ❌ Fetch sin CORS: ${error.message}`);
+                addResult('Fetch sin CORS', `❌ ${error.message}`, 'error');
+            }
+            
+            // Test 5.2: XMLHttpRequest
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', `${baseUrl}/impresoras`, false);
+                xhr.send();
+                log(`   📡 XMLHttpRequest: ${xhr.status} ${xhr.statusText}`);
+                addResult('XMLHttpRequest', `✅ ${xhr.status}`, 'success');
+            } catch (error) {
+                log(`   ❌ XMLHttpRequest: ${error.message}`);
+                addResult('XMLHttpRequest', `❌ ${error.message}`, 'error');
+            }
+            
+            // Resumen
+            log('=' * 50);
+            log('📋 RESUMEN DEL DIAGNÓSTICO');
+            
+            const tests = [
+                { name: 'Conectividad Básica', result: basicTest },
+                { name: 'Endpoint /impresoras', result: impresorasTest },
+                { name: 'Endpoint /imprimir', result: imprimirTest },
+                { name: 'Impresión de Prueba', result: printTest }
+            ];
+            
+            const successfulTests = tests.filter(t => t.result.success).length;
+            const totalTests = tests.length;
+            
+            log(`✅ Tests exitosos: ${successfulTests}/${totalTests}`);
+            
+            if (successfulTests === 0) {
+                log('❌ DIAGNÓSTICO: Plugin no accesible');
+                addResult('DIAGNÓSTICO FINAL', '❌ Plugin no accesible - Verifica que esté ejecutándose', 'error');
+            } else if (successfulTests < totalTests) {
+                log('⚠️ DIAGNÓSTICO: Plugin parcialmente accesible');
+                addResult('DIAGNÓSTICO FINAL', '⚠️ Plugin parcialmente accesible - Algunos endpoints fallan', 'warning');
+            } else {
+                log('✅ DIAGNÓSTICO: Plugin completamente funcional');
+                addResult('DIAGNÓSTICO FINAL', '✅ Plugin completamente funcional', 'success');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('btnDiagnostico').addEventListener('click', runCompleteDiagnostic);
+            document.getElementById('btnLimpiar').addEventListener('click', clearResults);
+            
+            // Auto-diagnóstico al cargar
+            log('📱 Página cargada - Listo para diagnóstico');
+            log('💡 Consejo: Si ves "failed to fetch", el plugin no está ejecutándose o no es accesible');
+        });
+    </script>
+</body>
+</html>
