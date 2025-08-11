@@ -749,8 +749,9 @@ export default function VentaFisicaPage() {
 
   // Función alternativa de impresión (fallback)
   const printTicketAlternative = () => {
-    console.log('🖨️ Mostrando ticket en modal... v2.0')
+    console.log('🖨️ Mostrando ticket en modal... v3.0')
     console.log('📊 Datos de venta:', lastSale)
+    console.log('🎭 Estado actual del modal:', showTicketModal)
     
     if (!lastSale) {
       toast.error('No hay datos de venta para mostrar')
@@ -759,7 +760,11 @@ export default function VentaFisicaPage() {
 
     console.log('✅ Abriendo modal del ticket...')
     setShowTicketModal(true)
-    console.log('🎭 Estado del modal:', true)
+    
+    // Verificar el estado después de un momento
+    setTimeout(() => {
+      console.log('🎭 Estado del modal después de setState:', showTicketModal)
+    }, 100)
   }
 
   // Imprimir ticket con Bluetooth

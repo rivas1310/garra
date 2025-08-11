@@ -9,10 +9,19 @@ interface TicketModalProps {
 }
 
 export default function TicketModal({ isOpen, onClose, lastSale, paymentMethod }: TicketModalProps) {
-  if (!isOpen || !lastSale) return null
+  console.log('🎭 TicketModal - isOpen:', isOpen, 'lastSale:', !!lastSale)
+  
+  // Detectar si es dispositivo móvil
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  
+  if (!isOpen || !lastSale) {
+    console.log('🎭 TicketModal - No se renderiza porque:', !isOpen ? 'isOpen es false' : 'lastSale es null')
+    return null
+  }
 
   console.log('🎭 Renderizando modal del ticket...')
   console.log('📊 Datos en modal:', lastSale)
+  console.log('📱 Es dispositivo móvil:', isMobile)
 
   // Calcular valores
   const subtotal = lastSale.subtotal || lastSale.items?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0) || 0
@@ -26,21 +35,22 @@ export default function TicketModal({ isOpen, onClose, lastSale, paymentMethod }
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0}}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" style={{maxHeight: '90vh', overflowY: 'auto'}}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900">🖨️ Ticket de Venta</h3>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+              style={{minWidth: '44px', minHeight: '44px'}}
             >
               ✕
             </button>
           </div>
           
           {/* Contenido del Ticket */}
-          <div className="font-mono text-xs bg-white p-6 rounded-lg border-2 border-gray-600 max-w-sm mx-auto" style={{fontFamily: 'Courier New, monospace'}}>
+          <div className="font-mono text-xs bg-white p-4 rounded-lg border-2 border-gray-600 w-full mx-auto" style={{fontFamily: 'Courier New, monospace', maxWidth: '100%', overflowX: 'auto'}}>
             {/* Logo y Header */}
             <div className="text-center mb-4">
               <div className="text-3xl mb-2">🐱</div>
@@ -126,13 +136,15 @@ export default function TicketModal({ isOpen, onClose, lastSale, paymentMethod }
           <div className="flex gap-3 mt-6">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              style={{minHeight: '48px'}}
             >
               Cerrar
             </button>
             <button
               onClick={handlePrint}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              style={{minHeight: '48px'}}
             >
               <Printer className="h-4 w-4" />
               Imprimir
