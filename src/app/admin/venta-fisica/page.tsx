@@ -747,9 +747,9 @@ export default function VentaFisicaPage() {
     }
   }
 
-  // Función alternativa de impresión (fallback) - Optimizada para 48mm
+  // Función alternativa de impresión (fallback) - HTML simple para RawBT
   const printTicketAlternative = () => {
-    console.log('🖨️ Generando ticket de 48mm... v7.0')
+    console.log('🖨️ Generando ticket simple para RawBT... v8.0')
     console.log('📊 Datos de venta:', lastSale)
     
     if (!lastSale) {
@@ -763,7 +763,7 @@ export default function VentaFisicaPage() {
     const tax = subtotal * 0.16
     const realSubtotal = total - tax
 
-    // Generar HTML optimizado para ticket de 48mm
+    // Generar HTML simple optimizado para 48mm
     const ticketHTML = `
       <!DOCTYPE html>
       <html>
@@ -774,207 +774,100 @@ export default function VentaFisicaPage() {
             size: 48mm auto;
             margin: 0;
           }
-          body {
-            font-family: 'Courier New', monospace;
-            font-size: 10px;
-            margin: 0;
+          body { 
+            font-family: monospace; 
+            font-size: 10px; 
+            margin: 0; 
             padding: 5px;
-            background: white;
             width: 48mm;
             max-width: 48mm;
-          }
-          .ticket {
-            width: 100%;
-            max-width: 48mm;
-            margin: 0 auto;
             background: white;
-            font-family: 'Courier New', monospace;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
             font-size: 10px;
-            line-height: 1.2;
           }
-          .header {
-            text-align: center;
-            margin-bottom: 8px;
+          td {
+            padding: 2px 1px;
+            vertical-align: top;
           }
-          .logo img {
-            font-size: 16px;
-            margin-bottom: 4px;
-          }
-          .logo img{
-          width:100px;
-          heigth:100px;
-          
-          }
-          .title {
-            font-family: serif;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 2px;
-          }
-          .subtitle {
-            font-size: 10px;
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .business-info {
-            text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 1px solid black;
-            padding-bottom: 4px;
-          }
-          .divider {
-            border-top: 1px dotted black;
-            margin: 4px 0;
-          }
-          .transaction-details {
-            margin-bottom: 6px;
-          }
-          .product-item {
-            margin-bottom: 4px;
-          }
-          .product-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2px;
-          }
-          .product-sku {
-            margin-left: 8px;
-            color: #666;
-            margin-bottom: 4px;
-            font-size: 8px;
-          }
-          .totals {
-            margin-bottom: 6px;
-          }
-          .total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2px;
-          }
-          .payment-info {
-            margin-bottom: 6px;
-          }
-          .footer {
-            text-align: center;
-            margin-top: 8px;
-          }
-          .text-center { text-align: center; }
-          .text-right { text-align: right; }
-          .text-small { font-size: 8px; }
-          .text-bold { font-weight: bold; }
+          .center { text-align: center; }
+          .right { text-align: right; }
+          .bold { font-weight: bold; }
+          .divider { border-top: 1px dotted #000; margin: 3px 0; }
+          .small { font-size: 8px; }
           @media print {
             body { 
               margin: 0; 
               padding: 0;
               width: 48mm;
             }
-            .ticket { 
-              border: none; 
+            table {
               width: 48mm;
-              max-width: 48mm;
             }
           }
         </style>
       </head>
       <body>
-        <div class="ticket">
-          <!-- Logo y Header -->
-          <div class="header">
-            <div class="logo"><img src="/logos/diseno-sin-titulo-5.png" alt="" /></div>
-            <div class="title">Garras Felinas</div>
-            <div class="subtitle">GARRAS FELINAS</div>
-            <div class="text-small">Venta Física</div>
-          </div>
+        <table>
+          <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></td></tr>
+          <tr><td class="center small" colspan="2">Venta Física</td></tr>
+          <tr><td class="divider" colspan="2"></td></tr>
           
-          <!-- Información del negocio -->
-          <div class="business-info">
-            <div class="text-small">andador 20 de noviembre, Zapopan</div>
-            <div class="text-small">Tel: +52 (555) 123-4567</div>
-            <div class="text-small">info@garrasfelinas.com</div>
-            <div class="text-small">RFC: GAR-123456-ABC</div>
-          </div>
+          <tr><td class="center small" colspan="2">andador 20 de noviembre, Zapopan</td></tr>
+          <tr><td class="center small" colspan="2">Tel: +52 (555) 123-4567</td></tr>
+          <tr><td class="center small" colspan="2">info@garrasfelinas.com</td></tr>
+          <tr><td class="center small" colspan="2">RFC: GAR-123456-ABC</td></tr>
+          <tr><td class="divider" colspan="2"></td></tr>
           
-          <!-- Línea punteada -->
-          <div class="divider"></div>
+          <tr><td class="small">Fecha:</td><td class="right small">${new Date().toLocaleString('es-MX')}</td></tr>
+          <tr><td class="small">Ticket #:</td><td class="right small">${lastSale.id}</td></tr>
+          <tr><td class="small">Cajero:</td><td class="right small">Admin</td></tr>
+          <tr><td class="divider" colspan="2"></td></tr>
           
-          <!-- Detalles de la transacción -->
-          <div class="transaction-details">
-            <div class="text-small">Fecha: ${new Date().toLocaleString('es-MX')}</div>
-            <div class="text-small">Ticket #: ${lastSale.id}</div>
-            <div class="text-small">Cajero: Admin</div>
-          </div>
-          
-          <!-- Línea punteada -->
-          <div class="divider"></div>
-          
-          <!-- Productos -->
           ${lastSale.items.map((item: any, index: number) => `
-            <div class="product-item">
-              <div class="product-header">
-                <span>${item.product?.name || 'Producto'} x${item.quantity}</span>
-                <span class="text-bold">$${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-              <div class="product-sku">
-                SKU: ${item.product?.sku || 'N/A'} | $${item.price.toFixed(2)} c/u
-              </div>
-            </div>
+            <tr><td colspan="2" class="small">${item.product?.name || 'Producto'} x${item.quantity}</td></tr>
+            <tr><td class="small">SKU: ${item.product?.sku || 'N/A'}</td><td class="right small">$${(item.price * item.quantity).toFixed(2)}</td></tr>
+            <tr><td class="small">$${item.price.toFixed(2)} c/u</td><td></td></tr>
           `).join('')}
           
-          <!-- Línea punteada -->
-          <div class="divider"></div>
+          <tr><td class="divider" colspan="2"></td></tr>
+          <tr><td class="small">Subtotal:</td><td class="right small">$${realSubtotal.toFixed(2)}</td></tr>
+          <tr><td class="small">IVA (16%):</td><td class="right small">$${tax.toFixed(2)}</td></tr>
+          <tr><td class="bold">TOTAL:</td><td class="right bold">$${total.toFixed(2)}</td></tr>
+          <tr><td class="divider" colspan="2"></td></tr>
           
-          <!-- Totales -->
-          <div class="totals">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span>$${realSubtotal.toFixed(2)}</span>
-            </div>
-            <div class="total-row">
-              <span>IVA (16%):</span>
-              <span>$${tax.toFixed(2)}</span>
-            </div>
-            <div class="total-row">
-              <span class="text-bold">TOTAL:</span>
-              <span class="text-bold">$${total.toFixed(2)}</span>
-            </div>
-          </div>
+          <tr><td colspan="2" class="small">Método: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</td></tr>
+          <tr><td class="center small" colspan="2">Comprobante fiscal</td></tr>
+          <tr><td class="divider" colspan="2"></td></tr>
           
-          <!-- Línea punteada -->
-          <div class="divider"></div>
-          
-          <!-- Método de pago e información legal -->
-          <div class="payment-info">
-            <div class="text-small">Método de pago: ${paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</div>
-            <div class="text-small">Este documento es un comprobante fiscal</div>
-          </div>
-          
-          <!-- Línea punteada -->
-          <div class="divider"></div>
-          
-          <!-- Footer -->
-          <div class="footer">
-            <div class="text-bold">¡Gracias por su compra!</div>
-            <div class="text-small">www.garrasfelinas.com</div>
-            <div class="text-small">Conserve este ticket para garantias y devoluciones</div>
-          </div>
-        </div>
-        <script>
-          window.onload = function() {
-            window.print();
-            setTimeout(function() {
-              window.close();
-            }, 1000);
-          };
-        </script>
+          <tr><td class="center bold" colspan="2">¡Gracias por su compra!</td></tr>
+          <tr><td class="center small" colspan="2">www.garrasfelinas.com</td></tr>
+          <tr><td class="center small" colspan="2">Conserve este ticket</td></tr>
+        </table>
       </body>
       </html>
     `
 
-    // Crear una nueva ventana con el contenido del ticket de 48mm
+    // Crear una nueva ventana con el contenido simple
     const printWindow = window.open('', '_blank', 'width=200,height=600')
     if (printWindow) {
       printWindow.document.write(ticketHTML)
       printWindow.document.close()
+      
+      // Imprimir automáticamente después de un breve delay
+      setTimeout(() => {
+        try {
+          printWindow.print()
+          setTimeout(() => {
+            printWindow.close()
+          }, 1000)
+        } catch (error) {
+          console.error('Error al imprimir:', error)
+          // Si falla, mantener la ventana abierta para impresión manual
+        }
+      }, 500)
     } else {
       // Fallback: mostrar en modal si no se puede abrir ventana
       console.log('✅ Abriendo modal del ticket...')
