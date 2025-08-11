@@ -110,13 +110,13 @@
             
             <h3>Prueba 1: Ticket de Ejemplo</h3>
             <p>Imprime un ticket con datos de ejemplo (ID: TEST123)</p>
-                         <a href="my.bluetoothprint.scheme://https://garrasfelinas.com/api/bluetooth-print?id=TEST123" class="print-button">
-                 🖨️ Imprimir Ticket Ejemplo
-             </a>
-             
-             <div class="url-display">
-                 URL: my.bluetoothprint.scheme://https://garrasfelinas.com/api/bluetooth-print?id=TEST123
-             </div>
+            <a href="my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=TEST123" class="print-button">
+                🖨️ Imprimir Ticket Ejemplo
+            </a>
+            
+            <div class="url-display">
+                URL: my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=TEST123
+            </div>
 
             <h3>Prueba 2: Ticket con ID Personalizado</h3>
             <p>Imprime un ticket con un ID específico:</p>
@@ -164,12 +164,12 @@
             const customUrlDisplay = document.getElementById('customUrlDisplay');
             const customUrl = document.getElementById('customUrl');
             
-                         if (customId.trim()) {
-                 const url = `my.bluetoothprint.scheme://https://garrasfelinas.com/api/bluetooth-print?id=${encodeURIComponent(customId)}`;
-                 customPrintBtn.href = url;
-                 customUrl.textContent = url;
-                 customUrlDisplay.style.display = 'block';
-             } else {
+            if (customId.trim()) {
+                const url = `my.bluetoothprint.scheme://http://localhost:3000/api/bluetooth-print?id=${encodeURIComponent(customId)}`;
+                customPrintBtn.href = url;
+                customUrl.textContent = url;
+                customUrlDisplay.style.display = 'block';
+            } else {
                 customPrintBtn.href = '#';
                 customUrlDisplay.style.display = 'none';
             }

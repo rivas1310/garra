@@ -21,10 +21,9 @@ Esta integración permite imprimir tickets térmicos desde tu aplicación web us
 2. Selecciona tu impresora térmica Bluetooth
 3. Verifica que la conexión sea exitosa
 
- ### 3. Configurar Red
- - **Para desarrollo local:** Asegúrate de que tu PC y móvil estén en la misma red WiFi
- - **Para producción:** Usa tu dominio público `garrasfelinas.com`
- - **Importante:** Abre la aplicación desde tu celular, no desde la PC
+### 3. Configurar Red
+- **Para desarrollo local:** Asegúrate de que tu PC y móvil estén en la misma red WiFi
+- **Para producción:** Usa tu dominio público
 
 ## 🔧 Implementación
 
@@ -78,11 +77,11 @@ GET /api/bluetooth-print?id={SALE_ID}
 
 ## 🧪 Pruebas
 
- ### 1. Página de Prueba
- Abre en tu navegador:
- ```
- https://garrasfelinas.com/test-bluetooth-print.html
- ```
+### 1. Página de Prueba
+Abre en tu navegador:
+```
+http://localhost:3000/test-bluetooth-print.html
+```
 
 ### 2. Script de Prueba
 Ejecuta el script de prueba:
@@ -90,11 +89,11 @@ Ejecuta el script de prueba:
 node scripts/test-bluetooth-print.js
 ```
 
- ### 3. Verificar Endpoint
- Accede directamente al endpoint:
- ```
- https://garrasfelinas.com/api/bluetooth-print?id=TEST123
- ```
+### 3. Verificar Endpoint
+Accede directamente al endpoint:
+```
+http://localhost:3000/api/bluetooth-print?id=TEST123
+```
 
 ## 📱 Uso en la Aplicación
 
@@ -116,21 +115,14 @@ const printWithBluetoothPrint = () => {
 }
 ```
 
- ## 🔄 Flujo de Impresión
- 
- ### Desde el Celular (Recomendado):
- 1. **Abre la app desde tu celular** → `https://garrasfelinas.com/admin/venta-fisica`
- 2. **Confirma una venta** → Se guarda en la base de datos
- 3. **Aparece botón "Bluetooth Print"** → En la esquina inferior derecha
- 4. **Usuario hace clic** → Se genera URL con scheme personalizado
- 5. **Navegador abre app** → Bluetooth Print se activa automáticamente
- 6. **App obtiene JSON** → Desde el endpoint `/api/bluetooth-print`
- 7. **App imprime ticket** → En la impresora térmica conectada
- 
- ### Desde la PC (Solo para pruebas):
- 1. **Desarrolla en PC** → `http://localhost:3000`
- 2. **Prueba desde celular** → `https://garrasfelinas.com`
- 3. **La app debe estar en el mismo dispositivo** → Celular con impresora
+## 🔄 Flujo de Impresión
+
+1. **Usuario confirma venta** → Se guarda en la base de datos
+2. **Aparece botón "Bluetooth Print"** → En la esquina inferior derecha
+3. **Usuario hace clic** → Se genera URL con scheme personalizado
+4. **Navegador abre app** → Bluetooth Print se activa automáticamente
+5. **App obtiene JSON** → Desde el endpoint `/api/bluetooth-print`
+6. **App imprime ticket** → En la impresora térmica conectada
 
 ## 🎨 Personalización del Ticket
 
