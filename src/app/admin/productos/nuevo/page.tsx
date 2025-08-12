@@ -17,7 +17,7 @@ import toast from 'react-hot-toast'
 const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const womenShoeSizes = ['2', '3', '4', '5', '6', '7', '8']
 const menShoeSizes = ['2', '3', '4', '5', '6', '7', '8', '9', '10']
-const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 'Gris']
+const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Gris']
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {

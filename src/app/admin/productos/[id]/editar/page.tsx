@@ -28,16 +28,23 @@ const categories = [
 const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const womenShoeSizes = ['2', '3', '4', '5', '6', '7', '8']
 const menShoeSizes = ['2', '3', '4', '5', '6', '7', '8', '9', '10']
-const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa', 'Gris']
+const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Gris']
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
   mujer: ["Vestidos", "Blusas", "Pantalones", "Chamarras", "Sudaderas", "Sacos", "Abrigos", "Tops", "Overoles", "Faldas", "Shorts"],
-  hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts"],
-  accesorios: ["Joyas", "Relojes", "Cinturones", "Bolsos"],
+  hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Shorts","Sudaderas"],
+  accesorios: ["Joyeria Para Dama", "Joyeria Para Caballero","Cinturones de Dama", "Cinturones de Hombre",],
   calzado: ["Zapatos", "Zapatillas", "Botas"],
-  bolsos: ["Carteras", "Mochilas", "Bolsos de mano"],
-  deportes: ["Ropa deportiva", "Fitness", "Accesorios deportivos"],
+  "calzado-mujer": ["Tacones", "Zapatillas", "Zapatos", "Sneakers", "Botas", "Huaraches", "Sandalias"],
+  "calzado-hombre": ["Zapatos", "Sneakers", "Botas", "Sandalias"],
+  "calzado-nino": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
+  "calzado-nina": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
+  ninas: ["Vestidos", "Blusas", "Pantalones", "Faldas", "Shorts","Playeras","Sudaderas","Chamarras"],
+  ninos: ["Camisetas", "Pantalones", "Shorts", "Sudaderas", "Chamarras","Playeras"],
+  bolsos: ["Carteras de Dama","Carteras de Cabalalero","Bolso de mano", "Mochilas de Dama", "Mochilas de Caballero"],
+  deportes: ["Ropa deportiva", "Zapatillas", "Accesorios deportivos"],
+
 };
 
 // Datos simulados del producto

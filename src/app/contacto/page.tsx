@@ -53,7 +53,7 @@ export default function ContactoPage() {
     {
       icon: <Phone className="h-6 w-6" />,
       title: 'Teléfono',
-      value: '+52 (33) 1234-5678',
+      value: '+52 33 5193 5392',
       subtitle: 'Lun-Vie 9:00-18:00',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
@@ -61,7 +61,7 @@ export default function ContactoPage() {
     {
       icon: <Mail className="h-6 w-6" />,
       title: 'Email',
-      value: 'contacto@bazarfashion.com',
+      value: 'info@garrasfelinas.com',
       subtitle: 'Respuesta en 24h',
       color: 'text-green-600',
       bgColor: 'bg-green-50'
@@ -77,8 +77,8 @@ export default function ContactoPage() {
     {
       icon: <Clock className="h-6 w-6" />,
       title: 'Horarios',
-      value: 'Lun-Vie: 9:00-18:00',
-      subtitle: 'Sáb: 10:00-14:00',
+      value: 'Mie-Vie: 15:00-21:00',
+      subtitle: 'Sáb: 15:00-21:00',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
     }
@@ -324,8 +324,9 @@ export default function ContactoPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900">Línea directa</h4>
-                        <p className="text-gray-600">+52 (33) 1234-5678</p>
-                        <p className="text-sm text-gray-500">Lun-Vie 9:00-18:00</p>
+                        <p className="text-gray-600">+52 33 5193 5392</p>
+                        <p className="text-sm text-gray-500">Mie-Vie 15:00-21:00</p>
+                        <p className="text-sm text-gray-500">Sab-Dom 15:00-21:00</p>
                       </div>
                     </div>
 
@@ -335,7 +336,7 @@ export default function ContactoPage() {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900">Email</h4>
-                        <p className="text-gray-600">contacto@bazarfashion.com</p>
+                        <p className="text-gray-600">info@garrasfelinas.com</p>
                         <p className="text-sm text-gray-500">Respuesta en 24h</p>
                       </div>
                     </div>
