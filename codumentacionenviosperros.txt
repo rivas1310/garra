@@ -1,0 +1,95 @@
+EnvíosPerros V2IntroductionChange logAhora se muestran todas las paqueterías disponibles, aunque no haya servicio en las direcciones solicitadas.Se agregan una bandera en la respuesta del end point "shiping/rates" para indicar si el servicio está disponible.Cada elemento que regresa "shiping/rates" contiene un campo indicando la razón de por qué no se encuentra disponible o "Correcto" en caso de que si lo esté.Change log 2023-10-08Se agregan paqueterías a sus respectivo catálogoEn ordenes se agrega el campo discount_code , hace referencía a un código de descuentoEn métodos de envíos se actualizan pesos y medidas aceptadas para cada servicio¿Cómo comenzar a usar nuestra API?Primero debes registrarte con nosotros en la siguiente liga:https://app.enviosperros.com/registerTerminando el registro deberás activar tu cuenta via correo.IMPORTANTE: Si vas a desarrollar pruebas haz los mismos pasos que arriba pero en el link:https://staging-app.enviosperros.com:Nota: Nuestra API es un servicio REST que se consume a través de via HTTP con encabezados y una respuesta en formato JSON.URL'S BaseEndpoint para consumir los servicios mediante HTTPS.
+Producción	https://app.enviosperros.com/api/v2/
+Ambiente staging	https://staging-app.enviosperros.com/api/v2/
+En cada API podrás ver la url a detalle.AutenticaciónEl sistema de EnvíosPerros usa autenticación mediante API Key, lo cúal significa que debes envíar este token mediante el header bearer. Esto nos permitirá saber quien esta consumiendo nuestra API y controlar sus consumos. Para conocer el API-KEY debes acceder a nuestra plataforma y en el menú integraciones dar click sobre el botón "Ver detalles" en la tarjeta llamada Conexión vía API Rest
+Producción	Lo encontrarás en el link de producción:
+https://app.enviosperros.com/integrations
+una vez registrado
+Pruebas	Lo encontrarás en el link de pruebas:
+https://staging-app.enviosperros.com/integrations
+una vez registrado
+CátalogosPaqueterias
+Servicios	Cátalogos
+Estafeta	ESTAFETA_EXPRESS
+Estafeta	ESTAFETA_ECONOMICO
+Redpack	EXPRESS
+Redpack	ECOEXPRESS
+Redpack	METROPOLITANO
+PaqueteExpress	STD-T
+JTExpress	STANDARD_JT
+Métodos de envioTipos de envío, servicio y restricciones.
+Este parámetro debe ser envíado en la petición "Crear Orden".
+ESTAFETA_EXPRESS	Servicio con garantía de entrega al día siguiente hábil en horario abierto de 9:00 a 18:00 hrs. Aplica para domicilios comerciales en las zonas céntricas. Existen excepciones para ciertas ciudades origen.Acepta hasta 60 kilos de envío
+ESTAFETA_ECONOMICO	Tus envíos llegan a cualquier parte del país al mejor precio, con garantía de 3 a 5 días hábiles en horario abierto de 9:00 a 18:00 hrs. Acepta hasta 60 kilos de envío
+EXPRESS	Entrega estimada entre 1 a 3 dias hábiles. La entrega estándar de ECOEXPRESS está disponible en los 32 estados, pero solo en direcciones donde Redpack lo permita en su radar para ello se debera consultar la url de cotización y saber la disponibilidad ,solo se admiten medidas del paquete menor a 110cm. . Acepta hasta 70 kilos de envío
+ECOEXPRESS	Entrega estimada entre 3 a 6 dias hábiles. La entrega estándar de ECOEXPRESS está disponible en los 32 estados, pero solo en direcciones donde Redpack lo permita en su radar para ello se debera consultar la url de cotización y saber la disponibilidad ,solo se admiten medidas del paquete menor a 110cm. Acepta hasta 70 kilos de envío
+METROPOLITANO	Mismo día - día siguiente. La entrega METROPOLITANO está disponible en los 3 estados en lo cuales son solo 3 ciudades metropolitanas CDMX, GDL y Mty. Y solo se aceptan paquetes de 1 kilo.
+STANDARD_JT	Entrega estimada entre 3 a 7 dias hábiles. La entrega estándar de STANDARD_JT está disponible en 32 estados, pero solo en direcciones donde el compromiso de entrega STANDARD_JT es antes de las 10:30 a.m. o al mediodía. Acepta hasta 30 kilos de envío
+URL TrackingUrl's de seguimiento de un paquete.
+Estafeta	https://cs.estafeta.com/es/Tracking/searchByGet?wayBill=[NUMERO-DE-GUIA]&wayBillType=0&isShipmentDetail=False
+J&T	https://www.jtexpress.mx/trajectoryQuery?waybillNo=guía&flag=1
+Redpack	https://www.redpack.com.mx/es/rastreo/?guias=guía
+PaqueteExpress	https://www.paquetexpress.com.mx/rastreo/guía
+Periodos pickupLa recolección se lleva a cabo en los siguientes periodos de horario la recolección aplica para guías que al consumir nuestra URL de cotización asi lo muestre.Se muestran en la tabla de abajo los periodos de tiempos en los que se puede solicitasr la recolección.
+Periodos	
+0	start =>11:00:00,end => 16:00:00
+1	start =>12:00:00,end => 17:00:00
+2	start =>13:00:00,end => 18:00:00
+3	start =>14:00:00,end => 19:00:00
+Se deben considerar los siguientes lineamientos:La recolección independiente del periodo, es a partir del día siguiente de haber generado la guía.La recolección se lleva a cabo de lunes a viernes.La recolección no puede ser solicitada despues de 4 días de haber generado la guía.Datos carta porteLos siguientes datos que servirá a la empresa de paquetería a generar la Carta Porte según los requisitos del SAT (Link al centro de ayuda: https://ayuda.enviosperros.com/es-mx/article/como-afecta-la-carta-porte-mis-envios-6olcjy/
+Datos	
+claveProdServ	Clave de producto de acuerdo a catálogo del SAT
+descripcion_producto	Nombre del producto de acuerdo a catálogo del SAT
+clave_unidad	Clave de unidad de acuerdo a catálogo del SAT
+nombre_unidad	Nombre de la unidad de acuerdo a catálogo del SAT
+valor_mercancia	Valor en pesos mexicanos del paquete
+rfc_origin	Valor que representa el RFC del remitente
+rfc_dest	Valor que representa el RFC del destinatario
+Catálogos del SAT : http://omawww.sat.gob.mx/tramitesyservicios/Paginas/documentos/catCFDI_V_40_29122021.xls
+Reference
+CotizacionesDa click abajo en "Shipping Rates" para ver detalles, url, body y tokens necesarios.
+shipping rates
+URL's para consultar Métodos de Envío
+Producción	https://app.enviosperros.com/api/v2/shipping/rates
+Ambiente staging	https://staging-app.enviosperros.com/api/v2/shipping/rates
+Api para consultar los métodos de envíoPara consultar métodos de envío se debe considerar:1.- Incluir un token de autorización de tipo Bearer que está dentro de tu perfil de app.enviosperros.com donde te proporcionaremos el apikey al dar click en tu nombre de usuario.2.- Importante: considerar weight en kilos, tamaño máximo para fedex 63 kilos y para estafeta 70.3.- Importante: La regla de conversión es (lado * lado * lado / 5000), de esa manera se escoge en automático el tipo de envió y tamaño. Peso en KG y distancia en CM.4.- Se hace un Post con el siguiente cuerpo para México:Métodos HTTP permitidos
+Método	Descripción
+POST	Usado para consultar Métodos de Envío.
+Respuestas HTTP
+Código	Descripción
+200	Mensaje con los costos de envío
+401	Token de autorización incorrecto
+Datos de request
+value	Descripción
+depth	Requerido largo o profundidad del paquete no exceder los 150cm en caso de redpack los 100cm
+width	Requerido no exceder los 150cm en caso de redpack los 100cm
+height	Requerido no exceder los 150cm en caso de redpack los 100cm
+api_token	Requerido token de autorización incorrecto
+origin-codePostal	Requerido
+destination-codePostal	Requerido
+ÓrdenesDa click abajo en "Crear una orden" para ver detalles, url, body y tokens necesarios.
+Crear una orden
+API para autorizar la generación de una orden.Favor de considerar lo siguiente:1.- En Country es importante que se hagan pedidos en México2.- En caso de crear órdenes tome en cuenta que sameDay aplica antes de las 14 hrs horario local.3.- Recuerda usar tu Apikey que está dentro de tu perfil de clientes en Mi cuenta -> Developers.Datos de requestLos datos que se muestran en el ejemplo de este request todos son requeridos.
+value	Descripción
+save_origin	Requerido con valor opcional
+discount_code	valor de cupón de descuento,con valor opcional
+ocurre	Requerido con valor opciona
+Cancelación de una guíaDa click abajo en "Cancelar una guía" para ver detalles, url, body y tokens necesarios.
+Cancelar guía
+API para cancelar guíasPara ver cancelar una orden recuerda considerar lo siguiente:1.- Incluir un token de autorización de tipo Bearer que se encuentra al dar click en tu nombre de usuario.2.- Se hace un Post con el siguiente cuerpo:{ "referens":[12121] }4.- Dentro de los corchetes se agrega una o varias referencias (delimitadas por comas). Por Ejemplo:{ "referens":[234125676,31231223,282432211] }Datos de request
+value	Descripción
+referens	Requerido número(s) de guías
+Generación de etiqueta en PDFDa click abajo en "Generar pdf de guía" para ver detalles, url, body y tokens necesarios.
+Generacion PDF de guía
+Api para crear pdf de guíasPara crear pdf guías:1.- Incluir un token de autorización de tipo Bearer que está dentro de tu perfil de https://app.enviosperros.com/user/show en el cual deberas generar tu API KEY.2.- Considera en el body el valor base64: true como una respuesta de documento encriptado en base64 y base64:false como una respuesta de documento codificada para pdf.Datos de request
+value	Descripción
+reference	Requerido número de guía
+PickUpDa click abajo en "pickup" para crear una orden de recolección.
+Recolección de paquete
+Api para solicitar la recolección de un paquete, el parametro time corresponde al periodo de recolección, por favor visualizar en el apartado de cátalogos de esta documentación los diversos periodos que existen.Reglas a considerar para la recolección de paquetes:Este servicio solo esta disponible para la paqueteria de Paquete express, Redpack.La solicitud de recolección solo se puede llevar a cabo de lunes a viernes.La solicitud de recolección no puede ser solicitada el mismo dia de la generación de la guía.Se tiene un periodo de máximo 4 dias para solicitar la recolección.Datos de request
+value	Descripción
+date	Requerido
+time	Requerido ver en catálogo
+reference	Requerido número de guía
+
+

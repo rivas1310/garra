@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo Plugin Android - Impresoras Térmicas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #1976D2;
+        }
+        .btn-warning {
+            background-color: #FF9800;
+            color: white;
+        }
+        .btn-warning:hover {
+            background-color: #F57C00;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖨️ Plugin Android - Impresoras Térmicas</h1>
+        
+        <div class="instructions">
+            <h3>📋 Instrucciones:</h3>
+            <ul>
+                <li><strong>1.</strong> Asegúrate de que el plugin de Android esté ejecutándose en el puerto 8000</li>
+                <li><strong>2.</strong> Obtén la dirección MAC de tu impresora desde el plugin Android</li>
+                <li><strong>3.</strong> Ingresa la MAC en el campo de abajo</li>
+                <li><strong>4.</strong> Prueba la conexión antes de imprimir</li>
+                <li><strong>5.</strong> Usa los botones para diferentes tipos de impresión</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="phoneIp">IP del Teléfono Android:</label>
+            <input type="text" id="phoneIp" placeholder="Ej: 192.168.1.100" value="">
+            <small style="color: #666; font-size: 14px;">Deja vacío para usar localhost (si el plugin está en esta PC)</small>
+        </div>
+
+        <div class="form-group">
+            <label for="printerMac">Dirección MAC de la Impresora:</label>
+            <input type="text" id="printerMac" placeholder="FF:FF:FF:FF:FF:FF" value="">
+            <small style="color: #666; font-size: 14px;">Obtén la MAC desde el plugin Android en "Ver impresoras disponibles"</small>
+        </div>
+
+        <div class="form-group">
+            <label for="serial">Serial/Licencia (Opcional):</label>
+            <input type="text" id="serial" placeholder="Deja vacío si no tienes licencia" value="">
+        </div>
+
+        <div class="button-group">
+            <button class="btn-secondary" onclick="testConnection()">🔍 Probar Conexión</button>
+            <button class="btn-warning" onclick="obtenerImpresoras()">📋 Obtener Impresoras</button>
+            <button class="btn-primary" onclick="imprimirPrueba()">🧪 Imprimir Prueba</button>
+            <button class="btn-primary" onclick="imprimirTicketBasico()">🎫 Ticket Básico</button>
+            <button class="btn-primary" onclick="imprimirTicketCompleto()">🎨 Ticket Completo</button>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+    </div>
+
+    <!-- Incluir el conector -->
+    <script src="./ConectorEscposAndroid.js"></script>
+    
+    <script>
+        // Variables globales
+        let conector = null;
+        
+        // Función para mostrar estado
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.classList.remove('hidden');
+        }
+        
+        // Función para ocultar estado
+        function hideStatus() {
+            document.getElementById('status').classList.add('hidden');
+        }
+        
+        // Función para obtener valores del formulario
+        function getFormValues() {
+            return {
+                phoneIp: document.getElementById('phoneIp').value.trim(),
+                mac: document.getElementById('printerMac').value.trim(),
+                serial: document.getElementById('serial').value.trim()
+            };
+        }
+        
+        // Probar conexión con el plugin
+        async function testConnection() {
+            showStatus('🔍 Probando conexión con el plugin...', 'info');
+            
+            try {
+                const { phoneIp } = getFormValues();
+                const connected = await ConectorEscposAndroid.testConnection(undefined, phoneIp || undefined);
+                if (connected) {
+                    showStatus('✅ Conexión exitosa con el plugin de Android', 'success');
+                } else {
+                    showStatus('❌ No se puede conectar al plugin. Verifica que esté ejecutándose en el puerto 8000.', 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        }
+        
+        // Obtener lista de impresoras
+        async function obtenerImpresoras() {
+            showStatus('📋 Obteniendo lista de impresoras...', 'info');
+            
+            try {
+                const { phoneIp } = getFormValues();
+                const impresoras = await ConectorEscposAndroid.obtenerImpresoras(undefined, phoneIp || undefined);
+                if (impresoras.length > 0) {
+                    showStatus(`📋 Impresoras encontradas: ${impresoras.join(', ')}`, 'success');
+                    // Auto-llenar la primera impresora si el campo está vacío
+                    const macInput = document.getElementById('printerMac');
+                    if (!macInput.value && impresoras.length > 0) {
+                        macInput.value = impresoras[0];
+                    }
+                } else {
+                    showStatus('⚠️ No se encontraron impresoras. Esto es normal según la documentación.', 'info');
+                }
+            } catch (error) {
+                showStatus(`❌ Error obteniendo impresoras: ${error.message}`, 'error');
+            }
+        }
+        
+        // Imprimir ticket de prueba
+        async function imprimirPrueba() {
+            const { phoneIp, mac, serial } = getFormValues();
+            
+            if (!mac) {
+                showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
+                return;
+            }
+            
+            showStatus('🧪 Imprimiendo ticket de prueba...', 'info');
+            
+            try {
+                const conector = ConectorEscposAndroid.generarTicketPrueba(serial);
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
+                const resultado = await conector.imprimirEn(mac);
+                
+                if (resultado === true) {
+                    showStatus('✅ Ticket de prueba impreso correctamente', 'success');
+                } else {
+                    showStatus(`❌ Error al imprimir: ${resultado}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error de impresión: ${error.message}`, 'error');
+            }
+        }
+        
+        // Imprimir ticket básico
+        async function imprimirTicketBasico() {
+            const { phoneIp, mac, serial } = getFormValues();
+            
+            if (!mac) {
+                showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
+                return;
+            }
+            
+            showStatus('🎫 Imprimiendo ticket básico...', 'info');
+            
+            try {
+                const items = [
+                    { nombre: 'Producto 1', precio: 10.50, cantidad: 2 },
+                    { nombre: 'Producto 2', precio: 25.00, cantidad: 1 },
+                    { nombre: 'Producto 3', precio: 5.75, cantidad: 3 }
+                ];
+                
+                const subtotal = 58.25;
+                const total = 58.25;
+                
+                const conector = ConectorEscposAndroid.generarTicketBasico(
+                    'BAZAR - ENVÍOS PERROS',
+                    items,
+                    subtotal,
+                    total,
+                    new Date().toLocaleString(),
+                    serial
+                );
+                
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
+                
+                const resultado = await conector.imprimirEn(mac);
+                
+                if (resultado === true) {
+                    showStatus('✅ Ticket básico impreso correctamente', 'success');
+                } else {
+                    showStatus(`❌ Error al imprimir: ${resultado}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error de impresión: ${error.message}`, 'error');
+            }
+        }
+        
+        // Imprimir ticket completo con logo y código QR
+        async function imprimirTicketCompleto() {
+            const { phoneIp, mac, serial } = getFormValues();
+            
+            if (!mac) {
+                showStatus('❌ Debes especificar la dirección MAC de la impresora', 'error');
+                return;
+            }
+            
+            showStatus('🎨 Imprimiendo ticket completo...', 'info');
+            
+            try {
+                const conector = new ConectorEscposAndroid(serial);
+                
+                if (phoneIp) {
+                    conector.setPhoneIp(phoneIp);
+                }
+                
+                conector
+                    .Iniciar()
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                    .Feed(1)
+                    // Logo de la empresa
+                    .DescargarImagenDeInternetEImprimir(
+                        "https://res.cloudinary.com/dhwlirnis/image/upload/v1754606987/productos/rqyo1uuaimih7a5lof6d.png", 
+                        ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 
+                        216
+                    )
+                    .Iniciar() // Reiniciar después de imagen
+                    .Feed(1)
+                    // Encabezado
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                    .EstablecerTamañoFuente(2, 2)
+                    .EscribirTexto("BAZAR - ENVÍOS PERROS\n")
+                    .EstablecerTamañoFuente(1, 1)
+                    .EscribirTexto("Venta física\n")
+                    .EscribirTexto("Teléfono: 123-456-7890\n")
+                    .EscribirTexto("Fecha: " + new Date().toLocaleString() + "\n")
+                    .Feed(1)
+                    // Línea separadora
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                    .EscribirTexto("____________________\n")
+                    // Items
+                    .EscribirTexto("Producto Demo x1\n")
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                    .EscribirTexto("$25.00\n")
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                    .EscribirTexto("Servicio Demo x1\n")
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                    .EscribirTexto("$15.00\n")
+                    // Total
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+                    .EscribirTexto("____________________\n")
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+                    .EscribirTexto("Subtotal: $40.00\n")
+                    .EstablecerEnfatizado(true)
+                    .EstablecerTamañoFuente(1, 2)
+                    .EscribirTexto("TOTAL: $40.00\n")
+                    .EstablecerEnfatizado(false)
+                    .EstablecerTamañoFuente(1, 1)
+                    .EscribirTexto("____________________\n")
+                    // Mensaje de agradecimiento
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                    .Feed(1)
+                    .EstablecerEnfatizado(true)
+                    .EscribirTexto("¡Gracias por su compra!\n")
+                    .EstablecerEnfatizado(false)
+                    .Feed(1)
+                    // Código QR
+                    .ImprimirCodigoDeBarras(
+                        "qr", 
+                        "https://www.garrasfelinas.com", 
+                        ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 
+                        160, 
+                        160
+                    )
+                    .Iniciar() // Reiniciar después de código QR
+                    .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+                    .Feed(1)
+                    .EscribirTexto("www.garrasfelinas.com\n")
+                    .Feed(2)
+                    .Corte(1)
+                    .Pulso(48, 60, 120); // Abrir cajón si está conectado
+                
+                const resultado = await conector.imprimirEn(mac);
+                
+                if (resultado === true) {
+                    showStatus('✅ Ticket completo impreso correctamente', 'success');
+                } else {
+                    showStatus(`❌ Error al imprimir: ${resultado}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`❌ Error de impresión: ${error.message}`, 'error');
+            }
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            showStatus('📱 Página cargada. Haz clic en "Probar Conexión" para verificar el plugin.', 'info');
+        });
+    </script>
+</body>
+</html>

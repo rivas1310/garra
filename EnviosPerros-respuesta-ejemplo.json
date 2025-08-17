@@ -1,0 +1,48 @@
+{
+  "success": true,
+  "data": [
+    {
+      "title": "Servicio de Envío",
+      "deliveryType": {
+        "name": "Estándar",
+        "company": "Estafeta",
+        "description": "Servicio estándar",
+        "feature": "Entrega en 3-5 días hábiles"
+      },
+      "packageSize": "Paquete mediano",
+      "cost": 150.50,
+      "currency": "MXN",
+      "pickup": "Recolección a domicilio",
+      "available": true
+    },
+    {
+      "title": "Servicio Express",
+      "deliveryType": {
+        "name": "Express",
+        "company": "Redpack",
+        "description": "Servicio express",
+        "feature": "Entrega en 1-2 días hábiles"
+      },
+      "packageSize": "Paquete pequeño",
+      "cost": 220.00,
+      "currency": "MXN",
+      "pickup": "Recolección a domicilio",
+      "available": true
+    },
+    {
+      "title": "Servicio Económico",
+      "deliveryType": {
+        "name": "Económico",
+        "company": "JT Express",
+        "description": "Servicio económico",
+        "feature": "Entrega en 5-7 días hábiles"
+      },
+      "packageSize": "Paquete grande",
+      "cost": 120.00,
+      "currency": "MXN",
+      "pickup": "Recolección a domicilio",
+      "available": false,
+      "status_description": "El peso declarado excede el valor permitido"
+    }
+  ]
+}

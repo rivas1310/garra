@@ -1,0 +1,229 @@
+Documentación del plugin para impresoras térmicas Bluetooth en Android
+Documentación del servidor del plugin
+El plugin inicia un servidor en localhost:8000 (si en el futuro el puerto cambia lo anunciaré en mi blog).
+
+En la ruta /imprimir recibe peticiones POST que deben contener un JSON con la siguiente estructura:
+
+impresora: string, dirección mac de la  impresora
+serial: string, serial o licencia si es que cuentas con ella. Si no la tienes puedes omitirla o enviar una cadena vacía
+operaciones: arreglo de tipo Operacion
+El tipo Operacion tiene 2 propiedades:
+
+nombre: string, el nombre de la operación
+argumentos: arreglo de tipo dinámico (o genérico, ya que puede tener datos de cualquier tipo), los argumentos de la operación
+Veamos un ejemplo muy simple del payload que se debe enviar. En este caso el JSON está formateado para que su lectura sea fácil, 
+cuando tú hagas pruebas envía el JSON codificado normalmente.
+
+
+
+
+
+
+{
+	"operaciones": [
+		{
+			"nombre": "Iniciar",
+			"argumentos": []
+		},
+		{
+			"nombre": "EstablecerAlineacion",
+			"argumentos": [
+				1
+			]
+		},
+		{
+			"nombre": "DescargarImagenDeInternetEImprimir",
+			"argumentos": [
+				"http://assets.stickpng.com/thumbs/587e32259686194a55adab73.png",
+				0,
+				216
+			]
+		},
+		{
+			"nombre": "EstablecerTamañoFuente",
+			"argumentos": [
+				1,
+				1
+			]
+		},
+		{
+			"nombre": "EscribirTexto",
+			"argumentos": [
+				"parzibyte.me\n"
+			]
+		},
+		{
+			"nombre": "Feed",
+			"argumentos": [
+				2
+			]
+		},
+		{
+			"nombre": "Corte",
+			"argumentos": [
+				1
+			]
+		},
+		{
+			"nombre": "Pulso",
+			"argumentos": [
+				48,
+				60,
+				120
+			]
+		}
+	],
+	"impresora": "FF:FF:FF:FF:FF",
+	"serial": "123"
+}
+
+Internamente el plugin tiene varias funciones a las que llama por su nombre (por ejemplo, Pulso) y les pasa los argumentos dependiendo de la función, por ello es que algunas acciones tienen un argumento, algunos ninguno, etcétera.
+
+Fíjate también en la impresora y el serial del JSON de arriba.
+
+Sea como sea, mientras envíes un JSON válido el plugin va a imprimirlo en la impresora térmica. Y esto puedes hacerlo desde cualquier lenguaje usando cualquier librería siempre y cuando sea capaz de codificar ese JSON y enviarlo por HTTP.
+Solo para que quede claro, si quisieras imprimir el JSON de arriba deberías hacer una petición POST a http://localhost:8000/imprimir enviando el JSON codificado correctamente.
+
+Respuesta del servidor
+El servidor va a responder con un true codificado como JSON o con una cadena de error.
+
+Descripción de todas las operaciones
+Anteriormente te mostré un JSON con algunas operaciones. Igualmente puedes ver las operaciones desde algún conector que yo haya programado, pero para que quede claro y documentado a continuación mostraré todas las funciones que puede hacer el plugin en la impresora térmica Bluetooth desde Android
+Primero veamos los nombres de todas las operaciones. Fíjate que una cosa es el nombre de la operación y otra cosa es el nombre de la función real, el cambio es mínimo (por ejemplo, solo la primera letra es minúscula o se omite la ñ) .
+
+Todas las operaciones soportadas al momento son:
+
+CargarImagenLocalEImprimir
+Corte
+CorteParcial
+DescargarImagenDeInternetEImprimir
+DeshabilitarElModoDeCaracteresChinos
+EscribirTexto
+EstablecerAlineacion
+EstablecerEnfatizado
+EstablecerFuente
+EstablecerImpresionBlancoYNegroInversa
+EstablecerModoDeImpresionAlReves
+EstablecerRotacionDe90Grados
+EstablecerSubrayado
+EstablecerTamañoFuente
+Feed
+HabilitarElModoDeCaracteresChinos
+ImprimirCodigoDeBarras
+ImprimirImagenEnBase64
+Iniciar
+Pulso
+TextoSegunPaginaDeCodigos
+Ahora veamos las funciones y los argumentos de cada una. Dependiendo de la acción se invocará a su función correspondiente:
+
+cargarImagenLocalEImprimir(String ubicacionImagen, int tamano, int anchoMaximo)
+corte(int lineas)
+corteParcial()
+descargarImagenDeInternetEImprimir(String urlImagen, int tamano, int anchoMaximo)
+deshabilitarElModoDeCaracteresChinos()
+escribirTexto(String texto)
+establecerAlineacion(int alineacion)
+establecerEnfatizado(bool enfatizado)
+establecerFuente(int fuente)
+establecerImpresionBlancoYNegroInversa(bool invertir)
+establecerModoDeImpresionAlReves(bool alReves)
+establecerRotacionDe90Grados(bool rotar)
+establecerSubrayado(bool subrayado)
+establecerTamanoFuente(int multiplicadorAncho, int multiplicadorAlto)
+feed(int lineas)
+habilitarElModoDeCaracteresChinos()
+imprimirCodigoDeBarras(String tipo, String datos, int tamano, int ancho, int alto)
+imprimirImagenEnBase64(String imagenCodificadaEnBase64, int tamano, int anchoMaximo)
+iniciar()
+pulso(int pin, int tiempoEncendido, int tiempoApagado)
+textoSegunPaginaDeCodigos(int numeroPagina, String pagina, String texto)
+Entonces por ejemplo la acción EstablecerTamañoFuente va a invocar a establecerTamanoFuente, y el arreglo de argumentos debe tener 2 valores de tipo int que serán pasados a la función.
+
+Obtener impresoras
+Si invocas a http://localhost:8000/impresoras puede que obtengas la lista de  impresoras disponibles, pero no lo recomiendo pues varias veces se queda esperando por siempre.
+
+Lo recomendado es que averigües la MAC de la impresora desde el plugin en Ver impresoras disponibles.
+
+Algunas otras cosas importantes
+En mi impresora PT-210 debo invocar a Iniciar cada vez que imprimo una imagen. En esa misma impresora tampoco puedo definir caracteres personalizados.
+
+Este plugin para Android está basado (pero no es compatible de ningún modo) en mi plugin para impresoras térmicas USB versión 3, mucha documentación de ahí ayudará a entender lo mostrado aqui
+El ancho de las imágenes siempre debe ser múltiplo de 8.
+
+Los métodos que imprimen imágenes, códigos QR, códigos de barras, imágenes locales, de internet y en base64 usan la misma función de impresión de imágenes, así que procura que el ancho siempre sea múltiplo de 8.
+
+El tamaño de la imagen no se refiere a los pixeles, sino a una redimensión de la imagen al ser impresa. Revisa la documentación del plugin versión 3 pues ahí hay más información
+
+
+Desde HTML vamos a importarlo:
+
+<script src="./ConectorEscposAndroid.js" type="text/javascript"></script>
+<script src="./main.js" type="text/javascript"></script>
+En este caso main.js es el código que va a imprimir el ticket al presionar un botón. Cuando eso suceda se va a ejecutar el siguiente código:
+
+const demostrarCapacidades = async (macImpresora, licencia) => {
+    const conector = new ConectorEscposAndroid(licencia, URLPlugin);
+    conector
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .DescargarImagenDeInternetEImprimir("http://assets.stickpng.com/thumbs/587e32259686194a55adab73.png", 0, 216)
+        .Iniciar() // En mi impresora debo invocar a "Iniciar" después de imprimir una imagen
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .EscribirTexto("Parzibyte's blog\n")
+        .EscribirTexto("Blog de un programador\n")
+        .EscribirTexto("Teléfono: 123456798\n")
+        .EscribirTexto("Fecha y hora: " + (new Intl.DateTimeFormat("es-MX").format(new Date())))
+        .Feed(1)
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_IZQUIERDA)
+        .EscribirTexto("____________________\n")
+        .EscribirTexto("Venta de plugin para impresoras térmicas Bluetooth con Android (1 mes)\n")
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_DERECHA)
+        .EscribirTexto("$7.00\n")
+        .EscribirTexto("____________________\n")
+        .EscribirTexto("TOTAL: $7.00\n")
+        .EscribirTexto("____________________\n")
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .EstablecerEnfatizado(true)
+        .EstablecerTamañoFuente(1, 1)
+        .EscribirTexto("¡Gracias por su compra!\n")
+        .Feed(1)
+        .ImprimirCodigoDeBarras("qr", "https://parzibyte.me/blog/", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 160, 160)
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .ImprimirCodigoDeBarras("code128", "parzibyte.me", ConectorEscposAndroid.TAMAÑO_IMAGEN_NORMAL, 320, 50)
+        .Iniciar()
+        .EstablecerAlineacion(ConectorEscposAndroid.ALINEACION_CENTRO)
+        .Feed(1)
+        .EstablecerTamañoFuente(1, 1)
+        .EscribirTexto("parzibyte.me\n")
+        .Feed(2)
+        .Corte(1)
+        .Pulso(48, 60, 120)
+
+    try {
+        const respuesta = await conector.imprimirEn(macImpresora);
+        if (respuesta === true) {
+            alert("Impreso correctamente");
+        } else {
+            alert("Error: " + respuesta);
+        }
+    } catch (e) {
+        alert("Error imprimiendo: " + e.message);
+    }
+}
+
+
+Primero creamos una nueva instancia de ConectorEscposAndroid pasándole la licencia y la URL del plugin. La licencia es un parámetro opcional pero lo estoy mostrando aquí para futuros ejemplos.
+
+Luego podemos invocar a todos los métodos para armar nuestro ticket, ya sea para alinear, enfatizar, imprimir imágenes, etcétera (puedes ver la lista completa en el conector o en la documentación del plugin).
+
+Una cosa es armar nuestro conector y llenarlo de operaciones y otra muy distinta es enviar esas operaciones invocando a imprimirEn, pasando la dirección MAC de la impresora.
+
+Al invocar a imprimirEn se va a imprimir lo que hayamos definido en el conector, siempre y cuando el plugin se esté ejecutando en segundo plano. En este caso:
+
+¿Cómo funciona?
+Al momento de escribir este post no hay mucho soporte para Bluetooth desde JavaScript, y el poco que existe es con BLE además de que es un lío pelear con las características y servicios.
+
+Por ello es que decidí crear un plugin gratuito que permite ser invocado desde JavaScript (y otros lenguajes) para imprimir en una impresora térmica Bluetooth.

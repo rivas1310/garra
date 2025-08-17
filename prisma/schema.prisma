@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  role           Role      @default(USER)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  hashedPassword String?
+  avatar         String?
+  phone          String?
+  addresses      Address[]
+  orders         Order[]
+  reviews        Review[]
+  favorites      Product[] @relation("UserFavorites")
+  passwordResetTokens PasswordResetToken[] @relation("PasswordResetTokens")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  name          String
+  slug          String           @unique
+  description   String
+  price         Float
+  originalPrice Float?
+  images        String[]
+  categoryId    String
+  stock         Int              @default(0)
+  isActive      Boolean          @default(true)
+  isNew         Boolean          @default(false)
+  isOnSale      Boolean          @default(false)
+  rating        Float            @default(0)
+  reviewCount   Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  subcategoria  String?
+  isSecondHand  Boolean          @default(false)
+  barcode       String?          @unique
+  orderItems    OrderItem[]
+  category      Category         @relation(fields: [categoryId], references: [id])
+  variants      ProductVariant[]
+  reviews       Review[]
+  favorites     User[]           @relation("UserFavorites")
+}
+
+model ProductVariant {
+  id         String      @id @default(cuid())
+  productId  String
+  size       String?
+  color      String?
+  stock      Int         @default(0)
+  price      Float?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  orderItems OrderItem[]
+  product    Product     @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id                     String          @id @default(cuid())
+  userId                 String
+  status                 OrderStatus     @default(PENDING)
+  total                  Float
+  subtotal               Float
+  tax                    Float           @default(0)
+  shipping               Float           @default(0)
+  shippingAddressId      String?
+  billingAddressId       String?
+  paymentMethod          String?
+  paymentStatus          PaymentStatus   @default(PENDING)
+  notes                  String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  shippingCost           Float?
+  shippingData           Json?
+  shippingProvider       String?
+  trackingNumber         String?
+  shippingLabelUrl       String?
+  couponCode             String?
+  couponDiscount         Float           @default(0)
+  discount               Float           @default(0)
+  discountCouponId       String?
+  orderType              OrderType       @default(ONLINE)
+  stripeSessionId        String?         @unique
+  customerName           String?
+  customerEmail          String?
+  customerPhone          String?
+  customerStreet         String?
+  customerNumberExterior String?
+  customerNumberInterior String?
+  customerColonia        String?
+  customerCity           String?
+  customerState          String?
+  customerPostalCode     String?
+  customerCountry        String?
+  customerReferences     String?
+  stripeMetadata         Json?
+  billingAddress         Address?        @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  discountCoupon         DiscountCoupon? @relation("OrderDiscount", fields: [discountCouponId], references: [id])
+  shippingAddress        Address?        @relation("ShippingAddress", fields: [shippingAddressId], references: [id])
+  user                   User            @relation(fields: [userId], references: [id])
+  items                  OrderItem[]
+}
+
+model OrderItem {
+  id        String          @id @default(cuid())
+  orderId   String
+  productId String
+  variantId String?
+  quantity  Int
+  price     Float
+  createdAt DateTime        @default(now())
+  order     Order           @relation(fields: [orderId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model Address {
+  id             String   @id @default(cuid())
+  city           String
+  state          String
+  country        String
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  label          String?
+  street         String
+  userId         String
+  zipCode        String
+  user           User     @relation(fields: [userId], references: [id])
+  billingOrders  Order[]  @relation("BillingAddress")
+  shippingOrders Order[]  @relation("ShippingAddress")
+}
+
+model DiscountCoupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType
+  discountValue Float
+  minOrderValue Float?       @default(0)
+  maxUses       Int?         @default(1)
+  usedCount     Int          @default(0)
+  isActive      Boolean      @default(true)
+  startDate     DateTime     @default(now())
+  endDate       DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  orders        Order[]      @relation("OrderDiscount")
+}
+
+enum Role {
+  USER
+  ADMIN
+  VENDEDOR
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum OrderType {
+  ONLINE
+  FISICA
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expires   DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation("PasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+}

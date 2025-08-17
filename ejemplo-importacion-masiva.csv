@@ -1,0 +1,11 @@
+Nombre,Precio,Categoría,Subcategoría,Stock,Imagen
+Camisa Azul,25.99,Ropa,Camisas,100,camisa-azul.jpg
+Pantalón Negro,45.50,Ropa,Pantalones,50,pantalon-negro.jpg
+Zapatos Deportivos,89.99,Calzado,Deportivos,75,zapatos-deportivos.jpg
+Bolso Elegante,120.00,Accesorios,Bolsos,30,bolso-elegante.jpg
+Reloj Clásico,299.99,Accesorios,Relojes,25,reloj-clasico.jpg
+Vestido Floral,65.00,Ropa,Vestidos,40,vestido-floral.jpg
+Sneakers Urbanos,79.99,Calzado,Urbanos,60,sneakers-urbanos.jpg
+Cinturón de Cuero,35.50,Accesorios,Cinturones,45,cinturon-cuero.jpg
+Blazer Formal,95.00,Ropa,Blazers,35,blazer-formal.jpg
+Mochila Escolar,55.00,Accesorios,Mochilas,80,mochila-escolar.jpg
