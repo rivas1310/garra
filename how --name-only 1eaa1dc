@@ -1,0 +1,15 @@
+[33mcommit 1eaa1dc1b45e2a2aae3a2ec3e55b0b9dc96f3c83[m
+Author: rivas1310 <rivasalberto1310>
+Date:   Sun Aug 17 00:59:41 2025 -0600
+
+    🧹 Limpieza: Eliminar archivos extraños y corregir estado del repositorio
+
+[1mdiff --git a/h origin main b/h origin main[m
+[1mdeleted file mode 100644[m
+[1mindex c412da1..0000000[m
+[1m--- a/h origin main[m	
+[1m+++ /dev/null[m
+[36m@@ -1,3 +0,0 @@[m
+[31m-[33m4400fc82[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m fix: Configurar redirección al perfil después del login con Google[m
+[31m-[33m9b46584b[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: Confirmar que todas las imágenes de public están incluidas (78 archivos)[m
+[31m-[33m9a6105e2[m feat: Optimización responsive completa para tablets[m

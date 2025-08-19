@@ -1,0 +1,9 @@
+[33m391cf1b[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Test connection pooling con Vercel-Railway integration
+[33me82d077[m Simplificar: solo Prisma Accelerate para connection pooling, sin Vercel KV
+[33m2000981[m Estandarizar TODOS los imports de Prisma a named export para evitar múltiples instancias
+[33mdfd3425[m Implementar caché de favoritos, optimizar conexiones BD y connection pooling con circuit breaker
+[33mda7d7ca[m feat: implement connection pooling and monitoring system - Add connection pooling to Prisma client - Add connection monitoring API and admin page - Add shadcn/ui components - Add connection cleanup scripts - Fix too many clients database issue
+[33m8df70ca[m 🔧 Agregar script de monitoreo de conexiones y optimizaciones
+[33mb4a5471[m 🔧 Optimizar Prisma: Limitar conexiones y limpieza automática
+[33m1eaa1dc[m 🧹 Limpieza: Eliminar archivos extraños y corregir estado del repositorio
+[33m7e51fa2[m 🎉 Commit inicial: E-commerce completo con Cloudflare R2, importación masiva y sistema de administración
