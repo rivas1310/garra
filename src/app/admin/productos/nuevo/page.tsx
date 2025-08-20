@@ -13,6 +13,7 @@ import {
   Eye
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { generateManualBarcode, generateManualEAN13 } from '@/lib/barcodeUtils'
 
 // Tallas por tipo de producto
 const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
@@ -307,43 +308,44 @@ export default function NuevoProductoPage() {
     <div className="min-h-screen bg-gradient-elegant">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-primary-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin/productos" className="btn-secondary">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <Link href="/admin/productos" className="btn-secondary text-sm px-3 py-2">
+                <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Volver</span>
+                <span className="sm:hidden">Atrás</span>
               </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-title">Nuevo Producto</h1>
-                <p className="text-body">Agrega un nuevo producto a tu catálogo</p>
+              <div className="flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-title">Nuevo Producto</h1>
+                <p className="text-xs sm:text-sm text-body hidden sm:block">Agrega un nuevo producto a tu catálogo</p>
               </div>
             </div>
             <button
               type="submit"
               form="product-form"
               disabled={isLoading}
-              className="btn-primary inline-flex items-center"
+              className="btn-primary inline-flex items-center text-sm px-3 py-2 sm:px-4 sm:py-2 w-full sm:w-auto justify-center"
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               {isLoading ? 'Guardando...' : 'Guardar Producto'}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form id="product-form" onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <form id="product-form" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Formulario Principal */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Información Básica */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <h2 className="text-lg font-semibold text-title mb-4">Información Básica</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Información Básica</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Nombre del Producto *
                     </label>
                     <input
@@ -352,13 +354,13 @@ export default function NuevoProductoPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="Ej: Vestido Floral de Verano"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Categoría *
                     </label>
                     <select
@@ -366,7 +368,7 @@ export default function NuevoProductoPage() {
                       value={formData.category}
                       onChange={handleInputChange}
                       required
-                      className="input-field"
+                      className="input-field text-sm"
                     >
                       <option value="">Seleccionar categoría</option>
                       {categories.map((category) => (
@@ -378,7 +380,7 @@ export default function NuevoProductoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Subcategoría {formData.category && '*'}
                     </label>
                     <select
@@ -386,7 +388,7 @@ export default function NuevoProductoPage() {
                       value={formData.subcategoria}
                       onChange={handleInputChange}
                       required={!!formData.category && (subcategoriasPorCategoria[getSlugByCategoryId(formData.category)] || []).length > 0}
-                      className="input-field"
+                      className="input-field text-sm"
                       disabled={!formData.category || !(subcategoriasPorCategoria[getSlugByCategoryId(formData.category)] || []).length}
                     >
                       <option value="">{formData.category ? 'Seleccionar subcategoría' : 'Selecciona una categoría primero'}</option>
@@ -397,7 +399,7 @@ export default function NuevoProductoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Precio de Venta *
                     </label>
                     <input
@@ -408,13 +410,13 @@ export default function NuevoProductoPage() {
                       required
                       min="0"
                       step="0.01"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Precio Original
                     </label>
                     <input
@@ -424,13 +426,13 @@ export default function NuevoProductoPage() {
                       onChange={handleInputChange}
                       min="0"
                       step="0.01"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Stock Inicial *
                     </label>
                     <input
@@ -440,47 +442,60 @@ export default function NuevoProductoPage() {
                       onChange={handleInputChange}
                       required
                       min="0"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                       Código de Barras
                     </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        name="barcode"
-                        value={formData.barcode}
-                        onChange={handleInputChange}
-                        className="input-field flex-1"
-                        placeholder="Se generará automáticamente"
-                        readOnly
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Generar código de barras automáticamente
-                          const timestamp = Date.now().toString().slice(-8);
-                          const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-                          const barcode = `PRD${timestamp}${randomDigits}`;
-                          setFormData(prev => ({ ...prev, barcode }));
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        Generar
-                      </button>
+                    <div className="space-y-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          name="barcode"
+                          value={formData.barcode}
+                          onChange={handleInputChange}
+                          className="input-field flex-1 text-sm"
+                          placeholder="Código de barras (opcional)"
+                          readOnly
+                        />
+                        <select
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-full sm:w-auto"
+                          onChange={(e) => {
+                            const format = e.target.value as 'PRD' | 'EAN13';
+                            let barcode: string;
+                            
+                            if (format === 'EAN13') {
+                              barcode = generateManualEAN13();
+                            } else {
+                              barcode = generateManualBarcode('PRD');
+                            }
+                            
+                            setFormData(prev => ({ ...prev, barcode }));
+                          }}
+                        >
+                          <option value="">Generar código</option>
+                          <option value="PRD">PRD (Formato largo)</option>
+                          <option value="EAN13">EAN-13 (Estándar)</option>
+                        </select>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs">
+                        <span className="text-gray-500 mt-0.5">💡</span>
+                        <span className="text-gray-600 leading-relaxed">
+                          <strong>EAN-13:</strong> Más compatible con lectores (13 dígitos)<br className="sm:hidden" />
+                          <span className="hidden sm:inline"> | </span>
+                          <strong>PRD:</strong> Formato interno (15 caracteres)
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      El código de barras se usará para escanear productos en ventas físicas
-                    </p>
                   </div>
                 </div>
 
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-title mb-2">
+                <div className="mt-3 sm:mt-4">
+                  <label className="block text-xs sm:text-sm font-medium text-title mb-1 sm:mb-2">
                     Descripción *
                   </label>
                   <textarea
@@ -488,28 +503,28 @@ export default function NuevoProductoPage() {
                     value={formData.description}
                     onChange={handleInputChange}
                     required
-                    rows={4}
-                    className="input-field"
+                    rows={3}
+                    className="input-field text-sm"
                     placeholder="Describe el producto..."
                   />
                 </div>
               </div>
 
               {/* Variantes */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-title">Variantes</h2>
-                    <p className="text-sm text-muted mt-1">
+                    <h2 className="text-base sm:text-lg font-semibold text-title">Variantes</h2>
+                    <p className="text-xs sm:text-sm text-muted mt-1">
                       Total de variantes: <span className="font-semibold text-primary-600">{variants.length}</span>
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="btn-secondary inline-flex items-center"
+                    className="btn-secondary inline-flex items-center text-sm px-3 py-2 w-full sm:w-auto justify-center"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Agregar Variante
                   </button>
                 </div>
@@ -519,61 +534,71 @@ export default function NuevoProductoPage() {
                     No hay variantes agregadas. Haz clic en "Agregar Variante" para comenzar.
                   </p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {variants.map((variant, index) => (
-                      <div key={`variant-${index}-${variant.size}-${variant.color}`} className="flex items-center gap-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-                        <div className="flex items-center gap-2 min-w-[60px]">
+                      <div key={`variant-${index}-${variant.size}-${variant.color}`} className="p-3 sm:p-4 bg-primary-50 rounded-lg border border-primary-200">
+                        <div className="flex items-center justify-between mb-3">
                           <span className="text-xs font-medium text-primary-600 bg-primary-100 px-2 py-1 rounded">
-                            #{index + 1}
+                            Variante #{index + 1}
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(index)}
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg"
+                            title="Eliminar variante"
+                          >
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </button>
                         </div>
                         
-                        <select
-                          value={variant.size}
-                          onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
-                        >
-                          <option value="">Seleccionar talla</option>
-                          {getAvailableSizes().map((size) => (
-                            <option key={size} value={size}>{size}</option>
-                          ))}
-                        </select>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Talla</label>
+                            <select
+                              value={variant.size}
+                              onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                              className="w-full px-2 sm:px-3 py-2 border border-primary-200 rounded-lg text-sm"
+                            >
+                              <option value="">Seleccionar talla</option>
+                              {getAvailableSizes().map((size) => (
+                                <option key={size} value={size}>{size}</option>
+                              ))}
+                            </select>
+                          </div>
 
-                        <select
-                          value={variant.color}
-                          onChange={(e) => updateVariant(index, 'color', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
-                        >
-                          <option value="">Seleccionar color</option>
-                          {colors.map((color) => (
-                            <option key={color} value={color}>{color}</option>
-                          ))}
-                        </select>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
+                            <select
+                              value={variant.color}
+                              onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                              className="w-full px-2 sm:px-3 py-2 border border-primary-200 rounded-lg text-sm"
+                            >
+                              <option value="">Seleccionar color</option>
+                              {colors.map((color) => (
+                                <option key={color} value={color}>{color}</option>
+                              ))}
+                            </select>
+                          </div>
 
-                        <input
-                          type="number"
-                          value={variant.stock || 0}
-                          onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
-                          min="0"
-                          className="w-24 px-3 py-2 border border-primary-200 rounded-lg"
-                          placeholder="Stock"
-                        />
-
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(index)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
-                          title="Eliminar variante"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Stock</label>
+                            <input
+                              type="number"
+                              value={variant.stock || 0}
+                              onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
+                              min="0"
+                              className="w-full px-2 sm:px-3 py-2 border border-primary-200 rounded-lg text-sm"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
                     
                     {/* Resumen de variantes */}
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="text-sm font-medium text-blue-800 mb-2">Resumen de variantes:</h4>
-                      <div className="text-xs text-blue-700">
+                    <div className="mt-3 sm:mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="text-xs sm:text-sm font-medium text-blue-800 mb-2">Resumen de variantes:</h4>
+                      <div className="text-xs text-blue-700 space-y-1">
                         <p>• Total de variantes: <strong>{variants.length}</strong></p>
                         <p>• Variantes completas: <strong>{variants.filter(v => v.size && v.color && v.stock > 0).length}</strong></p>
                         <p>• Variantes incompletas: <strong>{variants.filter(v => !v.size || !v.color || v.stock === 0).length}</strong></p>
@@ -589,18 +614,18 @@ export default function NuevoProductoPage() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Imágenes */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <h2 className="text-lg font-semibold text-title mb-4">Imágenes</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Imágenes</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-primary-200 rounded-lg p-6 text-center cursor-pointer hover:border-primary-300 transition-colors"
+                    className="border-2 border-dashed border-primary-200 rounded-lg p-4 sm:p-6 text-center cursor-pointer hover:border-primary-300 transition-colors"
                   >
-                    <Upload className="mx-auto h-8 w-8 text-primary-400 mb-2" />
-                    <p className="text-sm text-muted">Haz clic para subir imágenes</p>
+                    <Upload className="mx-auto h-6 w-6 sm:h-8 sm:w-8 text-primary-400 mb-2" />
+                    <p className="text-xs sm:text-sm text-muted">Haz clic para subir imágenes</p>
                     <p className="text-xs text-muted mt-1">PNG, JPG hasta 5MB</p>
                     <p className="text-xs font-medium text-primary-600 mt-2">{images.length > 0 ? `${images.length} imágenes seleccionadas` : "Ninguna imagen seleccionada"}</p>
                   </div>
@@ -626,13 +651,13 @@ export default function NuevoProductoPage() {
                           Eliminar todas
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
                         {images.map((image, index) => (
                           <div key={index} className="relative group">
                             <img
                               src={image}
                               alt={`Imagen ${index + 1}`}
-                              className="w-full h-24 object-cover rounded-lg"
+                              className="w-full h-20 sm:h-24 object-cover rounded-lg"
                             />
                             <div className="absolute top-1 left-1 bg-black bg-opacity-70 text-white text-xs px-1.5 py-0.5 rounded">
                               {index + 1}
@@ -640,7 +665,7 @@ export default function NuevoProductoPage() {
                             <button
                               type="button"
                               onClick={() => removeImage(index)}
-                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                             >
                               <X className="h-3 w-3" />
                             </button>
@@ -654,43 +679,47 @@ export default function NuevoProductoPage() {
               </div>
 
               {/* Configuración */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <h2 className="text-lg font-semibold text-title mb-4">Configuración</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Configuración</h2>
                 
-                <div className="space-y-3">
-                  <label className="flex items-center gap-2">
+                <div className="space-y-2 sm:space-y-3">
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       name="isNew"
                       checked={formData.isNew}
                       onChange={handleInputChange}
+                      className="h-4 w-4"
                     />
                     Marcar como nuevo
                   </label>
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       name="isOnSale"
                       checked={formData.isOnSale}
                       onChange={handleInputChange}
+                      className="h-4 w-4"
                     />
                     Producto en oferta
                   </label>
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       name="isSecondHand"
                       checked={formData.isSecondHand}
                       onChange={handleInputChange}
+                      className="h-4 w-4"
                     />
                     Segunda mano
                   </label>
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
                       name="isActive"
                       checked={formData.isActive}
                       onChange={handleInputChange}
+                      className="h-4 w-4"
                     />
                     Producto activo
                   </label>
@@ -699,26 +728,26 @@ export default function NuevoProductoPage() {
 
               {/* Vista Previa */}
               {formData.name && (
-                <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                  <h2 className="text-lg font-semibold text-title mb-4">Vista Previa</h2>
+                <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Vista Previa</h2>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {images[0] && (
                       <img
                         src={images[0]}
                         alt="Vista previa"
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-28 sm:h-32 object-cover rounded-lg"
                       />
                     )}
                     <div>
-                      <h3 className="font-medium text-title">{formData.name || 'Nombre del producto'}</h3>
-                      <p className="text-sm text-muted">{formData.category || 'Categoría'}</p>
+                      <h3 className="text-sm sm:text-base font-medium text-title">{formData.name || 'Nombre del producto'}</h3>
+                      <p className="text-xs sm:text-sm text-muted">{formData.category || 'Categoría'}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="font-bold text-title">
+                        <span className="text-sm sm:text-base font-bold text-title">
                           ${formData.price || '0.00'}
                         </span>
                         {formData.originalPrice && (
-                          <span className="text-sm text-muted line-through">
+                          <span className="text-xs sm:text-sm text-muted line-through">
                             ${formData.originalPrice}
                           </span>
                         )}

@@ -127,6 +127,14 @@ export async function POST(req: Request) {
         referencias: customer?.referencias || '',
         couponCode: coupon?.code || '',
         couponDiscount: coupon ? String(coupon.discountAmount) : '0',
+        // Agregar totales para que el webhook pueda crear la orden
+        total: String(total),
+        subtotal: String(subtotal),
+        tax: String(tax),
+        shipping: String(shipping),
+        discount: String(discountAmount),
+        // Agregar items para crear OrderItems
+        items: JSON.stringify(items),
       },
     })
     
@@ -136,128 +144,9 @@ export async function POST(req: Request) {
       throw new Error('Stripe no devolvió una URL de sesión')
     }
 
-    // Crear la orden en la base de datos con el session ID
-    try {
-      // Obtener el primer usuario disponible (para pruebas)
-      const user = await prisma.user.findFirst();
-      if (!user) {
-        throw new Error('No hay usuarios en la base de datos');
-      }
-      
-      // Crear la orden en la base de datos
-      
-      const order = await prisma.order.create({
-        data: {
-          userId: user.id, // Usar el ID del usuario real
-          total: total,
-          subtotal: subtotal,
-          tax: tax,
-          shipping: shipping,
-          discount: discountAmount,
-          couponCode: coupon?.code || null,
-          couponDiscount: discountAmount,
-          status: 'PENDING',
-          paymentStatus: 'PENDING',
-          notes: `Cliente: ${customer.nombre} - Email: ${customer.email}`,
-          // Guardar datos del cliente para la etiqueta de envío
-          customerName: customer.nombre || null,
-          customerEmail: customer.email || null,
-          customerPhone: customer.telefono || null,
-          customerStreet: customer.direccion || null,
-          customerNumberExterior: customer.numeroExterior || null,
-          customerNumberInterior: customer.numeroInterior || null,
-          customerColonia: customer.colonia || null,
-          customerCity: customer.ciudad || null,
-          customerState: customer.estado || null,
-          customerPostalCode: customer.codigoPostal || null,
-          customerCountry: customer.pais || null,
-          customerReferences: customer.referencias || null,
-          // Crear los OrderItems
-          items: {
-            create: items.map((item: any) => ({
-              productId: item.productId,
-              variantId: item.variantId || null,
-              quantity: item.quantity,
-              price: item.price
-            }))
-          }
-        }
-      })
-
-      log.error('✅ Orden creada en la base de datos:', order.id)
-      
-      // Descontar stock de los productos
-      log.error('📦 Descontando stock de los productos...')
-      for (const item of items) {
-        log.error(`📦 Descontando stock para: ${item.name} - Cantidad: ${item.quantity}`)
-        
-        try {
-          if (item.variantId) {
-            // Si tiene variante, descontar del stock de la variante
-            const updatedVariant = await prisma.productVariant.update({
-              where: { id: item.variantId },
-              data: {
-                stock: {
-                  decrement: item.quantity
-                }
-              }
-            });
-            log.error(`✅ Stock de variante descontado: ${item.variantId}, nuevo stock: ${updatedVariant.stock}`);
-            
-            // Actualizar el stock total del producto principal
-            const allVariants = await prisma.productVariant.findMany({
-              where: { productId: item.productId }
-            });
-            
-            const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0);
-            
-            await prisma.product.update({
-              where: { id: item.productId },
-              data: { 
-                stock: totalStock,
-                isActive: totalStock > 0
-              }
-            });
-            
-            log.error(`✅ Stock total del producto actualizado: ${item.name}, nuevo stock total: ${totalStock}`);
-            
-            if (totalStock <= 0) {
-              log.error(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
-            }
-          } else {
-            // Si no tiene variante, descontar del stock principal del producto
-            const updatedProduct = await prisma.product.update({
-              where: { id: item.productId },
-              data: {
-                stock: {
-                  decrement: item.quantity
-                }
-              }
-            });
-            log.error(`✅ Stock de producto descontado: ${item.productId}, nuevo stock: ${updatedProduct.stock}`);
-            
-            // Si el stock llega a 0, desactivar el producto
-            if (updatedProduct.stock <= 0) {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: { isActive: false }
-              });
-              log.error(`⚠️ Producto ${item.name} desactivado - sin stock disponible`);
-            }
-          }
-          
-          log.error(`✅ Item procesado: ${item.name} - Cantidad: ${item.quantity}`);
-        } catch (error) {
-          log.error(`❌ Error al descontar stock para ${item.name}:`, error);
-        }
-      }
-      
-      log.error('✅ Stock descontado correctamente');
-      log.error('📋 Orden creada exitosamente:', order.id);
-    } catch (error) {
-      log.error('❌ Error al crear la orden:', error)
-      // Continuar aunque falle la creación de la orden
-    }
+    // NO crear la orden aquí - se creará en el webhook de Stripe cuando se confirme el pago
+    // Esto evita duplicación de órdenes
+    log.error('✅ Sesión de Stripe creada - La orden se creará en el webhook cuando se confirme el pago')
     
     return NextResponse.json({ 
       url: session.url, 

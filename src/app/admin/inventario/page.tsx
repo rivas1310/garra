@@ -381,105 +381,108 @@ export default function InventarioPage() {
     <div className="min-h-screen bg-gradient-elegant">
       {/* Header */}
       <div className="bg-white shadow-elegant border-b border-neutral-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
             <div>
-              <h1 className="text-2xl font-bold text-neutral-700">Control de Inventario</h1>
-              <p className="text-neutral-600">Gestiona stock, precios y proveedores</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-neutral-700">Control de Inventario</h1>
+              <p className="text-sm sm:text-base text-neutral-600">Gestiona stock, precios y proveedores</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="btn-secondary inline-flex items-center" onClick={handleExport} type="button">
-                <Download className="mr-2 h-4 w-4" />
-                Exportar
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <button className="btn-secondary inline-flex items-center text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2" onClick={handleExport} type="button">
+                <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Exportar</span>
+                <span className="sm:hidden">Export</span>
               </button>
-              <label className="btn-secondary inline-flex items-center cursor-pointer">
-                <Upload className="mr-2 h-4 w-4" />
-                Importar
+              <label className="btn-secondary inline-flex items-center cursor-pointer text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">
+                <Upload className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Importar</span>
+                <span className="sm:hidden">Import</span>
                 <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
               </label>
-              <button className="btn-primary inline-flex items-center" onClick={handleSyncProducts} disabled={syncing}>
+              <button className="btn-primary inline-flex items-center text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2" onClick={handleSyncProducts} disabled={syncing}>
                 {syncing ? (
-                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                 ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
+                  <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 )}
-                {syncing ? 'Sincronizando...' : 'Sincronizar'}
+                <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar'}</span>
+                <span className="sm:hidden">{syncing ? 'Sync...' : 'Sync'}</span>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-lg shadow-elegant p-3 sm:p-6 border border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-neutral-500">Total Productos</p>
-                <p className="text-2xl font-bold text-neutral-700">{mappedInventory.length}</p>
+                <p className="text-xs sm:text-sm text-neutral-500">Total Productos</p>
+                <p className="text-lg sm:text-2xl font-bold text-neutral-700">{mappedInventory.length}</p>
               </div>
-              <div className="p-3 rounded-full bg-primary-50 text-primary-600">
-                <Package className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-primary-50 text-primary-600">
+                <Package className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+          <div className="bg-white rounded-lg shadow-elegant p-3 sm:p-6 border border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-neutral-500">Stock Bajo</p>
-                <p className="text-2xl font-bold text-yellow-600">
+                <p className="text-xs sm:text-sm text-neutral-500">Stock Bajo</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-600">
                   {mappedInventory.filter(item => item.status === 'low-stock').length}
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-yellow-50 text-yellow-600">
-                <AlertTriangle className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-yellow-50 text-yellow-600">
+                <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+          <div className="bg-white rounded-lg shadow-elegant p-3 sm:p-6 border border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-neutral-500">Sin Stock</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-xs sm:text-sm text-neutral-500">Sin Stock</p>
+                <p className="text-lg sm:text-2xl font-bold text-red-600">
                   {mappedInventory.filter(item => item.status === 'out-of-stock').length}
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-red-50 text-red-600">
-                <XCircle className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-red-50 text-red-600">
+                <XCircle className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+          <div className="bg-white rounded-lg shadow-elegant p-3 sm:p-6 border border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-neutral-500">Valor Total</p>
-                <p className="text-2xl font-bold text-neutral-700">
+                <p className="text-xs sm:text-sm text-neutral-500">Valor Total</p>
+                <p className="text-lg sm:text-2xl font-bold text-neutral-700">
                   ${formatNumber(mappedInventory.reduce((sum, item) => sum + (item.currentStock * item.cost), 0))}
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-green-50 text-green-600">
-                <TrendingUp className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-green-50 text-green-600">
+                <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-3 sm:p-6 mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-4 w-4" />
+            <div className="relative sm:col-span-2 md:col-span-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-3 w-3 sm:h-4 sm:w-4" />
               <input
                 type="text"
                 placeholder="Buscar por nombre o SKU..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -487,7 +490,7 @@ export default function InventarioPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -500,7 +503,7 @@ export default function InventarioPage() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">Todos los estados</option>
               <option value="in-stock">En Stock</option>
@@ -512,7 +515,7 @@ export default function InventarioPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="name">Ordenar por nombre</option>
               <option value="stock">Ordenar por stock</option>
@@ -524,18 +527,19 @@ export default function InventarioPage() {
 
         {/* Inventory Table */}
         <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 overflow-hidden">
-          <div className="p-6 border-b border-neutral-100">
+          <div className="p-3 sm:p-6 border-b border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-neutral-700">
+                <h2 className="text-base sm:text-lg font-semibold text-neutral-700">
                   Inventario ({filteredItems.length})
                 </h2>
-                <p className="text-sm text-neutral-500">Gestiona stock y precios</p>
+                <p className="text-xs sm:text-sm text-neutral-500">Gestiona stock y precios</p>
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead className="bg-neutral-50">
                 <tr>
@@ -705,20 +709,105 @@ export default function InventarioPage() {
             </table>
           </div>
 
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            <div className="divide-y divide-neutral-100">
+              {filteredItems.map((item) => (
+                <div key={item.id} className="p-3 sm:p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-neutral-700 mb-1">{item.name}</h3>
+                      <p className="text-xs text-neutral-500 mb-1">{item.category}</p>
+                      <p className="text-xs text-neutral-400 font-mono">{item.sku}</p>
+                    </div>
+                    <div className="flex items-center gap-1 ml-2">
+                      <Link
+                        href={`/admin/productos/${item.id}`}
+                        className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Ver detalles"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Link>
+                      <button
+                        onClick={() => handleEdit(item.id)}
+                        className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </button>
+                      <button
+                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg"
+                        title="Eliminar producto"
+                        onClick={() => openDeleteModal(item.id, item.name)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-neutral-500">Stock:</span>
+                      <div className="font-medium text-neutral-700">{item.currentStock}</div>
+                      <div className="text-neutral-400">Min: {item.minStock} | Max: {item.maxStock}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500">Precio:</span>
+                      <div className="font-medium text-neutral-700">${item.price}</div>
+                      <div className="text-neutral-400">Costo: ${item.cost}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500">Margen:</span>
+                      <div className={`font-medium flex items-center gap-1 ${
+                        item.margin > 50 ? 'text-green-600' : 
+                        item.margin > 30 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {item.margin}%
+                        {item.margin > 50 ? (
+                          <TrendingUp className="h-3 w-3" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3" />
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-500">Estado:</span>
+                      <div className="flex items-center gap-1 mt-1">
+                        {getStatusIcon(item.status)}
+                        <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                          {getStatusText(item.status)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      {getActiveStatusIcon(item.isActive)}
+                      <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getActiveStatusColor(item.isActive)}`}>
+                        {getActiveStatusText(item.isActive)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-neutral-100">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-neutral-500">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-neutral-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="text-xs sm:text-sm text-neutral-500">
                 Mostrando 1-{filteredItems.length} de {filteredItems.length} productos
               </div>
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-1 text-sm border border-neutral-200 rounded hover:bg-neutral-50">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <button className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-neutral-200 rounded hover:bg-neutral-50">
                   Anterior
                 </button>
-                <button className="px-3 py-1 text-sm bg-primary-500 text-white rounded">
+                <button className="px-2 sm:px-3 py-1 text-xs sm:text-sm bg-primary-500 text-white rounded">
                   1
                 </button>
-                <button className="px-3 py-1 text-sm border border-neutral-200 rounded hover:bg-neutral-50">
+                <button className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-neutral-200 rounded hover:bg-neutral-50">
                   Siguiente
                 </button>
               </div>

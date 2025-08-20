@@ -23,20 +23,42 @@ function CheckoutSuccessContent() {
       return
     }
 
-    // Intentar crear el pedido con los datos de la sesión
-    const createOrder = async () => {
+    // Verificar si el pedido ya existe antes de intentar crearlo
+    const checkAndCreateOrder = async () => {
       try {
-        // Obtener datos de la sesión desde localStorage (almacenados antes del pago)
+        // Primero verificar si ya existe una orden con este session ID
+        log.error('Verificando si ya existe orden para session:', sessionId)
+        
+        const checkResponse = await fetch(`/api/orders/check/${sessionId}`)
+        
+        if (checkResponse.ok) {
+          const existingOrder = await checkResponse.json()
+          if (existingOrder && existingOrder.id) {
+            log.error('Orden ya existe:', existingOrder.id)
+            setOrderId(existingOrder.id)
+            setStatus('success')
+            // Limpiar datos temporales
+            localStorage.removeItem('pendingOrder')
+            return
+          }
+        }
+        
+        // Si no existe, intentar crear el pedido
+        log.error('No se encontró orden existente, verificando datos en localStorage')
+        
         const orderDataStr = localStorage.getItem('pendingOrder')
         if (!orderDataStr) {
-          throw new Error('No se encontraron datos del pedido')
+          // Si no hay datos en localStorage, la orden debería haberse creado en el webhook
+          // Esperar un poco y verificar de nuevo
+          log.error('No hay datos en localStorage, esperando que el webhook cree la orden...')
+          setTimeout(() => {
+            window.location.reload()
+          }, 2000)
+          return
         }
 
         const orderData = JSON.parse(orderDataStr)
-        log.error('Creando pedido con datos:', orderData)
-        
-        // Verificar si hay información de cupón
-        const hasCoupon = orderData.coupon && orderData.totals.discount > 0
+        log.error('Creando pedido con datos de localStorage:', orderData)
 
         const response = await fetch('/api/pedidos', {
           method: 'POST',
@@ -56,21 +78,23 @@ function CheckoutSuccessContent() {
           localStorage.removeItem('pendingOrder')
         } else {
           if (response.status === 409) {
-            // Pedido ya existe
+            // Pedido ya existe (creado por webhook)
+            log.error('Pedido ya existe (creado por webhook)')
             setStatus('success')
             setOrderId(result.order?.id || 'existente')
+            localStorage.removeItem('pendingOrder')
           } else {
             throw new Error(result.error || 'Error al crear pedido')
           }
         }
       } catch (err: any) {
-        log.error('Error al crear pedido:', err)
+        log.error('Error al verificar/crear pedido:', err)
         setStatus('error')
         setError(err.message || 'Error al procesar el pedido')
       }
     }
 
-    createOrder()
+    checkAndCreateOrder()
   }, [searchParams])
   
   // Segundo useEffect para recuperar datos del pedido del localStorage

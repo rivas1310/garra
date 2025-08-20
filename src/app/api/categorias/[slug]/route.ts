@@ -13,7 +13,12 @@ export async function GET(
   // Verificar si hay un parámetro de timestamp (para evitar caché)
   const timestamp = searchParams.get('t');
   
-  log.error(`API /categorias/${slug}: Obteniendo categoría y productos. Timestamp: ${timestamp || 'no proporcionado'}`);
+  // Parámetros de paginación
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '0'); // 0 = sin límite (comportamiento original)
+  const subcategoria = searchParams.get('subcategoria') || '';
+  
+  log.error(`API /categorias/${slug}: Obteniendo categoría y productos. Page: ${page}, Limit: ${limit}, Subcategoria: ${subcategoria}, Timestamp: ${timestamp || 'no proporcionado'}`);
   
   try {
     const categoria = await prisma.category.findUnique({
@@ -22,8 +27,29 @@ export async function GET(
     if (!categoria) {
       return NextResponse.json({ error: 'Categoría no encontrada' }, { status: 404 });
     }
-    const productos = await prisma.product.findMany({
-      where: { categoryId: categoria.id, isActive: true },
+    
+    // Construir filtros
+    const whereClause: any = {
+      categoryId: categoria.id,
+      isActive: true
+    };
+    
+    // Agregar filtro de subcategoría si se especifica
+    if (subcategoria) {
+      whereClause.subcategoria = {
+        contains: subcategoria,
+        mode: 'insensitive'
+      };
+    }
+    
+    // Obtener total de productos para paginación
+    const totalProductos = await prisma.product.count({
+      where: whereClause
+    });
+    
+    // Configurar paginación
+    const queryOptions: any = {
+      where: whereClause,
       orderBy: { name: 'asc' },
       select: {
         id: true,
@@ -35,11 +61,19 @@ export async function GET(
         reviewCount: true,
         isNew: true,
         isOnSale: true,
+        isSecondHand: true,
         stock: true,
-        subcategoria: true, // <-- Agregar este campo
-        // Puedes agregar más campos si lo necesitas
+        subcategoria: true,
       },
-    });
+    };
+    
+    // Solo agregar paginación si limit > 0
+    if (limit > 0) {
+      queryOptions.skip = (page - 1) * limit;
+      queryOptions.take = limit;
+    }
+    
+    const productos = await prisma.product.findMany(queryOptions);
     
     // Agregar encabezados para evitar caché
     const headers = new Headers();
@@ -47,7 +81,29 @@ export async function GET(
     headers.append('Pragma', 'no-cache');
     headers.append('Expires', '0');
     
-    return NextResponse.json({ categoria, productos }, { headers });
+    // Preparar respuesta con información de paginación
+    const response: any = {
+      categoria,
+      productos
+    };
+    
+    // Solo agregar información de paginación si se está usando limit
+    if (limit > 0) {
+      const totalPages = Math.ceil(totalProductos / limit);
+      response.pagination = {
+        currentPage: page,
+        totalPages,
+        totalProducts: totalProductos,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+        limit
+      };
+    } else {
+      // Para compatibilidad, agregar total sin paginación
+      response.totalProducts = totalProductos;
+    }
+    
+    return NextResponse.json(response, { headers });
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener la categoría', detalle: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }

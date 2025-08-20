@@ -677,23 +677,23 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
       </div>
 
       {/* Subcategorías Grid mejorado */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
         {/* Botón "Todas" mejorado */}
         <button
           onClick={() => onSubcatChange("")}
-          className={`group relative h-32 rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
+          className={`group relative h-20 sm:h-24 md:h-32 rounded-lg sm:rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
             subcatSeleccionada === "" 
-              ? "ring-4 ring-primary-400 shadow-2xl transform scale-105" 
-              : "hover:shadow-xl hover:ring-2 hover:ring-primary-300"
+              ? "ring-2 sm:ring-4 ring-primary-400 shadow-xl sm:shadow-2xl transform scale-105" 
+              : "hover:shadow-lg sm:hover:shadow-xl hover:ring-1 sm:hover:ring-2 hover:ring-primary-300"
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-600"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center text-white">
-              <Grid className="h-8 w-8 mx-auto mb-2 opacity-90 group-hover:scale-110 transition-transform duration-300" />
-              <div className="text-lg font-bold mb-1">Todas</div>
-              <div className="text-xs opacity-90">Ver todo</div>
+              <Grid className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 mx-auto mb-1 sm:mb-2 opacity-90 group-hover:scale-110 transition-transform duration-300" />
+              <div className="text-xs sm:text-sm md:text-lg font-bold mb-0.5 sm:mb-1">Todas</div>
+              <div className="text-xs opacity-90 hidden sm:block">Ver todo</div>
             </div>
           </div>
           {/* Efecto de brillo */}
@@ -705,10 +705,10 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
           <button
             key={subcat.name}
             onClick={() => onSubcatChange(subcat.name)}
-            className={`group relative h-32 rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
+            className={`group relative h-20 sm:h-24 md:h-32 rounded-lg sm:rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
               subcatSeleccionada === subcat.name 
-                ? "ring-4 ring-primary-400 shadow-2xl transform scale-105" 
-                : "hover:shadow-xl hover:ring-2 hover:ring-primary-300"
+                ? "ring-2 sm:ring-4 ring-primary-400 shadow-xl sm:shadow-2xl transform scale-105" 
+                : "hover:shadow-lg sm:hover:shadow-xl hover:ring-1 sm:hover:ring-2 hover:ring-primary-300"
             }`}
           >
             {/* Imagen de fondo mejorada */}
@@ -725,35 +725,36 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
             <div className={`absolute inset-0 bg-gradient-to-br ${subcat.color} opacity-20 group-hover:opacity-30 transition-opacity duration-300`}></div>
             
             {/* Badges mejorados */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1">
+            <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
               {subcat.isNew && (
-                <span className="inline-flex items-center px-2 py-1 text-xs font-semibold bg-primary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
-                  <Sparkles className="h-2.5 w-2.5 mr-1" />
-                  Nuevo
+                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-primary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
+                  <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Nuevo</span>
                 </span>
               )}
               {subcat.isTrending && (
-                <span className="inline-flex items-center px-2 py-1 text-xs font-semibold bg-secondary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
-                  <TrendingUp className="h-2.5 w-2.5 mr-1" />
-                  Hot
+                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-secondary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
+                  <TrendingUp className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5 sm:mr-1" />
+                  <span className="hidden sm:inline">Hot</span>
                 </span>
               )}
               {subcat.discount && (
-                <span className="inline-flex items-center px-2 py-1 text-xs font-semibold bg-accent-500 text-white rounded-full shadow-lg backdrop-blur-sm">
+                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-accent-500 text-white rounded-full shadow-lg backdrop-blur-sm">
                   {subcat.discount}
                 </span>
               )}
             </div>
 
             {/* Contenido mejorado */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-              <div className="text-sm font-bold mb-1 truncate">{subcat.name}</div>
-              <div className="text-xs opacity-90 mb-1 line-clamp-1">{subcat.description}</div>
+            <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-2 md:p-3 text-white">
+              <div className="text-xs sm:text-sm font-bold mb-0.5 sm:mb-1 truncate">{subcat.name}</div>
+              <div className="text-xs opacity-90 mb-0.5 sm:mb-1 line-clamp-1 hidden sm:block">{subcat.description}</div>
               <div className="flex items-center justify-between">
-                <div className="text-xs opacity-75 bg-black/30 px-1.5 py-0.5 rounded-full">
-                  {getProductCount(subcat.name)} productos
+                <div className="text-xs opacity-75 bg-black/30 px-1 sm:px-1.5 py-0.5 rounded-full">
+                  <span className="hidden sm:inline">{getProductCount(subcat.name)} productos</span>
+                  <span className="sm:hidden">{getProductCount(subcat.name)}</span>
                 </div>
-                <ArrowRight className="h-3 w-3 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
+                <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
               </div>
             </div>
 
@@ -782,4 +783,4 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
       </div>
     </div>
   )
-} 
+}

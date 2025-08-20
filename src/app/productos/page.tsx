@@ -39,22 +39,22 @@ export default function ProductosPage() {
   const [sortBy, setSortBy] = useState('featured')
 
   const mappedProducts = Array.isArray(products) ? products.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    price: p.price,
-    originalPrice: p.originalPrice,
-    image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/img/placeholder.png',
-    rating: p.rating ?? 0,
-    reviews: p.reviewCount ?? 0,
-    category: p.category?.name ?? '',
-    isNew: p.isNew,
-    isOnSale: p.isOnSale,
-    isSecondHand: p.isSecondHand,
-    stock: p.stock ?? 0,
-    isActive: p.isActive ?? true,
-    isAvailable: p.isAvailable ?? true,
-    totalStock: p.totalStock ?? p.stock ?? 0,
-    variants: p.variants ?? [], // Incluir las variantes del producto
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      originalPrice: p.originalPrice,
+      image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/img/placeholder.png',
+      rating: p.rating ?? 0,
+      reviews: p.reviewCount ?? 0,
+      category: p.category?.name ?? '',
+      isNew: p.isNew,
+      isOnSale: p.isOnSale,
+      isSecondHand: p.isSecondHand,
+      stock: p.stock ?? 0,
+      isActive: p.isActive ?? true,
+      isAvailable: p.isAvailable ?? true,
+      totalStock: p.totalStock ?? p.stock ?? 0,
+      variants: p.variants ?? [], // Incluir las variantes del producto
   })) : [];
 
   const filteredProducts = mappedProducts.filter(product => {

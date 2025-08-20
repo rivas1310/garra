@@ -9,7 +9,7 @@ export default function OfertasPage() {
   useEffect(() => {
     // Agregar timestamp para evitar caché
     const timestamp = Date.now();
-    fetch(`/api/productos?t=${timestamp}`)
+    fetch(`/api/productos?isOnSale=true&t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
         // Manejar tanto array directo como objeto con propiedad productos

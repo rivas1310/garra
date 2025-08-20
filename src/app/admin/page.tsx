@@ -186,37 +186,37 @@ export default function AdminPage() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="bg-white shadow-elegant border-b border-neutral-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-neutral-700">Panel de Administración</h1>
-              <p className="text-neutral-600">Gestiona tu inventario y ventas</p>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-center sm:text-left">
+              <h1 className="text-xl sm:text-2xl font-bold text-neutral-700">Panel de Administración</h1>
+              <p className="text-sm sm:text-base text-neutral-600">Gestiona tu inventario y ventas</p>
             </div>
-            <div className="flex items-center gap-3">
-              <button className="btn-secondary inline-flex items-center" onClick={handleRefresh} type="button">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+              <button className="btn-secondary inline-flex items-center justify-center text-sm" onClick={handleRefresh} type="button">
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Actualizar
+                <span className="sm:inline">Actualizar</span>
               </button>
-              <Link href="/admin/productos/nuevo" className="btn-primary inline-flex items-center">
+              <Link href="/admin/productos/nuevo" className="btn-primary inline-flex items-center justify-center text-sm">
                 <Plus className="mr-2 h-4 w-4" />
-                Nuevo Producto
+                <span className="sm:inline">Nuevo Producto</span>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <div className="bg-white rounded-lg shadow-elegant p-4 sm:p-6 border border-neutral-100">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-neutral-500">Total Productos</p>
-                <p className="text-2xl font-bold text-neutral-700">{totalProductos}</p>
+                <p className="text-xs sm:text-sm text-neutral-500">Total Productos</p>
+                <p className="text-xl sm:text-2xl font-bold text-neutral-700">{totalProductos}</p>
               </div>
-              <div className="p-3 rounded-full bg-primary-50 text-primary-600">
-                <Package className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-primary-50 text-primary-600">
+                <Package className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
             </div>
           </div>
@@ -224,39 +224,39 @@ export default function AdminPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Link href="/admin/productos" className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Link href="/admin/productos" className="bg-white rounded-lg shadow-elegant p-4 sm:p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-primary-50 text-primary-600">
-                <Package className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-primary-50 text-primary-600 flex-shrink-0">
+                <Package className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-neutral-700">Gestionar Productos</h3>
-                <p className="text-neutral-600">Agregar, editar y eliminar productos</p>
+              <div className="ml-3 sm:ml-4 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-700">Gestionar Productos</h3>
+                <p className="text-sm sm:text-base text-neutral-600">Agregar, editar y eliminar productos</p>
               </div>
             </div>
           </Link>
 
-          <Link href="/admin/inventario" className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
+          <Link href="/admin/inventario" className="bg-white rounded-lg shadow-elegant p-4 sm:p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-secondary-50 text-secondary-600">
-                <TrendingUp className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-secondary-50 text-secondary-600 flex-shrink-0">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-neutral-700">Control de Stock</h3>
-                <p className="text-neutral-600">Actualizar inventario y precios</p>
+              <div className="ml-3 sm:ml-4 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-700">Control de Stock</h3>
+                <p className="text-sm sm:text-base text-neutral-600">Actualizar inventario y precios</p>
               </div>
             </div>
           </Link>
 
-          <Link href="/admin/pedidos" className="bg-white rounded-lg shadow-elegant p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
+          <Link href="/admin/pedidos" className="bg-white rounded-lg shadow-elegant p-4 sm:p-6 border border-neutral-100 hover:shadow-premium transition-shadow">
             <div className="flex items-center">
-              <div className="p-3 rounded-full bg-accent-50 text-accent-600">
-                <ShoppingCart className="h-6 w-6" />
+              <div className="p-2 sm:p-3 rounded-full bg-accent-50 text-accent-600 flex-shrink-0">
+                <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-semibold text-neutral-700">Gestionar Pedidos</h3>
-                <p className="text-neutral-600">Ver y procesar pedidos</p>
+              <div className="ml-3 sm:ml-4 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-700">Gestionar Pedidos</h3>
+                <p className="text-sm sm:text-base text-neutral-600">Ver y procesar pedidos</p>
               </div>
             </div>
           </Link>
@@ -264,51 +264,57 @@ export default function AdminPage() {
 
         {/* Recent Products */}
         <div className="bg-white rounded-lg shadow-elegant border border-neutral-100">
-          <div className="p-6 border-b border-neutral-100">
+          <div className="p-4 sm:p-6 border-b border-neutral-100">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-700">Productos Recientes</h2>
-              <Link href="/admin/productos" className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+              <h2 className="text-base sm:text-lg font-semibold text-neutral-700">Productos Recientes</h2>
+              <Link href="/admin/productos" className="text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-medium">
                 Ver todos
               </Link>
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="space-y-4">
+          <div className="p-3 sm:p-6">
+            <div className="space-y-3 sm:space-y-4">
               {productosRecientes.map((product) => (
-                <div key={product.id} className="flex items-center gap-4 p-4 bg-neutral-50 rounded-lg">
+                <div key={product.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-neutral-50 rounded-lg">
                   <img
                     src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
                     alt={product.name}
-                    className="w-16 h-16 object-cover rounded-lg"
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
                   />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-neutral-700">{product.name}</h3>
-                    <p className="text-sm text-neutral-500">{product.category?.name}</p>
-                    <div className="flex items-center gap-4 mt-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm sm:text-base font-medium text-neutral-700 truncate">{product.name}</h3>
+                    <p className="text-xs sm:text-sm text-neutral-500">{product.category?.name}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
                       <span className="text-sm font-medium text-neutral-700">${product.price}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
+                      <span className={`text-xs px-2 py-1 rounded-full inline-block w-fit ${
                         product.stock > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {product.stock > 0 ? 'En Stock' : 'Sin Stock'} ({product.stock})
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <Link
                       href={`/admin/productos/${product.id}`}
-                      className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 sm:p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      title="Ver detalles"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Link>
                     <Link
                       href={`/admin/productos/${product.id}/editar`}
-                      className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      className="p-1.5 sm:p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                      title="Editar"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Link>
-                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onClick={() => openDeleteModal(product.id, product.name)} title="Eliminar">
-                      <Trash2 className="h-4 w-4" />
+                    <button 
+                      className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                      onClick={() => openDeleteModal(product.id, product.name)} 
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
                   </div>
                 </div>

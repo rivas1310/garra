@@ -17,18 +17,18 @@ export default function AdminLayout({
     <AdminProtectedRoute>
       <div className="min-h-screen bg-gradient-elegant">
         {/* Mobile menu button */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-premium rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">B</span>
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-3 sm:p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-premium rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm sm:text-base">B</span>
             </div>
-            <h1 className="text-lg font-bold text-neutral-700">Bazar Admin</h1>
+            <h1 className="text-base sm:text-lg font-bold text-neutral-700">Bazar Admin</h1>
           </div>
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-md text-gray-700 hover:bg-gray-100"
+            className="p-1.5 sm:p-2 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
 
@@ -52,7 +52,7 @@ export default function AdminLayout({
         </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto pt-16 lg:pt-0 lg:pl-64 w-full">
+        <main className="flex-1 overflow-auto pt-14 sm:pt-16 lg:pt-0 lg:pl-64 w-full">
           {children}
         </main>
         

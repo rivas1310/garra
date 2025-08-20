@@ -15,6 +15,7 @@ import {
   Package
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { generateManualBarcode, generateManualEAN13 } from '@/lib/barcodeUtils'
 
 const categories = [
   { id: 'mujer', name: 'Mujer' },
@@ -360,43 +361,44 @@ export default function EditarProductoPage() {
     <div className="min-h-screen bg-gradient-elegant">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-primary-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin/productos" className="btn-secondary">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Volver
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <Link href="/admin/productos" className="btn-secondary text-xs sm:text-sm py-2 px-3">
+                <ArrowLeft className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Volver</span>
+                <span className="sm:hidden">Atrás</span>
               </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-title">Editar Producto</h1>
-                <p className="text-body">Modifica la información del producto</p>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-title">Editar Producto</h1>
+                <p className="text-xs sm:text-sm text-body hidden sm:block">Modifica la información del producto</p>
               </div>
             </div>
             <button
               type="submit"
               form="product-form"
               disabled={isLoading}
-              className="btn-primary inline-flex items-center"
+              className="btn-primary inline-flex items-center text-xs sm:text-sm py-2 px-3 w-full sm:w-auto justify-center"
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               {isLoading ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form id="product-form" onSubmit={handleSubmit} className="space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <form id="product-form" onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 lg:space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {/* Formulario Principal */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               {/* Información Básica */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <h2 className="text-lg font-semibold text-title mb-4">Información Básica</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-3 sm:p-4 lg:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Información Básica</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Nombre del Producto *
                     </label>
                     <input
@@ -405,13 +407,13 @@ export default function EditarProductoPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="Ej: Vestido Floral de Verano"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Categoría *
                     </label>
                     <select
@@ -419,7 +421,7 @@ export default function EditarProductoPage() {
                       value={formData.category}
                       onChange={handleInputChange}
                       required
-                      className="input-field"
+                      className="input-field text-sm"
                     >
                       <option value="">Seleccionar categoría</option>
                       {categories.map((category) => (
@@ -430,8 +432,8 @@ export default function EditarProductoPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Subcategoría {formData.category && '*'}
                     </label>
                     <select
@@ -439,7 +441,7 @@ export default function EditarProductoPage() {
                       value={formData.subcategoria}
                       onChange={handleInputChange}
                       required={!!formData.category && (subcategoriasPorCategoria[getSlugByCategoryId(formData.category)] || []).length > 0}
-                      className="input-field"
+                      className="input-field text-sm"
                       disabled={!formData.category || !(subcategoriasPorCategoria[getSlugByCategoryId(formData.category)] || []).length}
                     >
                       <option value="">{formData.category ? 'Seleccionar subcategoría' : 'Selecciona una categoría primero'}</option>
@@ -450,7 +452,7 @@ export default function EditarProductoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Precio de Venta *
                     </label>
                     <input
@@ -461,13 +463,13 @@ export default function EditarProductoPage() {
                       required
                       min="0"
                       step="0.01"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Precio Original
                     </label>
                     <input
@@ -477,13 +479,13 @@ export default function EditarProductoPage() {
                       onChange={handleInputChange}
                       min="0"
                       step="0.01"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-title mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-title mb-1.5 sm:mb-2">
                       Stock Total *
                     </label>
                     <input
@@ -493,7 +495,7 @@ export default function EditarProductoPage() {
                       onChange={handleInputChange}
                       required
                       min="0"
-                      className="input-field"
+                      className="input-field text-sm"
                       placeholder="0"
                     />
                   </div>
@@ -513,27 +515,65 @@ export default function EditarProductoPage() {
                         readOnly={!!formData.barcode} // Solo lectura si ya tiene código
                       />
                       {!formData.barcode && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            // Generar código de barras automáticamente
-                            const timestamp = Date.now().toString().slice(-8);
-                            const randomDigits = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-                            const barcode = `PRD${timestamp}${randomDigits}`;
+                        <select
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(e) => {
+                            const format = e.target.value as 'PRD' | 'EAN13';
+                            let barcode: string;
+                            
+                            if (format === 'EAN13') {
+                              barcode = generateManualEAN13();
+                            } else {
+                              barcode = generateManualBarcode('PRD');
+                            }
+                            
                             setFormData(prev => ({ ...prev, barcode }));
                           }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                          Generar
-                        </button>
+                          <option value="">Generar código</option>
+                          <option value="PRD">PRD (Formato largo)</option>
+                          <option value="EAN13">EAN-13 (Estándar)</option>
+                        </select>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.barcode 
-                        ? 'Código de barras asignado al producto' 
-                        : 'Genera un código de barras para escanear en ventas físicas'
-                      }
-                    </p>
+                    {formData.barcode ? (
+                      <div className="mt-1">
+                        <p className="text-xs text-gray-500 mb-2">
+                          Código de barras asignado: {formData.barcode.startsWith('PRD') ? 'Formato PRD' : formData.barcode.length === 13 ? 'Formato EAN-13' : 'Formato personalizado'}
+                        </p>
+                        {formData.barcode.startsWith('PRD') && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newEAN13 = generateManualEAN13();
+                                setFormData(prev => ({ ...prev, barcode: newEAN13 }));
+                                toast.success('Código convertido a EAN-13');
+                              }}
+                              className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            >
+                              Convertir a EAN-13
+                            </button>
+                            <span className="text-xs text-gray-600">
+                              Mejora la compatibilidad con lectores externos
+                            </span>
+                          </div>
+                        )}
+                        {formData.barcode.length === 13 && !formData.barcode.startsWith('PRD') && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-green-600">✓ Formato EAN-13 compatible</span>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 text-xs mt-1">
+                        <span className="text-gray-500">💡</span>
+                        <span className="text-gray-600">
+                          <strong>EAN-13:</strong> Más compatible con lectores (13 dígitos) | 
+                          <strong>PRD:</strong> Formato interno (15 caracteres)
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -554,84 +594,145 @@ export default function EditarProductoPage() {
               </div>
 
               {/* Variantes */}
-              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-title">Variantes</h2>
-                    <p className="text-sm text-muted mt-1">
+                    <h2 className="text-base sm:text-lg font-semibold text-title">Variantes</h2>
+                    <p className="text-xs sm:text-sm text-muted mt-1">
                       Total de variantes: <span className="font-semibold text-primary-600">{variants.length}</span>
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={addVariant}
-                    className="btn-secondary inline-flex items-center"
+                    className="btn-secondary inline-flex items-center text-sm px-3 py-2 w-full sm:w-auto justify-center"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Agregar Variante
                   </button>
                 </div>
 
                 {variants.length === 0 ? (
-                  <p className="text-muted text-center py-8">
+                  <p className="text-muted text-center py-6 sm:py-8 text-sm">
                     No hay variantes agregadas. Haz clic en "Agregar Variante" para comenzar.
                   </p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {variants.map((variant, index) => (
-                      <div key={`variant-${index}-${variant.size}-${variant.color}`} className="flex items-center gap-4 p-4 bg-primary-50 rounded-lg border border-primary-200">
-                        <div className="flex items-center gap-2 min-w-[60px]">
+                      <div key={`variant-${index}-${variant.size}-${variant.color}`} className="p-3 sm:p-4 bg-primary-50 rounded-lg border border-primary-200">
+                        {/* Header móvil */}
+                        <div className="flex items-center justify-between mb-3 sm:hidden">
                           <span className="text-xs font-medium text-primary-600 bg-primary-100 px-2 py-1 rounded">
-                            #{index + 1}
+                            Variante #{index + 1}
                           </span>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(index)}
+                            className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg"
+                            title="Eliminar variante"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
                         
-                        <select
-                          value={variant.size}
-                          onChange={(e) => updateVariant(index, 'size', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
-                        >
-                          <option value="">Seleccionar talla</option>
-                          {getAvailableSizes().map((size) => (
-                            <option key={size} value={size}>{size}</option>
-                          ))}
-                        </select>
+                        {/* Layout móvil - vertical */}
+                        <div className="sm:hidden space-y-3">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Talla</label>
+                              <select
+                                value={variant.size}
+                                onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                                className="w-full px-2 py-2 text-sm border border-primary-200 rounded-lg"
+                              >
+                                <option value="">Seleccionar</option>
+                                {getAvailableSizes().map((size) => (
+                                  <option key={size} value={size}>{size}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
+                              <select
+                                value={variant.color}
+                                onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                                className="w-full px-2 py-2 text-sm border border-primary-200 rounded-lg"
+                              >
+                                <option value="">Seleccionar</option>
+                                {colors.map((color) => (
+                                  <option key={color} value={color}>{color}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700 mb-1">Stock</label>
+                            <input
+                              type="number"
+                              value={variant.stock || 0}
+                              onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
+                              min="0"
+                              className="w-full px-2 py-2 text-sm border border-primary-200 rounded-lg"
+                              placeholder="Cantidad"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Layout desktop - horizontal */}
+                        <div className="hidden sm:flex items-center gap-4">
+                          <div className="flex items-center gap-2 min-w-[60px]">
+                            <span className="text-xs font-medium text-primary-600 bg-primary-100 px-2 py-1 rounded">
+                              #{index + 1}
+                            </span>
+                          </div>
+                          
+                          <select
+                            value={variant.size}
+                            onChange={(e) => updateVariant(index, 'size', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
+                          >
+                            <option value="">Seleccionar talla</option>
+                            {getAvailableSizes().map((size) => (
+                              <option key={size} value={size}>{size}</option>
+                            ))}
+                          </select>
 
-                        <select
-                          value={variant.color}
-                          onChange={(e) => updateVariant(index, 'color', e.target.value)}
-                          className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
-                        >
-                          <option value="">Seleccionar color</option>
-                          {colors.map((color) => (
-                            <option key={color} value={color}>{color}</option>
-                          ))}
-                        </select>
+                          <select
+                            value={variant.color}
+                            onChange={(e) => updateVariant(index, 'color', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-primary-200 rounded-lg"
+                          >
+                            <option value="">Seleccionar color</option>
+                            {colors.map((color) => (
+                              <option key={color} value={color}>{color}</option>
+                            ))}
+                          </select>
 
-                        <input
-                          type="number"
-                          value={variant.stock || 0}
-                          onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
-                          min="0"
-                          className="w-24 px-3 py-2 border border-primary-200 rounded-lg"
-                          placeholder="Stock"
-                        />
+                          <input
+                            type="number"
+                            value={variant.stock || 0}
+                            onChange={(e) => updateVariant(index, 'stock', e.target.value ? parseInt(e.target.value) : 0)}
+                            min="0"
+                            className="w-24 px-3 py-2 border border-primary-200 rounded-lg"
+                            placeholder="Stock"
+                          />
 
-                        <button
-                          type="button"
-                          onClick={() => removeVariant(index)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
-                          title="Eliminar variante"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(index)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
+                            title="Eliminar variante"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                     
                     {/* Resumen de variantes */}
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <h4 className="text-sm font-medium text-blue-800 mb-2">Resumen de variantes:</h4>
-                      <div className="text-xs text-blue-700">
+                    <div className="mt-3 sm:mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="text-xs sm:text-sm font-medium text-blue-800 mb-2">Resumen de variantes:</h4>
+                      <div className="text-xs text-blue-700 space-y-1">
                         <p>• Total de variantes: <strong>{variants.length}</strong></p>
                         <p>• Variantes completas: <strong>{variants.filter(v => v.size && v.color && v.stock > 0).length}</strong></p>
                         <p>• Variantes incompletas: <strong>{variants.filter(v => !v.size || !v.color || v.stock === 0).length}</strong></p>

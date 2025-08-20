@@ -25,6 +25,7 @@ interface Product {
   category?: string
   isNew?: boolean
   isSale?: boolean
+  isOnSale?: boolean
   isSecondHand?: boolean
   variants?: Array<{
     size?: string
@@ -315,7 +316,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
               Nuevo
             </span>
           )}
-          {product.isSale && (
+          {(product.isSale || product.isOnSale) && (
             <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
               Oferta
             </span>
@@ -396,7 +397,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
   return (
     <div className="group card overflow-hidden">
       {/* Product Image with Link */}
-      <Link href={`/productos/${product.id}`} className="block relative h-64 overflow-hidden">
+      <Link href={`/productos/${product.id}`} className="block relative h-40 sm:h-48 md:h-64 overflow-hidden">
         <img
           src={product.image}
           alt={product.name}
@@ -405,77 +406,80 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         />
         
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-1.5 sm:top-3 left-1.5 sm:left-3 flex flex-col gap-1 sm:gap-2">
           {product.isNew && (
-            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Nuevo
+            <span className="bg-blue-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+              <span className="hidden sm:inline">Nuevo</span>
+              <span className="sm:hidden">N</span>
             </span>
           )}
-          {product.isSale && (
-            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-              Oferta
+          {(product.isSale || product.isOnSale) && (
+            <span className="bg-red-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+              <span className="hidden sm:inline">Oferta</span>
+              <span className="sm:hidden">%</span>
             </span>
           )}
           {product.isSecondHand && (
-            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-              Segunda mano
+            <span className="bg-green-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+              <span className="hidden sm:inline">Segunda mano</span>
+              <span className="sm:hidden">2M</span>
             </span>
           )}
         </div>
 
         {/* Action Buttons */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2">
+        <div className="absolute top-1.5 sm:top-3 right-1.5 sm:right-3 flex flex-col gap-1 sm:gap-2">
           <button
             onClick={(e) => {
               e.preventDefault();
               toggleFavorite();
             }}
-            className={`p-2 rounded-full ${
+            className={`p-1.5 sm:p-2 rounded-full ${
               isFavorite
                 ? 'bg-red-500 text-white'
                 : 'bg-white text-gray-700 hover:text-red-500'
             } shadow-lg hover:scale-110 transition-all duration-200`}
           >
-            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+            <Heart size={14} fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
         </div>
 
         {/* Ver Producto Overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <div className="bg-white text-primary-600 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
-            <Eye size={16} />
-            Ver Producto
+          <div className="bg-white text-primary-600 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium flex items-center gap-1 sm:gap-2">
+            <Eye size={14} className="sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">Ver Producto</span>
           </div>
         </div>
       </Link>
 
       {/* Product Info */}
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted uppercase tracking-wide">
+      <div className="p-2 sm:p-4">
+        <div className="flex items-center justify-between mb-1 sm:mb-2">
+          <span className="text-xs text-muted uppercase tracking-wide truncate">
             {product.category}
           </span>
           <div className="flex items-center">
-            <Star size={14} className="text-yellow-400 fill-current" />
-            <span className="text-sm text-body ml-1">
+            <Star size={12} className="text-yellow-400 fill-current sm:w-3.5 sm:h-3.5" />
+            <span className="text-xs sm:text-sm text-body ml-1">
               {product.rating} ({product.reviewCount})
             </span>
           </div>
         </div>
 
         <Link href={`/productos/${product.id}`} className="block">
-          <h3 className="font-semibold text-title mb-2 line-clamp-2 hover:text-primary-600 transition-colors">
+          <h3 className="font-semibold text-sm sm:text-base text-title mb-1 sm:mb-2 line-clamp-2 hover:text-primary-600 transition-colors">
             {product.name}
           </h3>
         </Link>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-title">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <span className="text-base sm:text-lg font-bold text-title">
               ${product.price}
             </span>
             {product.originalPrice && (
-              <span className="text-sm text-muted line-through">
+              <span className="text-xs sm:text-sm text-muted line-through">
                 ${product.originalPrice}
               </span>
             )}

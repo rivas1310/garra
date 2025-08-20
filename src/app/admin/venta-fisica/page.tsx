@@ -32,6 +32,11 @@ const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), {
   ssr: false
 })
 
+// Importar el escáner externo de forma dinámica (solo en el cliente)
+const ExternalScanner = dynamic(() => import('@/components/ExternalScanner'), {
+  ssr: false
+})
+
 export default function VentaFisicaPage() {
   const router = useRouter()
   const [products, setProducts] = useState<any[]>([])
@@ -41,6 +46,7 @@ export default function VentaFisicaPage() {
   const [barcodeInput, setBarcodeInput] = useState('')
   const [processingOrder, setProcessingOrder] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
+  const [showExternalScanner, setShowExternalScanner] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'tarjeta'>('efectivo')
   const [lastSale, setLastSale] = useState<any>(null)
@@ -1097,7 +1103,15 @@ garantias y devoluciones
                     className="btn-secondary text-sm sm:text-base py-1.5 px-3 sm:py-2 sm:px-4 flex items-center gap-1 sm:gap-2 flex-1 sm:flex-none"
                   >
                     <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-                    Escanear
+                    Cámara
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowExternalScanner(true)}
+                    className="btn-secondary text-sm sm:text-base py-1.5 px-3 sm:py-2 sm:px-4 flex items-center gap-1 sm:gap-2 flex-1 sm:flex-none bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    <Bluetooth className="h-3 w-3 sm:h-4 sm:w-4" />
+                    Externo
                   </button>
                 </div>
               </form>
@@ -1582,7 +1596,51 @@ garantias y devoluciones
         paymentMethod={paymentMethod}
       />
 
-
+      {/* Escáner Externo */}
+      <ExternalScanner
+        isOpen={showExternalScanner}
+        onScan={async (decodedText) => {
+          setBarcodeInput(decodedText);
+          setShowExternalScanner(false);
+          
+          try {
+            // Primero intentar buscar por código de barras usando la API
+            const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
+            
+            if (barcodeResponse.ok) {
+              const product = await barcodeResponse.json();
+              log.error('Producto encontrado por código de barras (escáner externo):', product);
+              
+              if (product.isAvailable) {
+                addToCart(product);
+                setBarcodeInput('');
+                toast.success(`Producto agregado: ${product.name}`);
+              } else {
+                toast.error(`Producto encontrado pero sin stock: ${product.name}`);
+              }
+              return;
+            }
+            
+            // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
+            const product = products.find(p => 
+              p.id === decodedText.trim() || 
+              p.slug === decodedText.trim()
+            );
+            
+            if (product) {
+              addToCart(product);
+              setBarcodeInput('');
+              toast.success(`Producto agregado: ${product.name}`);
+            } else {
+              toast.error('Producto no encontrado');
+            }
+          } catch (error) {
+            log.error('Error al buscar producto con escáner externo:', error);
+            toast.error('Error al buscar el producto');
+          }
+        }}
+        onClose={() => setShowExternalScanner(false)}
+      />
 
     </div>
   )

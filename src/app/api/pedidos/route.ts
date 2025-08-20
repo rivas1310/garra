@@ -70,9 +70,33 @@ export async function POST(req: Request) {
       coupon
     } = data
 
-    // Validaciones
-    if (!stripeSessionId || !items || !customer || !totals) {
-      return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 })
+    // Validaciones de entrada
+    if (!stripeSessionId) {
+      return NextResponse.json(
+        { error: 'stripeSessionId es requerido' },
+        { status: 400 }
+      )
+    }
+
+    if (!customer || !customer.email) {
+      return NextResponse.json(
+        { error: 'Información del cliente es requerida' },
+        { status: 400 }
+      )
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: 'Items de la orden son requeridos' },
+        { status: 400 }
+      )
+    }
+
+    if (!totals) {
+      return NextResponse.json(
+        { error: 'Totales de la orden son requeridos' },
+        { status: 400 }
+      )
     }
 
     // Verificar si ya existe un pedido con este Stripe Session ID
@@ -81,8 +105,18 @@ export async function POST(req: Request) {
     })
 
     if (existingOrder) {
-      return NextResponse.json({ error: 'Pedido ya existe', order: existingOrder }, { status: 409 })
+      console.log(`Orden duplicada detectada para session: ${stripeSessionId}, orden existente: ${existingOrder.id}`)
+      return NextResponse.json(
+        { 
+          error: 'Orden ya existe',
+          order: existingOrder
+        },
+        { status: 409 }
+      )
     }
+
+    // Log para debugging
+    console.log(`Creando nueva orden para session: ${stripeSessionId}`)
 
     // Buscar o crear usuario
     let user = await prisma.user.findUnique({
@@ -145,6 +179,77 @@ export async function POST(req: Request) {
     })
 
     log.error('Pedido creado exitosamente:', order.id)
+    
+    // IMPORTANTE: Descontar stock de los productos/variantes
+    log.error('🔄 Descontando stock de los productos...')
+    
+    for (const item of order.items) {
+      try {
+        log.error(`📦 Descontando stock para producto ID: ${item.productId} - Cantidad: ${item.quantity}`)
+        
+        if (item.variantId) {
+          // Si tiene variante, descontar del stock de la variante
+          const updatedVariant = await prisma.productVariant.update({
+            where: { id: item.variantId },
+            data: {
+              stock: {
+                decrement: item.quantity
+              }
+            }
+          })
+          log.error(`✅ Stock de variante descontado: ${item.variantId}, nuevo stock: ${updatedVariant.stock}`)
+          
+          // Actualizar el stock total del producto principal
+          const allVariants = await prisma.productVariant.findMany({
+            where: { productId: item.productId }
+          })
+          
+          const totalStock = allVariants.reduce((sum, v) => sum + v.stock, 0)
+          
+          // Actualizar el stock principal del producto
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { 
+              stock: totalStock,
+              isActive: totalStock > 0
+            }
+          })
+          
+          log.error(`✅ Stock principal actualizado: ${item.productId}, nuevo stock total: ${totalStock}`)
+          
+          if (totalStock <= 0) {
+            log.error(`⚠️ Producto desactivado - sin stock disponible en variantes`)
+          }
+        } else {
+          // Si no tiene variante, descontar del stock principal del producto
+          const updatedProduct = await prisma.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                decrement: item.quantity
+              }
+            }
+          })
+          log.error(`✅ Stock de producto descontado: ${item.productId}, nuevo stock: ${updatedProduct.stock}`)
+          
+          // Si el stock llega a 0, desactivar el producto
+          if (updatedProduct.stock <= 0) {
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: { isActive: false }
+            })
+            log.error(`⚠️ Producto desactivado - sin stock disponible`)
+          }
+        }
+        
+        log.error(`✅ Item procesado: ${item.productId} - Cantidad: ${item.quantity}`)
+      } catch (stockError) {
+        log.error(`❌ Error al descontar stock para producto ${item.productId}:`, stockError)
+        // No fallar la creación del pedido por error de stock
+      }
+    }
+    
+    log.error('✅ Stock descontado correctamente para todos los items')
     
     // Enviar correo de confirmación
     try {
