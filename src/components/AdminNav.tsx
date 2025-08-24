@@ -16,7 +16,8 @@ import {
   Ticket,
   ClipboardList,
   X,
-  Upload
+  Upload,
+  QrCode
 } from 'lucide-react'
 
 // Navegación completa para administradores
@@ -24,6 +25,7 @@ const adminNavigation = [
   { name: 'Dashboard', href: '/admin', icon: Home },
   { name: 'Productos', href: '/admin/productos', icon: Package },
   { name: 'Importación Masiva', href: '/admin/importacion-masiva', icon: Upload },
+  { name: 'Etiquetas de Códigos', href: '/admin/etiquetas-codigos', icon: QrCode },
   { name: 'Inventario', href: '/admin/inventario', icon: TrendingUp },
   { name: 'Pedidos', href: '/admin/pedidos', icon: ShoppingCart },
   { name: 'Venta Física', href: '/admin/venta-fisica', icon: ShoppingBag },

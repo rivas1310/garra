@@ -1,15 +1,18 @@
 /**
  * Calcula el dígito de verificación para códigos EAN-13
+ * Algoritmo estándar EAN-13: posiciones impares x1, posiciones pares x3
  */
 function calculateEAN13CheckDigit(code: string): string {
   const digits = code.split('').map(Number);
   let sum = 0;
   
+  // EAN-13: posiciones 1,3,5,7,9,11 (índices 0,2,4,6,8,10) se multiplican por 1
+  // posiciones 2,4,6,8,10,12 (índices 1,3,5,7,9,11) se multiplican por 3
   for (let i = 0; i < 12; i++) {
     if (i % 2 === 0) {
-      sum += digits[i];
+      sum += digits[i] * 1;  // Posiciones impares (1,3,5...)
     } else {
-      sum += digits[i] * 3;
+      sum += digits[i] * 3;  // Posiciones pares (2,4,6...)
     }
   }
   
