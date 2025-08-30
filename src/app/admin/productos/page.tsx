@@ -1,5 +1,6 @@
 'use client'
 
+// Página de administración de productos con paginación optimizada - v4.2
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -101,11 +102,11 @@ export default function ProductosAdminPage() {
       status = stock === 0 ? 'out-of-stock' : stock < 5 ? 'low-stock' : 'active';
     }
     
-    return {
-      ...p,
-      stock,
-      status,
-    };
+      return {
+    ...p,
+    stock,
+    status,
+  };
   });
 
   const filteredProducts = mappedProducts.filter(product => {
@@ -201,7 +202,7 @@ export default function ProductosAdminPage() {
             >
               <Plus className="h-5 w-5 mr-2" />
               Nuevo Producto
-            </button>
+              </button>
           </div>
         </div>
       </div>
@@ -232,14 +233,14 @@ export default function ProductosAdminPage() {
               {/* Búsqueda */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar productos..."
-                  value={searchTerm}
+              <input
+                type="text"
+                placeholder="Buscar productos..."
+                value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              />
+            </div>
 
               {/* Mostrar inactivos */}
               <label className="flex items-center space-x-2">
@@ -260,7 +261,7 @@ export default function ProductosAdminPage() {
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="ml-2 text-gray-600">Cargando productos...</span>
-          </div>
+              </div>
         )}
 
         {/* Tabla de productos */}
@@ -277,49 +278,49 @@ export default function ProductosAdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Producto
-                      </th>
+                    Producto
+                  </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Categoría
-                      </th>
+                    Categoría
+                  </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Precio
-                      </th>
+                    Precio
+                  </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stock
-                      </th>
+                    Stock
+                  </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Estado
-                      </th>
+                    Estado
+                  </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProducts.map((product) => (
+                {filteredProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
                             <div className="h-10 w-10 flex-shrink-0">
-                              <img
+                        <img
                                 className="h-10 w-10 rounded-lg object-cover"
-                                src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
-                                alt={product.name}
-                              />
+                          src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
+                          alt={product.name}
+                        />
                             </div>
-                            <div className="ml-4">
+                        <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">{product.name}</div>
                               <div className="text-sm text-gray-500">ID: {product.id}</div>
                             </div>
-                          </div>
-                        </td>
+                      </div>
+                    </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {product.category?.name || 'Sin categoría'}
-                        </td>
+                    </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           ${product.price}
-                          {product.originalPrice && product.originalPrice > product.price && (
+                      {product.originalPrice && product.originalPrice > product.price && (
                             <span className="ml-2 text-sm text-gray-500 line-through">
                               ${product.originalPrice}
                             </span>
@@ -331,36 +332,36 @@ export default function ProductosAdminPage() {
                             <span className="ml-2 text-xs text-gray-500">
                               ({product.variants.length} variantes)
                             </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                           {getStatusBadge(product.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => router.push(`/admin/productos/${product.id}`)}
                               className="text-blue-600 hover:text-blue-900"
-                            >
-                              <Edit className="h-4 w-4" />
+                        >
+                          <Edit className="h-4 w-4" />
                             </button>
-                            <button
+                        <button
                               onClick={() => setDeleteModal({
                                 isOpen: true,
                                 productId: product.id,
                                 productName: product.name
                               })}
                               className="text-red-600 hover:text-red-900"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
             </div>
 
             {/* Paginación simple */}
@@ -377,27 +378,27 @@ export default function ProductosAdminPage() {
                   
                   <span className="px-4 py-2 text-gray-700">
                     Página {currentPage} de {pagination.totalPages}
-                  </span>
+                              </span>
                   
-                  <button
+                          <button
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === pagination.totalPages}
                     className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                   >
                     Siguiente
-                  </button>
-                </div>
+                          </button>
+                        </div>
                 
                 {/* Información de paginación */}
                 <div className="text-center text-sm text-gray-600">
                   Mostrando {((currentPage - 1) * 25) + 1} - {Math.min(currentPage * 25, pagination.total)} 
                   de {pagination.total} productos
                 </div>
-              </div>
+            </div>
             )}
           </>
         )}
-      </div>
+          </div>
 
       {/* Modal de confirmación de eliminación */}
       {deleteModal.isOpen && (

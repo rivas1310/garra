@@ -1,9 +1,6 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/profile/route": "app/api/profile/route.js",
-  "/api/productos/route": "app/api/productos/route.js",
   "/admin/page": "app/admin/page.js",
-  "/admin/venta-fisica/page": "app/admin/venta-fisica/page.js",
   "/admin/productos/page": "app/admin/productos/page.js",
-  "/admin/etiquetas-codigos/page": "app/admin/etiquetas-codigos/page.js"
+  "/admin/etiquetas-codigos/page": "app/admin/etiquetas-codigos/page.js",
+  "/admin/venta-fisica/page": "app/admin/venta-fisica/page.js"
 }
