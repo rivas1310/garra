@@ -52,21 +52,6 @@ export async function POST(req: Request) {
       log.error('📋 Procesando sesión completada:', session.id)
       log.error('📋 Metadata:', session.metadata)
 
-      // Verificar si hay un código de cupón en los metadatos
-      const couponCode = session.metadata?.couponCode
-
-      if (couponCode) {
-        log.error(`Procesando uso de cupón: ${couponCode}`)
-
-        // Incrementar el contador de usos del cupón
-        await prisma.discountCoupon.updateMany({
-          where: { code: couponCode },
-          data: { usedCount: { increment: 1 } }
-        })
-
-        log.error(`Contador de usos incrementado para el cupón: ${couponCode}`)
-      }
-
       // Crear o actualizar la orden con los datos del formulario
       try {
         // Buscar si ya existe una orden con este session ID
@@ -77,6 +62,9 @@ export async function POST(req: Request) {
             stripeSessionId: session.id
           }
         })
+
+        // Verificar si hay un código de cupón en los metadatos
+        const couponCode = session.metadata?.couponCode
 
         log.error(`🔍 Resultado de búsqueda: ${existingOrder ? 'ENCONTRADA' : 'NO ENCONTRADA'}`)
         if (existingOrder) {
@@ -279,6 +267,18 @@ export async function POST(req: Request) {
           })
           
           log.error('✅ Nueva orden creada:', newOrder.id)
+          
+          // Incrementar el contador de usos del cupón SOLO para nuevas órdenes
+          if (couponCode) {
+            log.error(`Procesando uso de cupón para nueva orden: ${couponCode}`)
+
+            await prisma.discountCoupon.updateMany({
+              where: { code: couponCode },
+              data: { usedCount: { increment: 1 } }
+            })
+
+            log.error(`Contador de usos incrementado para el cupón: ${couponCode}`)
+          }
           
           // Descontar el stock de cada item de la orden
           for (const item of newOrder.items) {

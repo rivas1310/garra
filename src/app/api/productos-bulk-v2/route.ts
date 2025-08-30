@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { generateUniqueEAN13 } from '@/lib/barcodeUtils';
 
 // Crear una nueva instancia de Prisma directamente
 const prisma = new PrismaClient();
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         // Generar código de barras si no existe
         let barcode = productData.barcode;
         if (!barcode) {
-          barcode = `GARRA${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+          barcode = generateUniqueEAN13();
         }
 
         // Generar slug para el producto

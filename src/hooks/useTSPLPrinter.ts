@@ -9,11 +9,9 @@ import {
   generateProductLabelTSPL, 
   generateMultipleProductLabelsTSPL,
   generateTestLabelTSPL,
-  generateTestLabelArribaTSPL,
-  generateTestLabelAbajoTSPL,
-  generateTestLabelIzquierdaTSPL,
-  generateTestLabelDerechaTSPL,
-  generateTestLabelCentroTSPL,
+  generateUpdatedTestLabel,
+  generateCenteringTestPattern,
+  generateMarginTestPattern,
   TSPLLabelData,
   validateTSPLCommands,
   getTSPLDebugInfo
@@ -68,7 +66,7 @@ export function useTSPLPrinter() {
    * Verifica si Web Bluetooth está disponible
    */
   const isBluetoothAvailable = useCallback((): boolean => {
-    if (typeof navigator === 'undefined' || !navigator.bluetooth) {
+    if (!navigator.bluetooth) {
       updateState({ error: 'Web Bluetooth no está soportado en este navegador' })
       toast.error('Web Bluetooth no está soportado')
       return false
@@ -87,7 +85,7 @@ export function useTSPLPrinter() {
     try {
       // Verificar que navigator.bluetooth existe
       if (!navigator.bluetooth) {
-        throw new Error('Web Bluetooth no está disponible en este navegador');
+        throw new Error('Bluetooth no está disponible en este navegador')
       }
       
       // Solicitar dispositivo Bluetooth
@@ -253,6 +251,51 @@ export function useTSPLPrinter() {
   }, [sendTSPLCommands])
 
   /**
+   * Imprime etiqueta de prueba con nuevas configuraciones
+   */
+  const printUpdatedTestLabel = useCallback(async (
+    labelSize: string = '51x25'
+  ): Promise<boolean> => {
+    try {
+      const commands = generateUpdatedTestLabel(labelSize)
+      return await sendTSPLCommands(commands, { labelSize })
+    } catch (error: any) {
+      toast.error('Error al generar comandos TSPL: ' + error.message)
+      return false
+    }
+  }, [sendTSPLCommands])
+
+  /**
+   * Imprime patrón de prueba de centrado
+   */
+  const printCenteringTestPattern = useCallback(async (
+    labelSize: string = '51x25'
+  ): Promise<boolean> => {
+    try {
+      const commands = generateCenteringTestPattern(labelSize)
+      return await sendTSPLCommands(commands, { labelSize })
+    } catch (error: any) {
+      toast.error('Error al generar comandos TSPL: ' + error.message)
+      return false
+    }
+  }, [sendTSPLCommands])
+
+  /**
+   * Imprime patrón de prueba de márgenes
+   */
+  const printMarginTestPattern = useCallback(async (
+    labelSize: string = '51x25'
+  ): Promise<boolean> => {
+    try {
+      const commands = generateMarginTestPattern(labelSize)
+      return await sendTSPLCommands(commands, { labelSize })
+    } catch (error: any) {
+      toast.error('Error al generar comandos TSPL: ' + error.message)
+      return false
+    }
+  }, [sendTSPLCommands])
+
+  /**
    * Imprime múltiples etiquetas de productos
    */
   const printMultipleProductLabels = useCallback(async (
@@ -280,7 +323,7 @@ export function useTSPLPrinter() {
   }, [sendTSPLCommands])
 
   /**
-   * Imprime etiqueta de prueba con nuevas configuraciones
+   * Envía comando de prueba a la impresora
    */
   const printTestLabel = useCallback(async (
     labelSize: string = '51x25'
@@ -325,133 +368,7 @@ export function useTSPLPrinter() {
     }
   }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
 
-  /**
-   * Funciones de prueba para entender movimiento de coordenadas
-   */
-  const printTestArriba = useCallback(async (labelSize: string = '51x25'): Promise<boolean> => {
-    if (!state.isConnected || !state.characteristic) {
-      toast.error('No hay conexión con la impresora')
-      return false
-    }
-    updateState({ isPrinting: true, error: null })
-    try {
-      const tsplCommands = generateTestLabelArribaTSPL(labelSize, 1)
-      const success = await sendTSPLCommands(tsplCommands)
-      if (success) {
-        toast.success('Etiqueta ARRIBA enviada')
-        return true
-      } else {
-        throw new Error('Error al enviar comandos')
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      updateState({ error: errorMessage })
-      toast.error(`Error: ${errorMessage}`)
-      return false
-    } finally {
-      updateState({ isPrinting: false })
-    }
-  }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
 
-  const printTestAbajo = useCallback(async (labelSize: string = '51x25'): Promise<boolean> => {
-    if (!state.isConnected || !state.characteristic) {
-      toast.error('No hay conexión con la impresora')
-      return false
-    }
-    updateState({ isPrinting: true, error: null })
-    try {
-      const tsplCommands = generateTestLabelAbajoTSPL(labelSize, 1)
-      const success = await sendTSPLCommands(tsplCommands)
-      if (success) {
-        toast.success('Etiqueta ABAJO enviada')
-        return true
-      } else {
-        throw new Error('Error al enviar comandos')
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      updateState({ error: errorMessage })
-      toast.error(`Error: ${errorMessage}`)
-      return false
-    } finally {
-      updateState({ isPrinting: false })
-    }
-  }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
-
-  const printTestIzquierda = useCallback(async (labelSize: string = '51x25'): Promise<boolean> => {
-    if (!state.isConnected || !state.characteristic) {
-      toast.error('No hay conexión con la impresora')
-      return false
-    }
-    updateState({ isPrinting: true, error: null })
-    try {
-      const tsplCommands = generateTestLabelIzquierdaTSPL(labelSize, 1)
-      const success = await sendTSPLCommands(tsplCommands)
-      if (success) {
-        toast.success('Etiqueta IZQUIERDA enviada')
-        return true
-      } else {
-        throw new Error('Error al enviar comandos')
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      updateState({ error: errorMessage })
-      toast.error(`Error: ${errorMessage}`)
-      return false
-    } finally {
-      updateState({ isPrinting: false })
-    }
-  }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
-
-  const printTestDerecha = useCallback(async (labelSize: string = '51x25'): Promise<boolean> => {
-    if (!state.isConnected || !state.characteristic) {
-      toast.error('No hay conexión con la impresora')
-      return false
-    }
-    updateState({ isPrinting: true, error: null })
-    try {
-      const tsplCommands = generateTestLabelDerechaTSPL(labelSize, 1)
-      const success = await sendTSPLCommands(tsplCommands)
-      if (success) {
-        toast.success('Etiqueta DERECHA enviada')
-        return true
-      } else {
-        throw new Error('Error al enviar comandos')
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      updateState({ error: errorMessage })
-      toast.error(`Error: ${errorMessage}`)
-      return false
-    } finally {
-      updateState({ isPrinting: false })
-    }
-  }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
-
-  const printTestCentro = useCallback(async (labelSize: string = '51x25'): Promise<boolean> => {
-    if (!state.isConnected || !state.characteristic) {
-      toast.error('No hay conexión con la impresora')
-      return false
-    }
-    updateState({ isPrinting: true, error: null })
-    try {
-      const tsplCommands = generateTestLabelCentroTSPL(labelSize, 1)
-      const success = await sendTSPLCommands(tsplCommands)
-      if (success) {
-        toast.success('Etiqueta CENTRO enviada')
-        return true
-      } else {
-        throw new Error('Error al enviar comandos')
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
-      updateState({ error: errorMessage })
-      toast.error(`Error: ${errorMessage}`)
-      return false
-    } finally {
-      updateState({ isPrinting: false })
-    }
-  }, [state.isConnected, state.characteristic, updateState, sendTSPLCommands])
 
   /**
    * Limpia el estado de error
@@ -477,8 +394,8 @@ export function useTSPLPrinter() {
     ...state,
     
     // Funciones de conexión
-    connectToPrinter: connect,
-    disconnectFromPrinter: disconnect,
+    connect,
+    disconnect,
     isBluetoothAvailable,
     getConnectionStatus,
     
@@ -486,13 +403,10 @@ export function useTSPLPrinter() {
     printProductLabel,
     printMultipleProductLabels,
     printTestLabel,
-    printTestArriba,
-    printTestAbajo,
-    printTestIzquierda,
-    printTestDerecha,
-    printTestCentro,
+    printUpdatedTestLabel,
+    printCenteringTestPattern,
+    printMarginTestPattern,
     sendTSPLCommands,
-    validateTSPLCommands,
     
     // Utilidades
     clearError
@@ -508,8 +422,8 @@ export function useSimpleTSPLPrinter() {
     isConnecting,
     isPrinting,
     error,
-    connectToPrinter,
-    disconnectFromPrinter,
+    connect,
+    disconnect,
     printProductLabel,
     clearError
   } = useTSPLPrinter()
@@ -519,8 +433,8 @@ export function useSimpleTSPLPrinter() {
     isConnecting,
     isPrinting,
     error,
-    connect: connectToPrinter,
-    disconnect: disconnectFromPrinter,
+    connect,
+    disconnect,
     printLabel: printProductLabel,
     clearError
   }

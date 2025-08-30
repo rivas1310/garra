@@ -26,7 +26,7 @@ const subcategoriasPorCategoria: Record<string, string[]> = {
   mujer: ["Vestidos", "Blusas", "Pantalones", "Pants", "Conjunto", "Suéter", "Chaleco", "Chamarras", "Sudaderas", "Sacos", "Abrigos", "Tops", "Overoles", "Faldas", "Shorts"],
   hombre: ["Chamarras", "Camisas", "Playeras", "Pantalones", "Chaleco", "Pants", "Suéter", "Shorts","Sudaderas"],
   accesorios: ["Joyeria Para Dama", "Joyeria Para Caballero","Cinturones de Dama", "Cinturones de Hombre",],
-  calzado: ["Zapatos", "Zapatillas", "Botas"],
+  calzado: ["Tacones", "Zapatillas", "Zapatos", "Sneakers", "Botas", "Huaraches", "Sandalias"],
   "calzado-mujer": ["Tacones", "Zapatillas", "Zapatos", "Sneakers", "Botas", "Huaraches", "Sandalias"],
   "calzado-hombre": ["Zapatos", "Sneakers", "Botas", "Sandalias"],
   "calzado-nino": ["Zapatos", "Botas", "Sneakers", "Sandalias"],
@@ -89,7 +89,7 @@ export default function NuevoProductoPage() {
   }, []);
 
   // Mapear id de categoría a slug para subcategorías
-  const getSlugByCategoryId = (id: string) => {
+  const getSlugByCategoryId = (id: string): 'mujer' | 'hombre' | 'accesorios' | 'calzado' | 'bolsos' | 'deportes' | 'calzado-mujer' | 'calzado-hombre' | 'calzado-nina' | 'calzado-nino' | 'ninas' | 'ninos' | '' => {
     const cat = categories.find((c) => c.id === id);
     // Si tienes el campo slug en la respuesta de categorías, usa c.slug
     // Si no, puedes mapear manualmente aquí
@@ -97,8 +97,12 @@ export default function NuevoProductoPage() {
       const nombre = cat.name.toLowerCase();
       if (nombre.includes('calzado de mujer')) return 'calzado-mujer';
       if (nombre.includes('calzado de hombre')) return 'calzado-hombre';
+      if (nombre.includes('calzado') && nombre.includes('mujer')) return 'calzado-mujer';
+      if (nombre.includes('calzado') && nombre.includes('hombre')) return 'calzado-hombre';
       if (nombre.includes('calzado de niño')) return 'calzado-nino';
       if (nombre.includes('calzado de niña')) return 'calzado-nina';
+      if (nombre.includes('calzado') && (nombre.includes('niña') || nombre.includes('nina'))) return 'calzado-nina';
+      if (nombre.includes('calzado') && (nombre.includes('niño') || nombre.includes('nino'))) return 'calzado-nino';
       if (nombre.includes('niña') && !nombre.includes('calzado')) return 'ninas';
       if (nombre.includes('niño') && !nombre.includes('calzado')) return 'ninos';
       if (nombre.includes('mujer') && !nombre.includes('calzado')) return 'mujer';
@@ -115,8 +119,13 @@ export default function NuevoProductoPage() {
   const getAvailableSizes = () => {
     const categorySlug = getSlugByCategoryId(formData.category);
     
-    if (categorySlug === 'calzado') {
-      // Para calzado, necesitamos determinar si es de mujer u hombre
+    // Verificar primero si es una categoría específica de calzado
+    if (categorySlug === 'calzado-mujer' || categorySlug === 'calzado-nina') {
+      return womenShoeSizes;
+    } else if (categorySlug === 'calzado-hombre' || categorySlug === 'calzado-nino') {
+      return menShoeSizes;
+    } else if (categorySlug === 'calzado') {
+      // Para calzado genérico, necesitamos determinar si es de mujer u hombre
       // Primero verificar si la categoría principal indica el género
       const categoryName = categories.find(c => c.id === formData.category)?.name?.toLowerCase() || '';
       const subcategory = formData.subcategoria.toLowerCase();

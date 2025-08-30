@@ -34,15 +34,12 @@ import {
   BluetoothConnected, 
   Printer, 
   Settings, 
+  TestTube,
   AlertCircle,
   CheckCircle,
-  Loader2,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight
+  Loader2
 } from 'lucide-react'
-import { useTSPLPrinter } from '../hooks/useTSPLPrinter'
+import { useTSPLPrinter } from '@/hooks/useTSPLPrinter'
 import { TSPLLabelData, TSPL_LABEL_CONFIGS } from '@/lib/tsplGenerator'
 
 export interface TSPLPrinterProps {
@@ -60,25 +57,21 @@ export function TSPLPrinter({
 }: TSPLPrinterProps) {
   const {
     isConnected,
+    isConnecting,
     isPrinting,
+    device,
     error,
     debugInfo,
-    connectToPrinter,
-    disconnectFromPrinter,
+    connect,
+    disconnect,
     printProductLabel,
     printMultipleProductLabels,
     printTestLabel,
-    printTestArriba,
-    printTestAbajo,
-    printTestIzquierda,
-    printTestDerecha,
-    printTestCentro,
-    sendTSPLCommands,
-    validateTSPLCommands,
-    getConnectionStatus,
+    printUpdatedTestLabel,
+    printCenteringTestPattern,
+    printMarginTestPattern,
     clearError,
-    device,
-    isConnecting
+    getConnectionStatus
   } = useTSPLPrinter()
 
   // Estados locales para configuración
@@ -93,9 +86,9 @@ export function TSPLPrinter({
    */
   const handleConnectionToggle = async () => {
     if (isConnected) {
-      await disconnectFromPrinter()
+      await disconnect()
     } else {
-      const success = await connectToPrinter()
+      const success = await connect()
       if (!success && onPrintError) {
         onPrintError('No se pudo conectar a la impresora')
       }
@@ -336,17 +329,17 @@ export function TSPLPrinter({
 
         {/* Botones de acción */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* Botón de conexión/desconexión */}
+          {/* Conexión */}
           <button
             onClick={handleConnectionToggle}
             disabled={isConnecting}
             style={{
               width: '100%',
               padding: '12px',
-              border: '1px solid #dc2626',
+              border: isConnected ? '1px solid #d1d5db' : 'none',
               borderRadius: '6px',
-              backgroundColor: isConnected ? '#dc2626' : '#fef2f2',
-              color: isConnected ? '#ffffff' : '#dc2626',
+              backgroundColor: isConnected ? 'white' : '#3b82f6',
+              color: isConnected ? '#374151' : 'white',
               fontSize: '14px',
               fontWeight: '500',
               cursor: isConnecting ? 'not-allowed' : 'pointer',
@@ -364,72 +357,95 @@ export function TSPLPrinter({
               </>
             ) : isConnected ? (
               <>
-                <BluetoothConnected style={{ width: '16px', height: '16px' }} />
+                <Bluetooth style={{ width: '16px', height: '16px' }} />
                 Desconectar
               </>
             ) : (
               <>
-                <Bluetooth style={{ width: '16px', height: '16px' }} />
+                <BluetoothConnected style={{ width: '16px', height: '16px' }} />
                 Conectar Impresora
               </>
             )}
           </button>
 
-          {/* Configuración de etiqueta */}
-          <div style={{ marginTop: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-              Tamaño de Etiqueta:
-            </label>
-            <select
-              value={labelSize}
-              onChange={(e) => setLabelSize(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}
-            >
-              {Object.keys(TSPL_LABEL_CONFIGS).map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Número de copias */}
-          <div style={{ marginTop: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500' }}>
-              Copias:
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={copies}
-              onChange={(e) => setCopies(parseInt(e.target.value) || 1)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                fontSize: '14px'
-              }}
-            />
-          </div>
-
-          {/* Imprimir etiqueta de prueba */}
+          {/* Imprimir seleccionados */}
           <button
-            onClick={() => printTestLabel(labelSize)}
+            onClick={handlePrintSelected}
+            disabled={!isConnected || isPrinting || selectedProducts.length === 0}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: 'none',
+              borderRadius: '6px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: (!isConnected || isPrinting || selectedProducts.length === 0) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: (!isConnected || isPrinting || selectedProducts.length === 0) ? 0.6 : 1
+            }}
+          >
+            {isPrinting ? (
+              <>
+                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                Imprimiendo...
+              </>
+            ) : (
+              <>
+                <Printer style={{ width: '16px', height: '16px' }} />
+                Imprimir Seleccionados ({selectedProducts.length})
+              </>
+            )}
+          </button>
+
+          {/* Etiqueta de prueba */}
+          <button
+            onClick={handlePrintTest}
+            disabled={!isConnected || isPrinting}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              backgroundColor: 'white',
+              color: '#374151',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: (!isConnected || isPrinting) ? 0.6 : 1
+            }}
+          >
+            {isPrinting ? (
+              <>
+                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                Imprimiendo...
+              </>
+            ) : (
+              <>
+                <TestTube style={{ width: '16px', height: '16px' }} />
+                Etiqueta de Prueba
+              </>
+            )}
+          </button>
+
+          {/* Prueba con nuevas configuraciones */}
+          <button
+            onClick={() => printUpdatedTestLabel(labelSize)}
             disabled={!isConnected || isPrinting}
             style={{
               width: '100%',
               padding: '12px',
               border: '1px solid #059669',
               borderRadius: '6px',
-              backgroundColor: '#f0fdf4',
+              backgroundColor: '#ecfdf5',
               color: '#059669',
               fontSize: '14px',
               fontWeight: '500',
@@ -448,49 +464,79 @@ export function TSPLPrinter({
               </>
             ) : (
               <>
-                <Printer style={{ width: '16px', height: '16px' }} />
-                Imprimir Etiqueta de Prueba
+                <TestTube style={{ width: '16px', height: '16px' }} />
+                Prueba Centrado Actualizado
               </>
             )}
           </button>
 
-          {/* Espacio para pruebas de movimiento direccional (eliminados) */}
+          {/* Patrón de centrado */}
+          <button
+            onClick={() => printCenteringTestPattern(labelSize)}
+            disabled={!isConnected || isPrinting}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #7c3aed',
+              borderRadius: '6px',
+              backgroundColor: '#faf5ff',
+              color: '#7c3aed',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: (!isConnected || isPrinting) ? 0.6 : 1
+            }}
+          >
+            {isPrinting ? (
+              <>
+                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                Imprimiendo...
+              </>
+            ) : (
+              <>
+                <TestTube style={{ width: '16px', height: '16px' }} />
+                Patrón de Centrado
+              </>
+            )}
+          </button>
 
-          {/* Imprimir etiquetas seleccionadas */}
-          {selectedProducts.length > 0 && (
-            <button
-              onClick={handlePrintSelected}
-              disabled={!isConnected || isPrinting}
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #7c3aed',
-                borderRadius: '6px',
-                backgroundColor: '#f3f4f6',
-                color: '#7c3aed',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                opacity: (!isConnected || isPrinting) ? 0.6 : 1
-              }}
-            >
-              {isPrinting ? (
-                <>
-                  <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                  Imprimiendo...
-                </>
-              ) : (
-                <>
-                  <Printer style={{ width: '16px', height: '16px' }} />
-                  Imprimir {selectedProducts.length} Etiqueta{selectedProducts.length > 1 ? 's' : ''}
-                </>
-              )}
-            </button>
-          )}
+          {/* Patrón de márgenes */}
+          <button
+            onClick={() => printMarginTestPattern(labelSize)}
+            disabled={!isConnected || isPrinting}
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #dc2626',
+              borderRadius: '6px',
+              backgroundColor: '#fef2f2',
+              color: '#dc2626',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: (!isConnected || isPrinting) ? 0.6 : 1
+            }}
+          >
+            {isPrinting ? (
+              <>
+                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                Imprimiendo...
+              </>
+            ) : (
+              <>
+                <TestTube style={{ width: '16px', height: '16px' }} />
+                Patrón de Márgenes
+              </>
+            )}
+          </button>
 
 
         </div>

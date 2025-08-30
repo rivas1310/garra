@@ -85,26 +85,32 @@ export async function POST(req: Request) {
       discountAmount = coupon.discountAmount
     }
     
-    // Calcular impuestos y envío
+    // Aplicar descuento proporcionalmente a cada producto si hay cupón
+    if (coupon && discountAmount > 0) {
+      const subtotalBeforeDiscount = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)
+      
+      // Aplicar descuento proporcionalmente a cada line_item
+      line_items.forEach((lineItem, index) => {
+        const originalItem = items[index]
+        const itemTotal = originalItem.price * originalItem.quantity
+        const itemDiscountRatio = itemTotal / subtotalBeforeDiscount
+        const itemDiscount = discountAmount * itemDiscountRatio
+        const discountedPrice = originalItem.price - (itemDiscount / originalItem.quantity)
+        
+        // Asegurar que el precio no sea negativo
+        const finalPrice = Math.max(0.01, discountedPrice) // Mínimo 1 centavo
+        
+        lineItem.price_data.unit_amount = Math.round(finalPrice * 100)
+      })
+    }
+    
+    // Calcular impuestos y envío (sin restar descuento aquí porque ya está en line_items)
     const tax = (subtotal - discountAmount) * 0.16 // 16% IVA
     const shipping = subtotal >= 1500 ? 0 : 200 // Envío gratis para compras de $1500 o más, $200 para menores
     const total = subtotal + shipping + tax - discountAmount
-    
-    // Crear objeto de descuento para Stripe si hay cupón
-    const discounts = coupon ? [
-      {
-        coupon_id: coupon.id,
-        // Crear un objeto de descuento personalizado
-        discount: {
-          type: coupon.discountType === 'PERCENTAGE' ? 'percent' : 'fixed_amount',
-          amount: coupon.discountType === 'PERCENTAGE' ? coupon.discountValue : Math.round(coupon.discountValue * 100),
-          currency: 'mxn',
-          name: `Cupón ${coupon.code}`,
-        }
-      }
-    ] : []
 
     log.error('Creando sesión de Stripe...')
+    log.error('Line items finales para Stripe:', line_items)
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,

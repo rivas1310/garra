@@ -95,7 +95,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const searchParams = url.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20"); // Cambiar de 10 a 20 por defecto
     const category = searchParams.get("category");
     const subcategory = searchParams.get("subcategory");
     const search = searchParams.get("search");
@@ -112,7 +112,10 @@ export async function GET(request: Request) {
     const admin = searchParams.get("admin") === "true";
     const timestamp = searchParams.get("t") || Date.now().toString();
 
-    log.error(`Obteniendo productos con timestamp: ${timestamp}`);
+    // LIMITAR el límite máximo para evitar sobrecarga
+    const safeLimit = Math.min(limit, 50); // Máximo 50 productos por página
+
+    log.error(`Obteniendo productos con timestamp: ${timestamp}, página: ${page}, límite: ${safeLimit}`);
 
     // Construir el objeto de filtro para Prisma
     const where: any = {};
@@ -179,7 +182,7 @@ export async function GET(request: Request) {
     }
 
     // Calcular el número de elementos a saltar para la paginación
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * safeLimit;
 
     // Determinar el orden según el parámetro sort
     let orderBy: any = {};
@@ -204,10 +207,13 @@ export async function GET(request: Request) {
     const productos = await prisma.product.findMany({
       where,
       orderBy,
-      skip: limit && page ? skip : undefined,
-      take: limit || undefined,
+      skip: skip,
+      take: safeLimit,
       include: {
-        variants: true,
+        variants: {
+          // Limitar las variantes para evitar sobrecarga
+          take: 10, // Máximo 10 variantes por producto
+        },
         category: true,
       },
     });
@@ -234,21 +240,20 @@ export async function GET(request: Request) {
       };
     });
 
-
-    if (page && limit) {
-      return NextResponse.json({
-        productos: productosConTotalStock,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      });
-    } else {
-      return NextResponse.json(productosConTotalStock);
-    }
+    // SIEMPRE retornar con paginación para mejor control
+    return NextResponse.json({
+      productos: productosConTotalStock,
+      pagination: {
+        total,
+        page,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit),
+        hasNextPage: page < Math.ceil(total / safeLimit),
+        hasPrevPage: page > 1,
+      },
+    });
   } catch (error) {
+    log.error('Error al obtener productos:', error);
     return NextResponse.json(
       { error: "Error al obtener productos" },
       { status: 500 },

@@ -48,8 +48,8 @@ export default function CarritoPage() {
 
   const subtotal = getTotal()
   const shipping = subtotal >= 1500 ? 0 : 200 // Envío gratis para compras de $1500 o más, $200 para menores
-  const tax = subtotal * 0.16 // 16% IVA
   const discount = coupon ? coupon.discountAmount : 0
+  const tax = (subtotal - discount) * 0.16 // 16% IVA aplicado después del descuento
   const total = subtotal + shipping + tax - discount
   
   const handleApplyCoupon = async () => {

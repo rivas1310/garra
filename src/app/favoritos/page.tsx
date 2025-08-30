@@ -163,7 +163,7 @@ export default function FavoritosPage() {
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {product.isNew && (
                       <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                        Nuevo
+                        Like New
                       </span>
                     )}
                     {product.isOnSale && (
@@ -173,7 +173,7 @@ export default function FavoritosPage() {
                     )}
                     {product.isSecondHand && (
                       <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                        Segunda Mano
+                        Pre-loved
                       </span>
                     )}
                   </div>

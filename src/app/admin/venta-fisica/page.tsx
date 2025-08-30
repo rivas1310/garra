@@ -73,14 +73,11 @@ export default function VentaFisicaPage() {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      // Agregar timestamp para evitar caché
-      const timestamp = Date.now();
-      const response = await fetch(`/api/productos?admin=true&limit=1000&t=${timestamp}`)
+      // Usar paginación en lugar de cargar todos los productos
+      const response = await fetch(`/api/productos?admin=true&limit=50&t=${Date.now()}`)
       const data = await response.json()
       log.error('Datos recibidos en venta física:', data);
-      if (Array.isArray(data)) {
-        setProducts(data)
-      } else if (Array.isArray(data.productos)) {
+      if (Array.isArray(data.productos)) {
         setProducts(data.productos)
       } else if (Array.isArray(data.products)) {
         setProducts(data.products)

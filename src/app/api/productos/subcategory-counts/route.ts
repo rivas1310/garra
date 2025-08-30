@@ -151,7 +151,8 @@ export async function GET(request: NextRequest) {
                   { subcategoria: { contains: subcategory, mode: 'insensitive' } }
                 ]
               },
-              { isActive: true }
+              { isActive: true },
+              { category: { slug: category } } // Filtrar por la categoría específica
             ]
           }
         })

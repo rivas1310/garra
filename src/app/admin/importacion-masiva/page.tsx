@@ -116,11 +116,20 @@ export default function ImportacionMasivaPage() {
       setIsUploading(true);
       setUploadProgress(0);
       
-      const validProducts = csvData.filter(product => 
-        uploadedImages[product.imageName]
-      );
+      console.log('=== FILTRADO DE PRODUCTOS VÁLIDOS ===');
+      console.log('Total productos en CSV:', csvData.length);
+      console.log('Imágenes disponibles:', Object.keys(uploadedImages));
       
-                    const productsToImport = validProducts.map(product => ({
+      const validProducts = csvData.filter((product, index) => {
+        const hasImage = uploadedImages[product.imageName];
+        console.log(`Producto ${index + 1}: "${product.name}" - Imagen: "${product.imageName}" - Válido: ${hasImage ? 'SÍ' : 'NO'}`);
+        return hasImage;
+      });
+      
+      console.log('Productos válidos filtrados:', validProducts.length);
+      console.log('Lista de productos válidos:', validProducts.map(p => p.name));
+      
+      const productsToImport = validProducts.map(product => ({
          name: product.name,
          price: product.price,
          stock: product.stock,
@@ -321,23 +330,48 @@ function CsvUploadStep({ onComplete }: { onComplete: (data: ProductPreview[]) =>
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+      const lines = text.split('\n').filter(line => line.trim());
       
-             const products: ProductPreview[] = lines.slice(1)
-         .filter(line => line.trim())
-         .map(line => {
-           const values = line.split(',').map(v => v.trim());
-           return {
-             name: values[0] || '',
-             price: parseFloat(values[1]) || 0,
-             category: values[2] || '',
-             subcategory: values[3] || '',
-             stock: parseInt(values[4]) || 0,
-             imageName: values[5] || '',
-             status: 'pending' as const
-           };
-         });
+      // Debug: Log del procesamiento CSV
+      console.log('=== PROCESAMIENTO CSV ===');
+      console.log('Total de líneas en CSV:', lines.length);
+      
+      // Detectar si la primera línea son encabezados o datos
+      const firstLine = lines[0].split(',').map(h => h.trim());
+      const expectedHeaders = ['nombre', 'precio', 'categoria', 'subcategoria', 'stock', 'imagen'];
+      const isFirstLineHeaders = firstLine.some(col => 
+        expectedHeaders.some(header => col.toLowerCase().includes(header))
+      );
+      
+      console.log('Primera línea:', firstLine);
+      console.log('¿Es línea de encabezados?', isFirstLineHeaders);
+      
+      // Determinar desde qué línea empezar a procesar
+      const startIndex = isFirstLineHeaders ? 1 : 0;
+      const dataLines = lines.slice(startIndex);
+      
+      console.log('Líneas de datos a procesar:', dataLines.length);
+      
+      const products: ProductPreview[] = dataLines
+        .map((line, index) => {
+          const values = line.split(',').map(v => v.trim());
+          const product = {
+            name: values[0] || '',
+            price: parseFloat(values[1]) || 0,
+            category: values[2] || '',
+            subcategory: values[3] || '',
+            stock: parseInt(values[4]) || 0,
+            imageName: values[5] || '',
+            status: 'pending' as const
+          };
+          
+          // Debug: Log de cada producto procesado
+          console.log(`Producto ${index + 1}:`, product);
+          return product;
+        });
+      
+      console.log('Total productos procesados:', products.length);
+      console.log('Productos finales:', products);
       
       onComplete(products);
     };
@@ -523,11 +557,23 @@ function MappingStep({
 
   // Mapear automáticamente por nombre de archivo
   useEffect(() => {
-    const mapped = csvData.map(product => ({
-      ...product,
-      imageUrl: uploadedImages[product.imageName] || undefined,
-      status: (uploadedImages[product.imageName] ? 'success' : 'error') as 'success' | 'error'
-    }));
+    console.log('=== MAPEO DE PRODUCTOS ===');
+    console.log('CSV Data recibido:', csvData);
+    console.log('Imágenes subidas:', uploadedImages);
+    console.log('Nombres de imágenes disponibles:', Object.keys(uploadedImages));
+    
+    const mapped = csvData.map((product, index) => {
+      const hasImage = uploadedImages[product.imageName];
+      console.log(`Producto ${index + 1}: "${product.name}" - Imagen: "${product.imageName}" - Encontrada: ${hasImage ? 'SÍ' : 'NO'}`);
+      
+      return {
+        ...product,
+        imageUrl: uploadedImages[product.imageName] || undefined,
+        status: (uploadedImages[product.imageName] ? 'success' : 'error') as 'success' | 'error'
+      };
+    });
+    
+    console.log('Productos mapeados:', mapped);
     setMappedProducts(mapped);
   }, [csvData, uploadedImages]);
 
@@ -539,6 +585,15 @@ function MappingStep({
       <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 text-center">
         Paso 3: Revisar y mapear productos
       </h2>
+      
+      <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-6 text-center">
+        <p className="text-sm sm:text-base text-blue-700">
+          <strong>Total de productos en CSV: {mappedProducts.length}</strong>
+        </p>
+        <p className="text-xs sm:text-sm text-blue-600 mt-1">
+          Todos los productos del archivo CSV se procesan sin limitaciones
+        </p>
+      </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6 mb-4 sm:mb-6">
         <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
@@ -569,7 +624,7 @@ function MappingStep({
       </div>
 
       {/* Mobile: Card view */}
-      <div className="block sm:hidden max-h-96 overflow-y-auto space-y-3">
+      <div className="block sm:hidden max-h-[600px] overflow-y-auto space-y-3">
         {mappedProducts.map((product, index) => (
           <div key={index} className={`p-3 rounded-lg border ${
             product.status === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
@@ -598,7 +653,7 @@ function MappingStep({
       </div>
       
       {/* Desktop: Table view */}
-      <div className="hidden sm:block max-h-96 overflow-y-auto">
+      <div className="hidden sm:block max-h-[600px] overflow-y-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 sticky top-0">
             <tr>

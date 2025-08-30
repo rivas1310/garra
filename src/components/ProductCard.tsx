@@ -313,7 +313,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           />
           {product.isNew && (
             <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Nuevo
+              Like New
             </span>
           )}
           {(product.isSale || product.isOnSale) && (
@@ -323,7 +323,7 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           )}
           {product.isSecondHand && (
             <span className="absolute bottom-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-              Segunda mano
+              Pre-loved
             </span>
           )}
         </Link>
@@ -409,8 +409,8 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         <div className="absolute top-1.5 sm:top-3 left-1.5 sm:left-3 flex flex-col gap-1 sm:gap-2">
           {product.isNew && (
             <span className="bg-blue-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-              <span className="hidden sm:inline">Nuevo</span>
-              <span className="sm:hidden">N</span>
+              <span className="hidden sm:inline">Like New</span>
+              <span className="sm:hidden">LN</span>
             </span>
           )}
           {(product.isSale || product.isOnSale) && (
@@ -421,8 +421,8 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
           )}
           {product.isSecondHand && (
             <span className="bg-green-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-              <span className="hidden sm:inline">Segunda mano</span>
-              <span className="sm:hidden">2M</span>
+              <span className="hidden sm:inline">Pre-loved</span>
+              <span className="sm:hidden">PL</span>
             </span>
           )}
         </div>
