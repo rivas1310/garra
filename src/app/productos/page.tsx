@@ -1,5 +1,6 @@
 'use client'
 
+// Página de productos con paginación optimizada - v4.1
 import { useState, useEffect } from 'react'
 import { Grid, List, Loader2 } from 'lucide-react'
 import ProductCard from '@/components/ProductCard'
