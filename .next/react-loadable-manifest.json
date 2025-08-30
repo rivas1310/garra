@@ -1,0 +1,26 @@
+{
+  "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
+    ]
+  },
+  "app\\admin\\venta-fisica\\page.tsx -> @/components/BarcodeScanner": {
+    "id": "app\\admin\\venta-fisica\\page.tsx -> @/components/BarcodeScanner",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_BarcodeScanner_tsx.js"
+    ]
+  },
+  "app\\admin\\venta-fisica\\page.tsx -> @/components/ExternalScanner": {
+    "id": "app\\admin\\venta-fisica\\page.tsx -> @/components/ExternalScanner",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_ExternalScanner_tsx.js"
+    ]
+  },
+  "components\\ExternalScanner.tsx -> ./ScannerConfig": {
+    "id": "components\\ExternalScanner.tsx -> ./ScannerConfig",
+    "files": [
+      "static/chunks/_app-pages-browser_src_components_ScannerConfig_tsx.js"
+    ]
+  }
+}

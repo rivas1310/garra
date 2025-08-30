@@ -1,0 +1,31 @@
+{
+  "version": "1.0.0",
+  "created": "2025-08-16T04:06:35.113Z",
+  "settings": {
+    "monitorInterval": 300000,
+    "alertThresholds": {
+      "critical": 10,
+      "high": 50,
+      "total": 100
+    },
+    "directories": [
+      "src",
+      "scripts",
+      "prisma"
+    ],
+    "fileExtensions": [
+      ".ts",
+      ".tsx",
+      ".js",
+      ".jsx",
+      ".prisma"
+    ],
+    "autoStart": false,
+    "notifications": {
+      "email": false,
+      "slack": false,
+      "console": true
+    }
+  },
+  "description": "Configuración del sistema de monitoreo de seguridad"
+}
