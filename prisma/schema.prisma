@@ -7,6 +7,24 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ConditionTag {
+  LIKE_NEW
+  PRE_LOVED
+  GENTLY_USED
+  VINTAGE
+  RETRO
+  UPCYCLED
+  REWORKED
+  DEADSTOCK
+  OUTLET_OVERSTOCK
+  REPURPOSED
+  NEARLY_NEW
+  DESIGNER_RESALE
+  SUSTAINABLE_FASHION
+  THRIFTED
+  CIRCULAR_FASHION
+}
+
 model User {
   id             String    @id @default(cuid())
   email          String    @unique
@@ -46,14 +64,13 @@ model Product {
   categoryId    String
   stock         Int              @default(0)
   isActive      Boolean          @default(true)
-  isNew         Boolean          @default(false)
   isOnSale      Boolean          @default(false)
+  conditionTag  ConditionTag?
   rating        Float            @default(0)
   reviewCount   Int              @default(0)
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   subcategoria  String?
-  isSecondHand  Boolean          @default(false)
   barcode       String?          @unique
   orderItems    OrderItem[]
   category      Category         @relation(fields: [categoryId], references: [id])

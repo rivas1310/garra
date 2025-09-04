@@ -9,6 +9,31 @@ import { useCart } from '@/hooks/useCart'
 import toast from 'react-hot-toast'
 import ProductCard from '@/components/ProductCard'
 
+// Función para obtener la etiqueta legible de condición
+const getConditionLabel = (conditionTag?: string): string | null => {
+  if (!conditionTag) return null
+  
+  const conditionLabels: Record<string, string> = {
+    'LIKE_NEW': 'Like New',
+    'PRE_LOVED': 'Pre Loved',
+    'GENTLY_USED': 'Gently Used',
+    'VINTAGE': 'Vintage',
+    'RETRO': 'Retro',
+    'UPCYCLED': 'Upcycled',
+    'REWORKED': 'Reworked',
+    'DEADSTOCK': 'Deadstock',
+    'OUTLET_OVERSTOCK': 'Outlet / Overstock',
+    'REPURPOSED': 'Repurposed',
+    'NEARLY_NEW': 'Nearly New',
+    'DESIGNER_RESALE': 'Designer Resale',
+    'SUSTAINABLE_FASHION': 'Sustainable Fashion',
+    'THRIFTED': 'Thrifted',
+    'CIRCULAR_FASHION': 'Circular Fashion'
+  }
+  
+  return conditionLabels[conditionTag] || null
+}
+
 interface FavoriteProduct {
   id: string
   name: string
@@ -18,9 +43,8 @@ interface FavoriteProduct {
   rating: number
   reviewCount: number
   category: string
-  isNew: boolean
+  conditionTag?: string
   isOnSale: boolean
-  isSecondHand: boolean
   calculatedStock: number
   isActive: boolean
   isAvailable: boolean
@@ -161,19 +185,14 @@ export default function FavoritosPage() {
                   
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {product.isNew && (
+                    {product.conditionTag && (
                       <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                        Like New
+                        {getConditionLabel(product.conditionTag)}
                       </span>
                     )}
                     {product.isOnSale && (
                       <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
                         Oferta
-                      </span>
-                    )}
-                    {product.isSecondHand && (
-                      <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                        Pre-loved
                       </span>
                     )}
                   </div>

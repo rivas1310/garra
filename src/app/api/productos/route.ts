@@ -3,6 +3,7 @@ import { log } from '@/lib/secureLogger'
 import prisma from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
+
 export async function POST(req: Request) {
   try {
     const data = await req.json();
@@ -18,9 +19,8 @@ export async function POST(req: Request) {
       stock,
       barcode, // Necesario para el código de barras
       isActive,
-      isNew,
+      conditionTag,
       isOnSale,
-      isSecondHand,
       variants = [],
     } = data;
 
@@ -47,9 +47,8 @@ export async function POST(req: Request) {
         stock: parseInt(stock),
         // barcode: barcode || null, // Incluir código de barras - Temporalmente comentado hasta regenerar Prisma client
         isActive,
-        isNew,
+        conditionTag,
         isOnSale,
-        isSecondHand: !!isSecondHand,
         variants: {
           create: variants.map((variant: any) => ({
             size: variant.size,
@@ -97,6 +96,8 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "20"); // Cambiar de 10 a 20 por defecto
     const category = searchParams.get("category");
+    
+
     const subcategory = searchParams.get("subcategory");
     const search = searchParams.get("search");
     const sort = searchParams.get("sort") || "newest";
@@ -107,15 +108,15 @@ export async function GET(request: Request) {
       ? parseFloat(searchParams.get("maxPrice")!)
       : undefined;
     const isOnSale = searchParams.get("isOnSale") === "true";
-    const isNew = searchParams.get("isNew") === "true";
-    const isSecondHand = searchParams.get("isSecondHand") === "true";
+    const conditionTag = searchParams.get("conditionTag");
     const admin = searchParams.get("admin") === "true";
     const timestamp = searchParams.get("t") || Date.now().toString();
 
     // LIMITAR el límite máximo para evitar sobrecarga
-    const safeLimit = Math.min(limit, 50); // Máximo 50 productos por página
+    // Permitir límites más altos para admin (etiquetas-códigos necesita todos los productos)
+    const safeLimit = admin ? Math.min(limit, 2000) : Math.min(limit, 50);
 
-    log.error(`Obteniendo productos con timestamp: ${timestamp}, página: ${page}, límite: ${safeLimit}`);
+
 
     // Construir el objeto de filtro para Prisma
     const where: any = {};
@@ -132,22 +133,23 @@ export async function GET(request: Request) {
       where.subcategoria = subcategory;
     }
 
-    // Filtrar por búsqueda si se proporciona
+    // Filtrar por búsqueda si se proporciona (con búsqueda normalizada)
     if (search) {
+
+      
+      // Búsqueda más estricta - solo en nombre del producto
       where.OR = [
         {
           name: {
             contains: search,
             mode: "insensitive",
           },
-        },
-        {
-          description: {
-            contains: search,
-            mode: "insensitive",
-          },
-        },
+        }
       ];
+      
+
+    } else {
+
     }
 
     // Filtrar por rango de precios
@@ -166,14 +168,9 @@ export async function GET(request: Request) {
       where.isOnSale = true;
     }
 
-    // Filtrar por nuevos
-    if (isNew) {
-      where.isNew = true;
-    }
-
-    // Filtrar por segunda mano
-    if (isSecondHand) {
-      where.isSecondHand = true;
+    // Filtrar por etiqueta de condición
+    if (conditionTag) {
+      where.conditionTag = conditionTag;
     }
 
     // Si no es admin, solo mostrar productos activos
@@ -217,6 +214,8 @@ export async function GET(request: Request) {
         category: true,
       },
     });
+
+
 
     // Obtener el total de productos para la paginación
     const total = await prisma.product.count({ where });

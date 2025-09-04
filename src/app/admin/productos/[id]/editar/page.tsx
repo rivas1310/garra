@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateManualBarcode, generateManualEAN13 } from '@/lib/barcodeUtils'
+import ConditionTagSelect from '@/components/ConditionTagSelect'
 
 const categories = [
   { id: 'mujer', name: 'Mujer' },
@@ -30,7 +31,26 @@ const categories = [
 const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const womenShoeSizes = ['2', '3', '4', '5', '6', '7', '8']
 const menShoeSizes = ['2', '3', '4', '5', '6', '7', '8', '9', '10']
-const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Gris']
+const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Multicolor','beige','Gris']
+
+// Opciones de etiquetas de condición
+const conditionTags = [
+  { value: 'LIKE_NEW', label: 'Like New' },
+  { value: 'PRE_LOVED', label: 'Pre Loved' },
+  { value: 'GENTLY_USED', label: 'Gently Used' },
+  { value: 'VINTAGE', label: 'Vintage' },
+  { value: 'RETRO', label: 'Retro' },
+  { value: 'UPCYCLED', label: 'Upcycled' },
+  { value: 'REWORKED', label: 'Reworked' },
+  { value: 'DEADSTOCK', label: 'Deadstock' },
+  { value: 'OUTLET_OVERSTOCK', label: 'Outlet / Overstock' },
+  { value: 'REPURPOSED', label: 'Repurposed' },
+  { value: 'NEARLY_NEW', label: 'Nearly New' },
+  { value: 'DESIGNER_RESALE', label: 'Designer Resale' },
+  { value: 'SUSTAINABLE_FASHION', label: 'Sustainable Fashion' },
+  { value: 'THRIFTED', label: 'Thrifted' },
+  { value: 'CIRCULAR_FASHION', label: 'Circular Fashion' }
+]
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
@@ -67,7 +87,7 @@ const mockProduct = {
     { size: 'M', color: 'Azul', stock: 8 },
     { size: 'L', color: 'Azul', stock: 2 }
   ],
-  isNew: true,
+  conditionTag: 'LIKE_NEW',
   isOnSale: true,
   isActive: true,
   createdAt: '2024-01-15',
@@ -87,9 +107,8 @@ export default function EditarProductoPage() {
     originalPrice: '',
     stock: '',
     barcode: '', // Campo para código de barras
-    isNew: false,
     isOnSale: false,
-    isSecondHand: false,
+    conditionTag: '',
     isActive: true
   })
   
@@ -107,7 +126,7 @@ export default function EditarProductoPage() {
   const [categories, setCategories] = useState<{ id: string, name: string }[]>([]);
 
   // Mapear id de categoría a slug para subcategorías
-  const getSlugByCategoryId = (id: string): 'mujer' | 'hombre' | 'accesorios' | 'calzado' | 'bolsos' | 'deportes' | 'calzado-mujer' | 'calzado-hombre' | 'calzado-nina' | 'calzado-nino' | '' => {
+  const getSlugByCategoryId = (id: string): 'mujer' | 'hombre' | 'accesorios' | 'calzado' | 'bolsos' | 'deportes' | 'calzado-mujer' | 'calzado-hombre' | 'calzado-nina' | 'calzado-nino' | 'ninas' | 'ninos' | '' => {
     const cat = categories.find((c) => c.id === id);
     if (cat && cat.name) {
       const nombre = cat.name.toLowerCase();
@@ -115,6 +134,8 @@ export default function EditarProductoPage() {
       if (nombre.includes('calzado') && nombre.includes('hombre')) return 'calzado-hombre';
       if (nombre.includes('calzado') && (nombre.includes('niña') || nombre.includes('nina'))) return 'calzado-nina';
       if (nombre.includes('calzado') && (nombre.includes('niño') || nombre.includes('nino'))) return 'calzado-nino';
+      if (nombre.includes('niña') || nombre.includes('nina')) return 'ninas';
+      if (nombre.includes('niño') || nombre.includes('nino')) return 'ninos';
       if (nombre.includes('mujer')) return 'mujer';
       if (nombre.includes('hombre')) return 'hombre';
       if (nombre.includes('accesorio')) return 'accesorios';
@@ -189,9 +210,8 @@ export default function EditarProductoPage() {
           originalPrice: producto.originalPrice?.toString() || '',
           stock: producto.stock?.toString() || '',
           barcode: producto.barcode || '', // Cargar código de barras existente
-          isNew: !!producto.isNew,
           isOnSale: !!producto.isOnSale,
-          isSecondHand: !!producto.isSecondHand,
+          conditionTag: producto.conditionTag || '',
           isActive: producto.isActive !== false
         });
         setImages(Array.isArray(producto.images) ? producto.images : []);
@@ -326,9 +346,8 @@ export default function EditarProductoPage() {
         stock: formData.stock,
         barcode: formData.barcode || null, // Incluir código de barras
         isActive: formData.isActive,
-        isNew: formData.isNew,
         isOnSale: formData.isOnSale,
-        isSecondHand: formData.isSecondHand,
+        conditionTag: formData.conditionTag || null,
         variants: variants.map(v => ({
           size: v.size,
           color: v.color,
@@ -825,16 +844,17 @@ export default function EditarProductoPage() {
                 <h2 className="text-lg font-semibold text-title mb-4">Configuración</h2>
                 
                 <div className="space-y-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isNew"
-                      checked={formData.isNew}
-                      onChange={handleInputChange}
-                      className="mr-2 text-primary-500 focus:ring-primary-500"
+                  <div>
+                    <label className="block text-sm font-medium text-title mb-2">
+                      Etiqueta de condición
+                    </label>
+                    <ConditionTagSelect
+                      value={formData.conditionTag}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conditionTag: value }))}
+                      options={conditionTags}
+                      placeholder="Seleccionar etiqueta (opcional)"
                     />
-                    <span className="text-sm text-body">Marcar como nuevo</span>
-                  </label>
+                  </div>
 
                   <label className="flex items-center">
                     <input
@@ -845,17 +865,6 @@ export default function EditarProductoPage() {
                       className="mr-2 text-primary-500 focus:ring-primary-500"
                     />
                     <span className="text-sm text-body">Producto en oferta</span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isSecondHand"
-                      checked={formData.isSecondHand}
-                      onChange={handleInputChange}
-                      className="mr-2 text-primary-500 focus:ring-primary-500"
-                    />
-                    <span className="text-sm text-body">Segunda mano</span>
                   </label>
 
                   <label className="flex items-center">

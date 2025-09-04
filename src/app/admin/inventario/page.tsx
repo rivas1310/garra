@@ -97,16 +97,23 @@ export default function InventarioPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [sortBy, setSortBy] = useState('name')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [minStock, setMinStock] = useState('')
+  const [maxStock, setMaxStock] = useState('')
+  const [activeFilter, setActiveFilter] = useState('all')
   const [editingItem, setEditingItem] = useState<number | null>(null)
+  const [selectedItems, setSelectedItems] = useState<number[]>([])
+  const [bulkAction, setBulkAction] = useState('')
+  const [bulkValue, setBulkValue] = useState('')
+  const [showBulkModal, setShowBulkModal] = useState(false)
   const [deleteModal, setDeleteModal] = useState<{
-    isOpen: boolean;
-    productId: string | null;
-    productName: string;
-  }>({
-    isOpen: false,
-    productId: null,
-    productName: ''
-  });
+    isOpen: boolean
+    productId: string | null
+    productName: string
+  }>({ isOpen: false, productId: null, productName: '' });
   const [editForm, setEditForm] = useState({
     stock: '',
     price: '',
@@ -135,9 +142,8 @@ export default function InventarioPage() {
     location: '',
     image: Array.isArray(p.images) && p.images[0] ? p.images[0] : '/img/placeholder.png',
     images: p.images || [],
-    isNew: p.isNew || false,
+    conditionTag: p.conditionTag || 'GOOD',
     isOnSale: p.isOnSale || false,
-    isSecondHand: p.isSecondHand || false,
   })) : [];
 
   const filteredItems = mappedInventory.filter(item => {
@@ -146,7 +152,22 @@ export default function InventarioPage() {
     const matchesCategory = selectedCategory === 'all' || item.category.toLowerCase() === selectedCategory
     const matchesStatus = selectedStatus === 'all' || item.status === selectedStatus
     
-    return matchesSearch && matchesCategory && matchesStatus
+    // Advanced filters
+    const matchesMinPrice = !minPrice || item.price >= parseFloat(minPrice)
+    const matcheMaxPrice = !maxPrice || item.price <= parseFloat(maxPrice)
+    const matchesMinStock = !minStock || item.currentStock >= parseInt(minStock)
+    const matchesMaxStock = !maxStock || item.currentStock <= parseInt(maxStock)
+    const matchesActive = activeFilter === 'all' || 
+                         (activeFilter === 'active' && item.isActive) ||
+                         (activeFilter === 'inactive' && !item.isActive)
+    
+    // Date filters (if lastUpdated exists)
+    const matchesDateFrom = !dateFrom || !item.lastUpdated || new Date(item.lastUpdated) >= new Date(dateFrom)
+    const matchesDateTo = !dateTo || !item.lastUpdated || new Date(item.lastUpdated) <= new Date(dateTo)
+    
+    return matchesSearch && matchesCategory && matchesStatus && 
+           matchesMinPrice && matcheMaxPrice && matchesMinStock && 
+           matchesMaxStock && matchesActive && matchesDateFrom && matchesDateTo
   })
 
   const handleEdit = (itemId: number) => {
@@ -179,9 +200,8 @@ export default function InventarioPage() {
           price: parseFloat(editForm.price),
           stock: parseInt(editForm.stock),
           images: item.images || [],
-          isNew: item.isNew || false,
+          conditionTag: item.conditionTag || 'GOOD',
           isOnSale: item.isOnSale || false,
-          isSecondHand: item.isSecondHand || false,
         }),
       });
 
@@ -361,6 +381,76 @@ export default function InventarioPage() {
     }
   };
 
+  // Bulk operations functions
+  const handleSelectAll = () => {
+    if (selectedItems.length === filteredItems.length) {
+      setSelectedItems([])
+    } else {
+      setSelectedItems(filteredItems.map(item => item.id))
+    }
+  }
+
+  const handleSelectItem = (id: number) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    )
+  }
+
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedItems.length === 0) return
+
+    try {
+      const promises = selectedItems.map(async (id) => {
+        const updateData: any = {}
+        
+        switch (bulkAction) {
+          case 'updateStock':
+            updateData.stock = parseInt(bulkValue)
+            break
+          case 'updatePrice':
+            updateData.price = parseFloat(bulkValue)
+            break
+          case 'activate':
+            updateData.active = true
+            break
+          case 'deactivate':
+            updateData.active = false
+            break
+          case 'delete':
+            return fetch(`/api/productos/${id}`, { method: 'DELETE' })
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          return fetch(`/api/productos/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateData)
+          })
+        }
+      })
+
+      await Promise.all(promises)
+      
+      if (bulkAction === 'delete') {
+        setInventoryItems(prev => prev.filter(item => !selectedItems.includes(item.id)))
+        toast.success(`${selectedItems.length} productos eliminados`)
+      } else {
+        await fetchInventory() // Refresh data
+        toast.success(`${selectedItems.length} productos actualizados`)
+      }
+      
+      setSelectedItems([])
+      setShowBulkModal(false)
+      setBulkAction('')
+      setBulkValue('')
+    } catch (error) {
+      console.error('Error in bulk operation:', error)
+      toast.error('Error en la operación masiva')
+    }
+  }
+
   const openDeleteModal = (productId: string, productName: string) => {
     setDeleteModal({
       isOpen: true,
@@ -388,6 +478,26 @@ export default function InventarioPage() {
               <p className="text-sm sm:text-base text-neutral-600">Gestiona stock, precios y proveedores</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {selectedItems.length > 0 && (
+                <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
+                  <span className="text-sm font-medium text-blue-700">
+                    {selectedItems.length} seleccionados
+                  </span>
+                  <button
+                    onClick={() => setShowBulkModal(true)}
+                    className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    <MoreVertical className="w-3 h-3 mr-1" />
+                    Acciones
+                  </button>
+                  <button
+                    onClick={() => setSelectedItems([])}
+                    className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                  >
+                    Limpiar
+                  </button>
+                </div>
+              )}
               <button className="btn-secondary inline-flex items-center text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2" onClick={handleExport} type="button">
                 <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Exportar</span>
@@ -471,57 +581,324 @@ export default function InventarioPage() {
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-3 sm:p-6 mb-4 sm:mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {/* Search */}
-            <div className="relative sm:col-span-2 md:col-span-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-3 w-3 sm:h-4 sm:w-4" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre o SKU..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
+        {/* Analytics Dashboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Stock Distribution Chart */}
+          <div className="bg-white rounded-xl shadow-lg border border-neutral-100 p-6">
+            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
+              Distribución de Stock
+            </h3>
+            <div className="space-y-4">
+              {categories.slice(1).map((category) => {
+                const categoryItems = mappedInventory.filter(item => item.category === category.name)
+                const totalStock = categoryItems.reduce((sum, item) => sum + item.currentStock, 0)
+                const maxStock = Math.max(...categories.slice(1).map(cat => 
+                  mappedInventory.filter(item => item.category === cat.name)
+                    .reduce((sum, item) => sum + item.currentStock, 0)
+                ))
+                const percentage = maxStock > 0 ? (totalStock / maxStock) * 100 : 0
+                
+                return (
+                  <div key={category.id} className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-sm font-medium text-neutral-700">{category.name}</span>
+                        <span className="text-sm text-neutral-500">{totalStock} unidades</span>
+                      </div>
+                      <div className="w-full bg-neutral-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Top Products by Value */}
+          <div className="bg-white rounded-xl shadow-lg border border-neutral-100 p-6">
+            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center">
+              <Package className="h-5 w-5 mr-2 text-green-600" />
+              Productos de Mayor Valor
+            </h3>
+            <div className="space-y-3">
+              {mappedInventory
+                .sort((a, b) => (b.currentStock * b.cost) - (a.currentStock * a.cost))
+                .slice(0, 5)
+                .map((item, index) => {
+                  const value = item.currentStock * item.cost
+                  return (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                          index === 1 ? 'bg-gray-100 text-gray-800' :
+                          index === 2 ? 'bg-orange-100 text-orange-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-neutral-800 truncate max-w-32">{item.name}</p>
+                          <p className="text-xs text-neutral-500">{item.currentStock} unidades</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-green-600">${formatNumber(value)}</p>
+                        <p className="text-xs text-neutral-500">${formatNumber(item.cost)}/u</p>
+                      </div>
+                    </div>
+                  )
+                })
+              }
+            </div>
+          </div>
+        </div>
+
+        {/* Stock Alerts */}
+        <div className="bg-white rounded-xl shadow-lg border border-neutral-100 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+            Alertas de Inventario
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Critical Stock */}
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-red-800">Stock Crítico</h4>
+                <XCircle className="h-4 w-4 text-red-600" />
+              </div>
+              <p className="text-2xl font-bold text-red-600 mb-1">
+                {mappedInventory.filter(item => item.status === 'out-of-stock').length}
+              </p>
+              <p className="text-xs text-red-600">Productos sin stock</p>
             </div>
 
-            {/* Category Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+            {/* Low Stock */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-yellow-800">Stock Bajo</h4>
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              </div>
+              <p className="text-2xl font-bold text-yellow-600 mb-1">
+                {mappedInventory.filter(item => item.status === 'low-stock').length}
+              </p>
+              <p className="text-xs text-yellow-600">Requieren reposición</p>
+            </div>
 
-            {/* Status Filter */}
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="in-stock">En Stock</option>
-              <option value="low-stock">Stock Bajo</option>
-              <option value="out-of-stock">Sin Stock</option>
-            </select>
+            {/* Healthy Stock */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-sm font-semibold text-green-800">Stock Saludable</h4>
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              </div>
+              <p className="text-2xl font-bold text-green-600 mb-1">
+                {mappedInventory.filter(item => item.status === 'in-stock').length}
+              </p>
+              <p className="text-xs text-green-600">En buen estado</p>
+            </div>
+          </div>
+        </div>
 
-            {/* Sort */}
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-2 sm:px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="name">Ordenar por nombre</option>
-              <option value="stock">Ordenar por stock</option>
-              <option value="price">Ordenar por precio</option>
-              <option value="sku">Ordenar por SKU</option>
-            </select>
+        {/* Filters and Search */}
+        <div className="bg-white rounded-xl shadow-lg border border-neutral-100 p-4 sm:p-6 mb-6">
+          <div className="flex flex-col space-y-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 h-5 w-5" />
+              <input
+                type="text"
+                placeholder="Buscar productos por nombre, SKU o código de barras..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-sm border border-neutral-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-neutral-50 hover:bg-white transition-colors"
+              />
+            </div>
+            
+            {/* Primary Filter Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Category Filter */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-neutral-600">Categoría</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-neutral-600">Estado</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="all">Todos los estados</option>
+                  <option value="in-stock">En Stock</option>
+                  <option value="low-stock">Stock Bajo</option>
+                  <option value="out-of-stock">Sin Stock</option>
+                </select>
+              </div>
+
+              {/* Sort */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-neutral-600">Ordenar por</label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border border-neutral-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="name">Nombre</option>
+                  <option value="stock">Stock</option>
+                  <option value="price">Precio</option>
+                  <option value="sku">SKU</option>
+                  <option value="updated">Última actualización</option>
+                </select>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-neutral-600">Acciones rápidas</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExport}
+                    className="flex-1 px-3 py-2.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <Download className="h-3 w-3 inline mr-1" />
+                    Exportar
+                  </button>
+                  <label className="flex-1 px-3 py-2.5 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors cursor-pointer text-center">
+                    <Upload className="h-3 w-3 inline mr-1" />
+                    Importar
+                    <input type="file" accept=".csv" onChange={handleImport} className="hidden" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Filters */}
+            <div className="border-t border-neutral-200 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-neutral-700">Filtros Avanzados</h3>
+                <button
+                  onClick={() => {
+                    setMinPrice('');
+                    setMaxPrice('');
+                    setDateFrom('');
+                    setDateTo('');
+                    setMinStock('');
+                    setMaxStock('');
+                    setActiveFilter('all');
+                  }}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Price Range */}
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Precio mín.</label>
+                    <input
+                      type="number"
+                      placeholder="$0"
+                      value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Precio máx.</label>
+                    <input
+                      type="number"
+                      placeholder="$999999"
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                {/* Date Range */}
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Desde</label>
+                    <input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Hasta</label>
+                    <input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Stock Range */}
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Stock mín.</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={minStock}
+                      onChange={(e) => setMinStock(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      min="0"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">Stock máx.</label>
+                    <input
+                      type="number"
+                      placeholder="999999"
+                      value={maxStock}
+                      onChange={(e) => setMaxStock(e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Active Status */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">Estado activo</label>
+                  <select
+                    value={activeFilter}
+                    onChange={(e) => setActiveFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  >
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -539,56 +916,95 @@ export default function InventarioPage() {
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-50">
+              <thead className="bg-gradient-to-r from-neutral-50 to-neutral-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.length === filteredItems.length && filteredItems.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-blue-600 bg-neutral-100 border-neutral-300 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Producto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     SKU
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Precio
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                    Margen
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Activo
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-neutral-700 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className="hover:bg-neutral-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-neutral-700">{item.name}</div>
-                        <div className="text-sm text-neutral-500">{item.category}</div>
+                  <tr key={item.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(item.id)}
+                        onChange={() => handleSelectItem(item.id)}
+                        className="w-4 h-4 text-blue-600 bg-neutral-100 border-neutral-300 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex-shrink-0">
+                          <img
+                            src={item.image || '/img/placeholder.svg'}
+                            alt={item.name}
+                            className="w-12 h-12 object-cover rounded-lg border border-neutral-200 shadow-sm"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = '/img/placeholder.svg';
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-neutral-900 truncate">{item.name}</div>
+                          <div className="text-xs text-neutral-500 mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                              {item.category}
+                            </span>
+                          </div>
+                          {item.conditionTag && (
+                            <div className="text-xs text-blue-600 mt-1 font-medium">
+                              {item.conditionTag}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-neutral-600 font-mono">{item.sku}</span>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-neutral-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-mono bg-neutral-100 text-neutral-700">
+                          {item.sku}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       {editingItem === item.id ? (
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
                             value={editForm.stock}
                             onChange={(e) => setEditForm(prev => ({ ...prev, stock: e.target.value }))}
-                            className="w-16 px-2 py-1 border border-neutral-200 rounded text-sm"
+                            className="w-16 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             min="0"
                           />
                           <div className="text-xs text-neutral-500">
@@ -597,21 +1013,21 @@ export default function InventarioPage() {
                         </div>
                       ) : (
                         <div>
-                          <div className="text-sm font-medium text-neutral-700">{item.currentStock}</div>
+                          <div className="text-sm font-semibold text-neutral-800">{item.currentStock}</div>
                           <div className="text-xs text-neutral-500">
                             Min: {item.minStock} | Max: {item.maxStock}
                           </div>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       {editingItem === item.id ? (
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
                             value={editForm.price}
                             onChange={(e) => setEditForm(prev => ({ ...prev, price: e.target.value }))}
-                            className="w-20 px-2 py-1 border border-neutral-200 rounded text-sm"
+                            className="w-20 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             min="0"
                             step="0.01"
                           />
@@ -621,32 +1037,17 @@ export default function InventarioPage() {
                         </div>
                       ) : (
                         <div>
-                          <div className="text-sm font-medium text-neutral-700">${item.price}</div>
+                          <div className="text-sm font-semibold text-green-700">${item.price}</div>
                           <div className="text-xs text-neutral-500">
                             Costo: ${item.cost}
                           </div>
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-medium ${
-                          item.margin > 50 ? 'text-green-600' : 
-                          item.margin > 30 ? 'text-yellow-600' : 'text-red-600'
-                        }`}>
-                          {item.margin}%
-                        </span>
-                        {item.margin > 50 ? (
-                          <TrendingUp className="h-3 w-3 text-green-600" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 text-red-600" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(item.status)}
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
+                        <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full shadow-sm ${getStatusColor(item.status)}`}>
                           {getStatusText(item.status)}
                         </span>
                       </div>
@@ -709,89 +1110,167 @@ export default function InventarioPage() {
             </table>
           </div>
 
-          {/* Mobile Card View */}
-          <div className="md:hidden">
-            <div className="divide-y divide-neutral-100">
-              {filteredItems.map((item) => (
-                <div key={item.id} className="p-3 sm:p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-neutral-700 mb-1">{item.name}</h3>
-                      <p className="text-xs text-neutral-500 mb-1">{item.category}</p>
-                      <p className="text-xs text-neutral-400 font-mono">{item.sku}</p>
-                    </div>
-                    <div className="flex items-center gap-1 ml-2">
-                      <Link
-                        href={`/admin/productos/${item.id}`}
-                        className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        title="Ver detalles"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Link>
-                      <button
-                        onClick={() => handleEdit(item.id)}
-                        className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                        title="Editar"
-                      >
-                        <Edit className="h-3 w-3" />
-                      </button>
-                      <button
-                        className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg"
-                        title="Eliminar producto"
-                        onClick={() => openDeleteModal(item.id, item.name)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+          {/* Mobile and Tablet Card View */}
+          <div className="lg:hidden space-y-4 p-4">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="bg-white border border-neutral-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-start space-x-4 mb-4">
+                  <div className="flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleSelectItem(item.id)}
+                      className="w-4 h-4 text-primary-600 bg-neutral-100 border-neutral-300 rounded focus:ring-primary-500 focus:ring-2"
+                    />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <span className="text-neutral-500">Stock:</span>
-                      <div className="font-medium text-neutral-700">{item.currentStock}</div>
-                      <div className="text-neutral-400">Min: {item.minStock} | Max: {item.maxStock}</div>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500">Precio:</span>
-                      <div className="font-medium text-neutral-700">${item.price}</div>
-                      <div className="text-neutral-400">Costo: ${item.cost}</div>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500">Margen:</span>
-                      <div className={`font-medium flex items-center gap-1 ${
-                        item.margin > 50 ? 'text-green-600' : 
-                        item.margin > 30 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
-                        {item.margin}%
-                        {item.margin > 50 ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item.image || '/img/placeholder.svg'}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-lg border border-neutral-200 shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/img/placeholder.svg';
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-base font-semibold text-neutral-900 truncate">{item.name}</h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                            {item.category}
+                          </span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono bg-neutral-100 text-neutral-700">
+                            {item.sku}
+                          </span>
+                        </div>
+                        {item.conditionTag && (
+                          <div className="text-xs text-blue-600 mt-1 font-medium">
+                            {item.conditionTag}
+                          </div>
                         )}
                       </div>
-                    </div>
-                    <div>
-                      <span className="text-neutral-500">Estado:</span>
-                      <div className="flex items-center gap-1 mt-1">
-                        {getStatusIcon(item.status)}
-                        <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                          {getStatusText(item.status)}
-                        </span>
+                      <div className="flex items-center gap-1 ml-2">
+                        <Link
+                          href={`/admin/productos/${item.id}`}
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleEdit(item.id)}
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                          title="Editar"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg"
+                          title="Eliminar producto"
+                          onClick={() => openDeleteModal(item.id, item.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      {getActiveStatusIcon(item.isActive)}
-                      <span className={`inline-flex px-1.5 py-0.5 text-xs font-semibold rounded-full ${getActiveStatusColor(item.isActive)}`}>
-                        {getActiveStatusText(item.isActive)}
-                      </span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Stock</span>
+                      <div className="mt-1">
+                        {editingItem === item.id ? (
+                          <input
+                            type="number"
+                            value={editForm.stock}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, stock: e.target.value }))}
+                            className="w-20 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                          />
+                        ) : (
+                          <div className="text-sm font-semibold text-neutral-800">
+                            {item.currentStock}
+                          </div>
+                        )}
+                        <div className="text-xs text-neutral-500 mt-0.5">
+                          Min: {item.minStock} | Max: {item.maxStock}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Estado</span>
+                      <div className="mt-1">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(item.status)}
+                          <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full shadow-sm ${getStatusColor(item.status)}`}>
+                            {getStatusText(item.status)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Precio</span>
+                      <div className="mt-1">
+                        {editingItem === item.id ? (
+                          <input
+                            type="number"
+                            value={editForm.price}
+                            onChange={(e) => setEditForm(prev => ({ ...prev, price: e.target.value }))}
+                            className="w-20 px-3 py-2 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                            step="0.01"
+                          />
+                        ) : (
+                          <div className="text-sm font-semibold text-green-700">
+                            ${item.price}
+                          </div>
+                        )}
+                        <div className="text-xs text-neutral-500 mt-0.5">
+                          Costo: ${item.cost}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Activo</span>
+                      <div className="mt-1">
+                        <div className="flex items-center gap-2">
+                          {getActiveStatusIcon(item.isActive)}
+                          <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full shadow-sm ${getActiveStatusColor(item.isActive)}`}>
+                            {getActiveStatusText(item.isActive)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {editingItem === item.id && (
+                  <div className="mt-4 flex items-center gap-2 pt-3 border-t border-neutral-100">
+                    <button
+                      onClick={() => handleSave(item.id)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Guardar
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Pagination */}
@@ -815,6 +1294,77 @@ export default function InventarioPage() {
           </div>
         </div>
       </div>
+
+      {/* Bulk Operations Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+              Operaciones en Lote
+            </h3>
+            <p className="text-sm text-neutral-600 mb-4">
+              {selectedItems.length} productos seleccionados
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Acción
+                </label>
+                <select
+                  value={bulkAction}
+                  onChange={(e) => setBulkAction(e.target.value)}
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                >
+                  <option value="">Seleccionar acción</option>
+                  <option value="updateStock">Actualizar Stock</option>
+                  <option value="updatePrice">Actualizar Precio</option>
+                  <option value="activate">Activar</option>
+                  <option value="deactivate">Desactivar</option>
+                  <option value="delete">Eliminar</option>
+                </select>
+              </div>
+              
+              {(bulkAction === 'updateStock' || bulkAction === 'updatePrice') && (
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    {bulkAction === 'updateStock' ? 'Nuevo Stock' : 'Nuevo Precio'}
+                  </label>
+                  <input
+                    type="number"
+                    value={bulkValue}
+                    onChange={(e) => setBulkValue(e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="0"
+                    step={bulkAction === 'updatePrice' ? '0.01' : '1'}
+                    placeholder={bulkAction === 'updateStock' ? 'Cantidad' : 'Precio'}
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowBulkModal(false);
+                  setBulkAction('');
+                  setBulkValue('');
+                }}
+                className="px-4 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleBulkAction}
+                disabled={!bulkAction || (bulkAction === 'updateStock' || bulkAction === 'updatePrice') && !bulkValue}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed rounded-lg transition-colors"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

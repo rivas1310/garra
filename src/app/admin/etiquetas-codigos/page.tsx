@@ -211,14 +211,14 @@ export default function EtiquetasCodigosPage() {
                               {/* Imagen del producto */}
                               <div className="flex-shrink-0">
                                 <img
-                                  src={product.image || '/img/placeholder.svg'}
-                                  alt={product.name}
-                                  className="w-16 h-16 object-cover rounded-lg border border-neutral-200"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = '/img/placeholder.svg';
-                                  }}
-                                />
+                                src={product.image || '/img/placeholder.svg'}
+                                alt={product.name}
+                                className="w-32 h-32 object-cover rounded-lg border border-neutral-200"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/img/placeholder.svg';
+                                }}
+                              />
                               </div>
                               
                               {/* Información del producto */}
@@ -290,7 +290,7 @@ export default function EtiquetasCodigosPage() {
                               <img
                                 src={product.image || '/img/placeholder.svg'}
                                 alt={product.name}
-                                className="w-12 h-12 object-cover rounded-lg border border-neutral-200"
+                                className="w-24 h-24 object-cover rounded-lg border border-neutral-200"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = '/img/placeholder.svg';

@@ -14,7 +14,7 @@ interface BulkProduct {
   subcategory?: string;
   imageUrl: string;
   barcode?: string;
-  isSecondHand?: boolean;
+  conditionTag?: 'LIKE_NEW' | 'PRE_LOVED' | 'GENTLY_USED' | 'VINTAGE' | 'RETRO' | 'UPCYCLED' | 'REWORKED' | 'DEADSTOCK' | 'OUTLET_OVERSTOCK' | 'REPURPOSED' | 'NEARLY_NEW' | 'DESIGNER_RESALE' | 'SUSTAINABLE_FASHION' | 'THRIFTED' | 'CIRCULAR_FASHION';
 }
 
 export async function POST(request: NextRequest) {
@@ -102,9 +102,8 @@ export async function POST(request: NextRequest) {
             subcategoria: normalizedSubcategory, // Usar subcategoría normalizada
             images: [productData.imageUrl], // Campo images como array
             barcode: barcode,
-            isSecondHand: productData.isSecondHand || false,
-            isActive: true,
-            isNew: false // NO marcar como nuevo producto
+            conditionTag: productData.conditionTag || 'LIKE_NEW',
+            isActive: true
           }
         });
 

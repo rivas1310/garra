@@ -12,9 +12,8 @@ interface Product {
   images: string[]
   rating?: number
   reviewCount?: number
-  isNew?: boolean
+  conditionTag?: string
   isOnSale?: boolean
-  isSecondHand?: boolean
   stock: number
   subcategoria?: string
   image: string
@@ -86,9 +85,8 @@ export default function PaginatedProductGrid({
         isActive: p.isActive ?? true,
         isAvailable: p.isAvailable ?? true,
         totalStock: p.totalStock ?? p.stock ?? 0,
-        isNew: p.isNew,
+        conditionTag: p.conditionTag,
         isOnSale: p.isOnSale,
-        isSecondHand: p.isSecondHand,
       }))
 
       if (append) {

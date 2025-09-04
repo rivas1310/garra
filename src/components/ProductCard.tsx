@@ -9,6 +9,31 @@ import { useSession } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
 import ClientOnly from './ClientOnly'
 
+// Función para obtener la etiqueta legible de condición
+const getConditionLabel = (conditionTag?: string): string | null => {
+  if (!conditionTag) return null
+  
+  const conditionLabels: Record<string, string> = {
+    'LIKE_NEW': 'Like New',
+    'PRE_LOVED': 'Pre Loved',
+    'GENTLY_USED': 'Gently Used',
+    'VINTAGE': 'Vintage',
+    'RETRO': 'Retro',
+    'UPCYCLED': 'Upcycled',
+    'REWORKED': 'Reworked',
+    'DEADSTOCK': 'Deadstock',
+    'OUTLET_OVERSTOCK': 'Outlet / Overstock',
+    'REPURPOSED': 'Repurposed',
+    'NEARLY_NEW': 'Nearly New',
+    'DESIGNER_RESALE': 'Designer Resale',
+    'SUSTAINABLE_FASHION': 'Sustainable Fashion',
+    'THRIFTED': 'Thrifted',
+    'CIRCULAR_FASHION': 'Circular Fashion'
+  }
+  
+  return conditionLabels[conditionTag] || null
+}
+
 interface Product {
   id: string
   name: string
@@ -23,10 +48,9 @@ interface Product {
   rating?: number
   reviewCount?: number
   category?: string
-  isNew?: boolean
   isSale?: boolean
   isOnSale?: boolean
-  isSecondHand?: boolean
+  conditionTag?: string
   variants?: Array<{
     size?: string
     color?: string
@@ -311,19 +335,14 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
             className="w-full h-full object-cover rounded-lg group-hover:opacity-90 transition-opacity"
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/img/placeholder.png'; }}
           />
-          {product.isNew && (
+          {getConditionLabel(product.conditionTag) && (
             <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Like New
+              {getConditionLabel(product.conditionTag)}
             </span>
           )}
           {(product.isSale || product.isOnSale) && (
             <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
               Oferta
-            </span>
-          )}
-          {product.isSecondHand && (
-            <span className="absolute bottom-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-              Pre-loved
             </span>
           )}
         </Link>
@@ -407,22 +426,15 @@ function ProductCardContent({ product, layout = 'grid' }: ProductCardProps) {
         
         {/* Badges */}
         <div className="absolute top-1.5 sm:top-3 left-1.5 sm:left-3 flex flex-col gap-1 sm:gap-2">
-          {product.isNew && (
-            <span className="bg-blue-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-              <span className="hidden sm:inline">Like New</span>
-              <span className="sm:hidden">LN</span>
+          {getConditionLabel(product.conditionTag) && (
+            <span className="bg-blue-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px] sm:max-w-none">
+              {getConditionLabel(product.conditionTag)}
             </span>
           )}
           {(product.isSale || product.isOnSale) && (
             <span className="bg-red-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
               <span className="hidden sm:inline">Oferta</span>
               <span className="sm:hidden">%</span>
-            </span>
-          )}
-          {product.isSecondHand && (
-            <span className="bg-green-600 text-white text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
-              <span className="hidden sm:inline">Pre-loved</span>
-              <span className="sm:hidden">PL</span>
             </span>
           )}
         </div>

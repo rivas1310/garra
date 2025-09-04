@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { log } from '@/lib/secureLogger'
+import { normalizeText } from '@/utils/searchUtils'
 
 const categories = [
   { id: 'all', name: 'Todas' },
@@ -31,6 +32,12 @@ export default function ProductosAdminPage() {
     productId: null,
     productName: ''
   });
+
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>('');
+
+  // Debug: Verificar estado del modal
+  console.log('Estado del modal:', showImageModal, 'Imagen seleccionada:', selectedImage);
 
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -84,9 +91,8 @@ export default function ProductosAdminPage() {
 
   // Recargar cuando cambien los filtros
   useEffect(() => {
-    if (products.length > 0) {
-      fetchProducts(1);
-    }
+    // Siempre recargar cuando cambien los filtros, independientemente si hay productos o no
+    fetchProducts(1);
   }, [selectedCategory, searchTerm]);
 
   // Mapeo de productos para asegurar que stock sea numérico y status correcto
@@ -120,16 +126,25 @@ export default function ProductosAdminPage() {
 
   const handleDelete = async (productId: string) => {
     try {
-      const response = await fetch(`/api/productos/${productId}`, {
+      const response = await fetch('/api/productos', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: productId }),
       });
+
+      const data = await response.json();
 
       if (response.ok) {
         toast.success('Producto eliminado correctamente');
         setDeleteModal({ isOpen: false, productId: null, productName: '' });
         fetchProducts(currentPage); // Recargar productos
+      } else if (response.status === 409) {
+        // Producto asociado a órdenes, mostrar mensaje específico
+        toast.error(`${data.error}. ${data.detalle}`);
       } else {
-        toast.error('Error al eliminar el producto');
+        toast.error(data.error || 'Error al eliminar el producto');
       }
     } catch (error) {
       toast.error('Error al eliminar el producto');
@@ -208,7 +223,12 @@ export default function ProductosAdminPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filtros y controles */}
+          <div className="mb-8">
+             <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Productos</h1>
+             <p className="text-gray-600">Administra tu catálogo de productos</p>
+           </div>
+
+          {/* Filtros y controles */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             {/* Categorías */}
@@ -233,14 +253,19 @@ export default function ProductosAdminPage() {
               {/* Búsqueda */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Buscar productos..."
-                value={searchTerm}
+                <input
+                  type="text"
+                  placeholder="Buscar productos (ignora acentos y mayúsculas)..."
+                  value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+                />
+                {searchTerm && (
+                  <div className="absolute -bottom-6 left-0 text-xs text-blue-500">
+                    🔍 Búsqueda inteligente activa
+                  </div>
+                )}
+              </div>
 
               {/* Mostrar inactivos */}
               <label className="flex items-center space-x-2">
@@ -299,51 +324,82 @@ export default function ProductosAdminPage() {
               </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={product.id} className="hover:bg-gray-50 border-b border-gray-100">
+                    <td className="px-6 py-8">
                       <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0">
+                            <div className="h-32 w-32 flex-shrink-0 relative group">
                         <img
-                                className="h-10 w-10 rounded-lg object-cover"
+                                className="h-32 w-32 rounded-xl object-cover border-2 border-gray-200 shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300"
                           src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
                           alt={product.name}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/img/placeholder.png';
+                          }}
                         />
+                        {/* Overlay con icono de zoom - ahora clickeable */}
+                        <div 
+                          className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-xl transition-all duration-300 flex items-center justify-center cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('=== CLICK EN OVERLAY ===');
+                            const imageUrl = Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png';
+                            console.log('URL de imagen:', imageUrl);
+                            console.log('Estado ANTES del click - Modal:', showImageModal, 'Imagen:', selectedImage);
+                            setSelectedImage(imageUrl);
+                            setShowImageModal(true);
+                            console.log('Comandos ejecutados - setSelectedImage y setShowImageModal(true)');
+                            // Verificar después de un pequeño delay
+                            setTimeout(() => {
+                              console.log('Estado DESPUÉS del click (con delay) - Modal:', showImageModal, 'Imagen:', selectedImage);
+                            }, 100);
+                          }}
+                        >
+                          <div className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center pointer-events-none">
+                            <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            </svg>
+                            <span className="text-xs font-medium">Ver imagen</span>
+                          </div>
+                        </div>
                             </div>
-                        <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                              <div className="text-sm text-gray-500">ID: {product.id}</div>
+                        <div className="ml-6">
+                              <div className="text-sm font-semibold text-gray-900 mb-1 max-w-xs truncate">{product.name}</div>
+                              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md inline-block">ID: {product.id}</div>
                             </div>
                       </div>
                     </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.category?.name || 'Sin categoría'}
+                        <td className="px-6 py-8 text-sm text-gray-900 align-middle">
+                          <div className="font-medium">{product.category?.name || 'Sin categoría'}</div>
                     </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${product.price}
+                        <td className="px-6 py-8 text-sm text-gray-900 align-middle">
+                          <div className="font-semibold text-green-600">${product.price}</div>
                       {product.originalPrice && product.originalPrice > product.price && (
-                            <span className="ml-2 text-sm text-gray-500 line-through">
+                            <div className="text-xs text-gray-500 line-through">
                               ${product.originalPrice}
-                            </span>
+                            </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {product.stock}
+                        <td className="px-6 py-8 text-sm text-gray-900 align-middle">
+                          <div className="font-medium">{product.stock}</div>
                           {product.variants && product.variants.length > 0 && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              ({product.variants.length} variantes)
-                            </span>
+                            <div className="text-xs text-blue-600 mt-1">
+                              {product.variants.length} variantes
+                            </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-8 align-middle">
                           {getStatusBadge(product.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-2">
+                    <td className="px-6 py-8 text-sm font-medium align-middle">
+                          <div className="flex items-center space-x-3">
                             <button
-                              onClick={() => router.push(`/admin/productos/${product.id}`)}
-                              className="text-blue-600 hover:text-blue-900"
+                              onClick={() => router.push(`/admin/productos/${product.id}/editar`)}
+                              className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
+                              title="Editar producto"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-5 w-5 group-hover:scale-110 transition-transform" />
                             </button>
                         <button
                               onClick={() => setDeleteModal({
@@ -351,9 +407,10 @@ export default function ProductosAdminPage() {
                                 productId: product.id,
                                 productName: product.name
                               })}
-                              className="text-red-600 hover:text-red-900"
+                              className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-all duration-200 group"
+                              title="Eliminar producto"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-5 w-5 group-hover:scale-110 transition-transform" />
                         </button>
                       </div>
                     </td>
@@ -430,6 +487,58 @@ export default function ProductosAdminPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de imagen ampliada */}
+      {showImageModal && selectedImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center cursor-pointer"
+          style={{
+            zIndex: 99999,
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh'
+          }}
+          onClick={() => {
+            console.log('Fondo clickeado - cerrando modal');
+            setShowImageModal(false);
+          }}
+        >
+          <div className="relative max-w-[95vw] max-h-[95vh]" onClick={(e) => e.stopPropagation()}>
+            {/* Botón de cerrar */}
+            <button
+              onClick={() => {
+                console.log('Botón X clickeado - cerrando modal');
+                setShowImageModal(false);
+              }}
+              className="absolute -top-12 right-0 text-white bg-red-600 hover:bg-red-700 rounded-full p-3 transition-all duration-200 shadow-lg z-10"
+              style={{ zIndex: 100000 }}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Imagen */}
+            <img
+              src={selectedImage}
+              alt="Imagen ampliada"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-default"
+              style={{
+                maxWidth: '95vw',
+                maxHeight: '95vh',
+                display: 'block'
+              }}
+              onContextMenu={(e) => {
+                // Permitir click derecho para copiar imagen
+                e.stopPropagation();
+              }}
+              draggable={true}
+            />
           </div>
         </div>
       )}

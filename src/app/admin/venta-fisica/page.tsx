@@ -52,6 +52,15 @@ export default function VentaFisicaPage() {
   const [lastSale, setLastSale] = useState<any>(null)
   const [showBluetoothModal, setShowBluetoothModal] = useState(false)
   const [showTicketModal, setShowTicketModal] = useState(false)
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState('')
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
+  const [stockFilter, setStockFilter] = useState('all') // 'all', 'in_stock', 'low_stock'
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showQuickActions, setShowQuickActions] = useState(false)
+  const [discountType, setDiscountType] = useState('percentage') // 'percentage', 'fixed'
+  const [discountValue, setDiscountValue] = useState('')
+  const [showDiscountModal, setShowDiscountModal] = useState(false)
 
   
   // Hook de impresión Bluetooth
@@ -69,6 +78,111 @@ export default function VentaFisicaPage() {
   useEffect(() => {
     fetchProducts()
   }, [])
+
+  // Atajos de teclado
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevenir atajos si hay un modal abierto o se está escribiendo en un input
+      const isInputFocused = document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA'
+      
+      if (isInputFocused && !['F1', 'F2', 'F3', 'F4', 'F5', 'Escape'].includes(event.key)) {
+        return
+      }
+
+      switch (event.key) {
+        case 'F1':
+          event.preventDefault()
+          // Enfocar en el campo de búsqueda
+          const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement
+          if (searchInput) {
+            searchInput.focus()
+            searchInput.select()
+          }
+          toast.success('F1: Campo de búsqueda enfocado')
+          break
+
+        case 'F2':
+          event.preventDefault()
+          // Procesar pago si hay productos en el carrito
+          if (cartItems.length > 0 && !showPaymentModal) {
+            setShowPaymentModal(true)
+            toast.success('F2: Modal de pago abierto')
+          } else if (cartItems.length === 0) {
+            toast.error('F2: Agrega productos al carrito primero')
+          }
+          break
+
+        case 'F3':
+          event.preventDefault()
+          // Limpiar carrito
+          if (cartItems.length > 0) {
+            setCartItems([])
+            toast.success('F3: Carrito limpiado')
+          } else {
+            toast.error('F3: El carrito ya está vacío')
+          }
+          break
+
+        case 'F4':
+          event.preventDefault()
+          // Abrir escáner de código de barras
+          if (!showScanner) {
+            setShowScanner(true)
+            toast.success('F4: Escáner de código de barras abierto')
+          }
+          break
+
+        case 'F5':
+          event.preventDefault()
+          // Mostrar/ocultar ayuda de atajos
+          setShowKeyboardHelp(!showKeyboardHelp)
+          break
+
+        case 'Escape':
+          event.preventDefault()
+          // Cerrar modales abiertos
+          if (showPaymentModal) {
+            setShowPaymentModal(false)
+            toast.success('Modal de pago cerrado')
+          } else if (showScanner) {
+            setShowScanner(false)
+            toast.success('Escáner cerrado')
+          } else if (showKeyboardHelp) {
+            setShowKeyboardHelp(false)
+          } else if (showBluetoothModal) {
+            setShowBluetoothModal(false)
+          } else if (showTicketModal) {
+            setShowTicketModal(false)
+          }
+          break
+
+        case '+':
+        case '=':
+          if (event.ctrlKey) {
+            event.preventDefault()
+            // Agregar último producto buscado al carrito
+            toast('Ctrl + +: Función no implementada aún')
+          }
+          break
+
+        case '-':
+          if (event.ctrlKey) {
+            event.preventDefault()
+            // Remover último producto del carrito
+            if (cartItems.length > 0) {
+              const newCartItems = [...cartItems]
+              newCartItems.pop()
+              setCartItems(newCartItems)
+              toast.success('Ctrl + -: Último producto removido')
+            }
+          }
+          break
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [cartItems, showPaymentModal, showScanner, showKeyboardHelp, showBluetoothModal, showTicketModal])
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -91,12 +205,32 @@ export default function VentaFisicaPage() {
     }
   }
 
-  // Filtrar productos por búsqueda
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase()))
-  )
+  // Filtrar productos por búsqueda y filtros avanzados
+  const filteredProducts = products.filter(product => {
+    // Filtro de búsqueda por texto
+    const matchesSearch = searchTerm === '' || 
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase()))
+    
+    // Filtro por categoría
+    const matchesCategory = categoryFilter === '' || 
+      (product.category && product.category.toLowerCase().includes(categoryFilter.toLowerCase()))
+    
+    // Filtro por rango de precio
+    const matchesPrice = (
+      (priceRange.min === '' || product.price >= parseFloat(priceRange.min)) &&
+      (priceRange.max === '' || product.price <= parseFloat(priceRange.max))
+    )
+    
+    // Filtro por stock
+    const matchesStock = 
+      stockFilter === 'all' ||
+      (stockFilter === 'in_stock' && product.stock > 0) ||
+      (stockFilter === 'low_stock' && product.stock > 0 && product.stock <= 5)
+    
+    return matchesSearch && matchesCategory && matchesPrice && matchesStock
+  })
 
   // Agregar producto al carrito
   const addToCart = (product: any) => {
@@ -212,9 +346,92 @@ export default function VentaFisicaPage() {
     setCartItems(updatedItems)
   }
 
+  // Aplicar descuento al carrito
+  const applyDiscount = () => {
+    if (!discountValue || parseFloat(discountValue) <= 0) {
+      toast.error('Ingresa un valor de descuento válido')
+      return
+    }
+
+    const currentTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    let discountAmount = 0
+
+    if (discountType === 'percentage') {
+      const percentage = parseFloat(discountValue)
+      if (percentage > 100) {
+        toast.error('El descuento no puede ser mayor al 100%')
+        return
+      }
+      discountAmount = (currentTotal * percentage) / 100
+    } else {
+      discountAmount = parseFloat(discountValue)
+      if (discountAmount > currentTotal) {
+        toast.error('El descuento no puede ser mayor al total')
+        return
+      }
+    }
+
+    // Aplicar descuento proporcionalmente a cada producto
+    const discountRatio = discountAmount / currentTotal
+    const updatedItems = cartItems.map(item => ({
+      ...item,
+      discountedPrice: item.price * (1 - discountRatio)
+    }))
+
+    setCartItems(updatedItems)
+    setShowDiscountModal(false)
+    setDiscountValue('')
+    toast.success(`Descuento de $${discountAmount.toFixed(2)} aplicado`)
+  }
+
+  // Limpiar carrito
+  const clearCart = () => {
+    if (cartItems.length === 0) {
+      toast.error('El carrito ya está vacío')
+      return
+    }
+    setCartItems([])
+    toast.success('Carrito limpiado')
+  }
+
+  // Guardar carrito para más tarde
+  const saveCart = () => {
+    if (cartItems.length === 0) {
+      toast.error('No hay productos en el carrito para guardar')
+      return
+    }
+    localStorage.setItem('savedCart', JSON.stringify(cartItems))
+    toast.success('Carrito guardado exitosamente')
+  }
+
+  // Cargar carrito guardado
+  const loadSavedCart = () => {
+    const savedCart = localStorage.getItem('savedCart')
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart))
+      localStorage.removeItem('savedCart')
+      toast.success('Carrito cargado exitosamente')
+    } else {
+      toast.error('No hay carrito guardado')
+    }
+  }
+
   // Calcular total del carrito
   const calculateTotal = () => {
+    return cartItems.reduce((total, item) => {
+      const price = item.discountedPrice || item.price
+      return total + (price * item.quantity)
+    }, 0)
+  }
+
+  // Calcular subtotal sin descuentos
+  const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0)
+  }
+
+  // Calcular descuento total aplicado
+  const calculateTotalDiscount = () => {
+    return calculateSubtotal() - calculateTotal()
   }
 
   // Abrir modal de confirmación de venta
@@ -1032,339 +1249,656 @@ garantias y devoluciones
   }
 
   return (
-    <div className="min-h-screen bg-gradient-elegant">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-primary-100">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Link href="/admin" className="btn-secondary text-sm sm:text-base py-1.5 px-2.5 sm:py-2 sm:px-3">
-                <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                Volver
+    <div className="min-h-screen bg-white">
+      {/* Header simple y funcional */}
+      <div className="bg-white shadow-md border-b border-gray-300">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Link href="/admin" className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors font-medium">
+                ← Volver
               </Link>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-title">Venta Física</h1>
-                <p className="text-sm sm:text-base text-body">Registra ventas realizadas en tienda física</p>
+                <h1 className="text-2xl font-bold text-gray-800">🏪 Punto de Venta</h1>
+                <p className="text-gray-600">Garras Felinas - Venta en Tienda</p>
               </div>
             </div>
             
-            {/* Indicador de estado Bluetooth */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
+              {/* Botón de ayuda de atajos */}
+              <button
+                onClick={() => setShowKeyboardHelp(true)}
+                className="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 rounded-lg font-medium transition-colors flex items-center gap-2"
+                title="Atajos de teclado (F5)"
+              >
+                ⌨️ Atajos
+              </button>
+              
+              {/* Estado Bluetooth simple */}
               <button
                 onClick={() => setShowBluetoothModal(true)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-lg font-medium ${
                   isPrinterConnected 
-                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                    ? 'bg-green-100 text-green-800 border border-green-300' 
+                    : 'bg-red-100 text-red-800 border border-red-300'
                 }`}
               >
-                <Bluetooth className={`h-4 w-4 ${isPrinterConnected ? 'text-green-600' : 'text-red-600'}`} />
-                {isPrinterConnected ? 'Impresora Conectada' : 'Sin Impresora'}
+                {isPrinterConnected ? '🖨️ Conectado' : '❌ Sin Impresora'}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {/* Productos */}
-          <div className="md:col-span-1 lg:col-span-2 space-y-4 sm:space-y-6">
-            {/* Búsqueda por código de barras/QR */}
-            <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-neutral-700 mb-3 sm:mb-4 flex items-center">
-                <Barcode className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-primary-600" />
-                Escanear Código
-              </h2>
-              <form onSubmit={handleBarcodeSearch} className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={barcodeInput}
-                    onChange={(e) => setBarcodeInput(e.target.value)}
-                    placeholder="Escanea o ingresa código de barras/QR"
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                  />
-                  <QrCode className="absolute right-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-neutral-400" />
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 lg:py-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:gap-6">
+          {/* Panel izquierdo - Carrito de venta (2 columnas) */}
+          <div className="xl:col-span-2 space-y-4 lg:space-y-6">
+            {/* Header del carrito con total mejorado */}
+            <div className="bg-white rounded-xl shadow-lg border-2 border-gray-100 overflow-hidden">
+              {/* Header sticky */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                      <ShoppingCart className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold">Carrito de Venta</h2>
+                      <p className="text-blue-100 text-sm">{cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-blue-100 text-sm font-medium">Total a cobrar</p>
+                    <p className="text-3xl font-bold text-white">${calculateTotal().toFixed(2)}</p>
+                    <p className="text-blue-100 text-xs">MXN</p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button 
-                    type="submit" 
-                    className="btn-primary text-sm sm:text-base py-1.5 px-3 sm:py-2 sm:px-4 flex-1 sm:flex-none"
-                  >
-                    Buscar
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowScanner(true)}
-                    className="btn-secondary text-sm sm:text-base py-1.5 px-3 sm:py-2 sm:px-4 flex items-center gap-1 sm:gap-2 flex-1 sm:flex-none"
-                  >
-                    <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-                    Cámara
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowExternalScanner(true)}
-                    className="btn-secondary text-sm sm:text-base py-1.5 px-3 sm:py-2 sm:px-4 flex items-center gap-1 sm:gap-2 flex-1 sm:flex-none bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    <Bluetooth className="h-3 w-3 sm:h-4 sm:w-4" />
-                    Externo
-                  </button>
-                </div>
-              </form>
+              </div>
               
-              {/* Escáner de códigos de barras */}
-              {showScanner && (
-                <div className="mt-3 sm:mt-4">
-                  <BarcodeScanner 
-                    onScan={async (decodedText) => {
-                      setBarcodeInput(decodedText);
-                      setShowScanner(false);
-                      
-                      try {
-                        // Primero intentar buscar por código de barras usando la API
-                        const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
-                        
-                        if (barcodeResponse.ok) {
-                          const product = await barcodeResponse.json();
-                          log.error('Producto encontrado por código de barras:', product);
+              {/* Contenido del carrito mejorado */}
+              <div className="p-6">
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <ShoppingCart className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Carrito vacío</h3>
+                    <p className="text-gray-500 text-sm">Agrega productos para comenzar la venta</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3 mb-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
+                    {cartItems.map(item => (
+                      <div key={item.id} className="group bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 transition-all duration-200">
+                        <div className="flex items-center gap-4">
+                          {/* Imagen del producto */}
+                          <div className="relative flex-shrink-0">
+                            <div className="w-32 sm:w-40 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden border-2 border-gray-200 hover:border-blue-200 transition-all duration-200">
+                              <img 
+                                src={item.image} 
+                                alt={item.name}
+                                className="w-full h-auto object-contain hover:scale-105 transition-transform duration-200"
+                              />
+                            </div>
+                          </div>
                           
-                          if (product.isAvailable) {
-                            addToCart(product);
-                            setBarcodeInput('');
-                            toast.success(`Producto agregado: ${product.name}`);
-                          } else {
-                            toast.error(`Producto encontrado pero sin stock: ${product.name}`);
-                          }
-                          return;
-                        }
-                        
-                        // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
-                        const product = products.find(p => 
-                          p.id === decodedText.trim() || 
-                          p.slug === decodedText.trim()
-                        );
-                        
-                        if (product) {
-                          addToCart(product);
-                          setBarcodeInput('');
-                          toast.success(`${product.name} agregado al carrito`);
-                        } else {
-                          toast.error('Producto no encontrado');
-                        }
-                      } catch (error) {
-                        log.error('Error al buscar producto:', error);
-                        toast.error('Error al buscar el producto');
-                      }
-                    }}
-                    onClose={() => setShowScanner(false)}
-                  />
-                </div>
-              )}
+                          {/* Información del producto */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm truncate mb-1">{item.name}</h3>
+                            <p className="text-gray-500 text-xs mb-2">${item.price.toFixed(2)} c/u</p>
+                            
+                            {/* Controles de cantidad */}
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center bg-white border-2 border-gray-300 rounded-lg shadow-sm">
+                                <button 
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="p-2 text-gray-600 hover:bg-gray-50 hover:text-red-600 transition-colors rounded-l-lg"
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </button>
+                                <span className="px-4 py-2 text-sm font-bold text-gray-800 min-w-[3rem] text-center bg-gray-50">
+                                  {item.quantity}
+                                </span>
+                                <button 
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  className="p-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 transition-colors rounded-r-lg"
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </button>
+                              </div>
+                              
+                              {/* Total del item */}
+                              <div className="text-right flex-1">
+                                <p className="font-bold text-lg text-blue-600">
+                                  ${(item.price * item.quantity).toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Botón eliminar */}
+                          <button 
+                            onClick={() => removeFromCart(item.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
+                            title="Eliminar producto"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Resumen y botón de cobrar */}
+                {cartItems.length > 0 && (
+                  <div className="border-t-2 border-gray-200 pt-4 space-y-4">
+                    {/* Resumen de totales */}
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} productos):</span>
+                        <span>${calculateTotal().toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>IVA (16%):</span>
+                        <span>${(calculateTotal() * 0.16).toFixed(2)}</span>
+                      </div>
+                      <div className="border-t border-gray-300 pt-2">
+                        <div className="flex justify-between text-lg font-bold text-gray-900">
+                          <span>Total:</span>
+                          <span className="text-green-600">${(calculateTotal() * 1.16).toFixed(2)} MXN</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Acciones rápidas */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                      <button 
+                        onClick={clearCart}
+                        className="py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Limpiar
+                      </button>
+                      <button 
+                        onClick={saveCart}
+                        className="py-2 px-4 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Guardar
+                      </button>
+                    </div>
+                    
+                    {/* Acciones adicionales */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+                      <button 
+                        onClick={() => setShowDiscountModal(true)}
+                        className="py-2 px-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <DollarSign className="h-4 w-4" />
+                        <span className="hidden sm:inline">Descuento</span>
+                        <span className="sm:hidden">%</span>
+                      </button>
+                      <button 
+                        onClick={loadSavedCart}
+                        className="py-2 px-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Package className="h-4 w-4" />
+                        <span className="hidden sm:inline">Cargar</span>
+                        <span className="sm:hidden">📦</span>
+                      </button>
+                      <button 
+                        onClick={() => setShowQuickActions(!showQuickActions)}
+                        className="py-2 px-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-2 sm:col-span-2 lg:col-span-1"
+                      >
+                        <span>⚡</span>
+                        <span className="hidden sm:inline">Más Acciones</span>
+                        <span className="sm:hidden">Más</span>
+                      </button>
+                    </div>
+                    
+                    {/* Panel de acciones rápidas expandido */}
+                    {showQuickActions && (
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4 space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">⚡ Acciones Rápidas</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button 
+                            onClick={() => {
+                              toast('Función de cambio en desarrollo')
+                            }}
+                            className="py-2 px-3 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-medium transition-colors"
+                          >
+                            🔄 Cambio
+                          </button>
+                          <button 
+                            onClick={() => {
+                              toast('Función de devolución en desarrollo')
+                            }}
+                            className="py-2 px-3 bg-red-400 hover:bg-red-500 text-white rounded text-xs font-medium transition-colors"
+                          >
+                            ↩️ Devolución
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Botón de cobrar principal */}
+                    <button 
+                      onClick={openPaymentModal}
+                      className="w-full py-4 px-6 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
+                    >
+                      <CreditCard className="h-6 w-6" />
+                      PROCESAR PAGO - ${(calculateTotal() * 1.16).toFixed(2)} MXN
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            
+          </div>
+          
+          {/* Panel derecho - Búsqueda y productos */}
+          <div className="space-y-4 lg:space-y-6">
             {/* Búsqueda de productos */}
-            <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 sm:p-6">
-              <h2 className="text-base sm:text-lg font-semibold text-neutral-700 mb-3 sm:mb-4 flex items-center">
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-primary-600" />
-                Productos
-              </h2>
-              <div className="relative mb-4 sm:mb-6">
+            <div className="bg-white rounded-lg shadow-md border border-gray-300 p-4 lg:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">🔍 Buscar Productos</h2>
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors self-start sm:self-auto"
+                >
+                  {showAdvancedFilters ? '🔼 Ocultar filtros' : '🔽 Filtros avanzados'}
+                </button>
+              </div>
+              
+              <div className="relative mb-6">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar productos..."
-                  className="w-full px-3 sm:px-4 py-2 pl-9 sm:pl-10 text-sm sm:text-base border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Buscar por nombre, ID o código..."
+                  className="w-full px-4 py-3 pl-12 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
-                <Search className="absolute left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-neutral-400" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               </div>
               
-              {loading ? (
-                <div className="flex justify-center py-6 sm:py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-primary-600"></div>
+              {/* Filtros avanzados */}
+              {showAdvancedFilters && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-3">⚙️ Filtros Avanzados</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Filtro por categoría */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                      <input
+                        type="text"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        placeholder="Ej: dental, limpieza..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    
+                    {/* Filtro por stock */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+                      <select
+                        value={stockFilter}
+                        onChange={(e) => setStockFilter(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="all">Todos los productos</option>
+                        <option value="in_stock">Con stock disponible</option>
+                        <option value="low_stock">Stock bajo (≤5)</option>
+                      </select>
+                    </div>
+                    
+                    {/* Botón limpiar filtros */}
+                    <div className="flex items-end">
+                      <button
+                        onClick={() => {
+                          setCategoryFilter('')
+                          setPriceRange({ min: '', max: '' })
+                          setStockFilter('all')
+                          setSearchTerm('')
+                        }}
+                        className="w-full px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                      >
+                        🗑️ Limpiar
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Filtro por rango de precio */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rango de Precio</label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={priceRange.min}
+                        onChange={(e) => setPriceRange(prev => ({ ...prev, min: e.target.value }))}
+                        placeholder="Precio mínimo"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        min="0"
+                        step="0.01"
+                      />
+                      <span className="text-gray-500 font-medium">-</span>
+                      <input
+                        type="number"
+                        value={priceRange.max}
+                        onChange={(e) => setPriceRange(prev => ({ ...prev, max: e.target.value }))}
+                        placeholder="Precio máximo"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Resumen de filtros activos */}
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {categoryFilter && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        Categoría: {categoryFilter}
+                      </span>
+                    )}
+                    {(priceRange.min || priceRange.max) && (
+                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                        Precio: ${priceRange.min || '0'} - ${priceRange.max || '∞'}
+                      </span>
+                    )}
+                    {stockFilter !== 'all' && (
+                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                        {stockFilter === 'in_stock' ? 'Con stock' : 'Stock bajo'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              ) : filteredProducts.length === 0 ? (
-                <div className="text-center py-6 sm:py-8 text-neutral-500 text-sm sm:text-base">
-                  No se encontraron productos
+              )}
+              
+              {/* Escáner de códigos */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-3">📱 Escanear Código</h3>
+                <form onSubmit={handleBarcodeSearch} className="space-y-3">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={barcodeInput}
+                      onChange={(e) => setBarcodeInput(e.target.value)}
+                      placeholder="Escanea código de barras/QR..."
+                      className="w-full px-4 py-3 pl-10 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <QrCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <button 
+                      type="submit" 
+                      className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm"
+                    >
+                      🔍 Buscar
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowScanner(true)}
+                      className="w-full py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold text-sm"
+                    >
+                      📷 Cámara
+                    </button>
+                  </div>
+                </form>
+                
+                {/* Escáner de códigos de barras */}
+                {showScanner && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <BarcodeScanner 
+                      onScan={async (decodedText) => {
+                        setBarcodeInput(decodedText);
+                        setShowScanner(false);
+                        
+                        try {
+                          // Primero intentar buscar por código de barras usando la API
+                          const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
+                          
+                          if (barcodeResponse.ok) {
+                            const product = await barcodeResponse.json();
+                            log.error('Producto encontrado por código de barras:', product);
+                            
+                            if (product.isAvailable) {
+                              addToCart(product);
+                              setBarcodeInput('');
+                              toast.success(`Producto agregado: ${product.name}`);
+                            } else {
+                              toast.error(`Producto encontrado pero sin stock: ${product.name}`);
+                            }
+                            return;
+                          }
+                          
+                          // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
+                          const product = products.find(p => 
+                            p.id === decodedText.trim() || 
+                            p.slug === decodedText.trim()
+                          );
+                          
+                          if (product) {
+                            addToCart(product);
+                            setBarcodeInput('');
+                            toast.success(`${product.name} agregado al carrito`);
+                          } else {
+                            toast.error('Producto no encontrado');
+                          }
+                        } catch (error) {
+                          log.error('Error al buscar producto:', error);
+                          toast.error('Error al buscar el producto');
+                        }
+                      }}
+                      onClose={() => setShowScanner(false)}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Lista de productos mejorada */}
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 lg:mb-6 gap-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <Package className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                    Productos Disponibles
+                  </h3>
+                  <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full self-start sm:self-auto">
+                    {filteredProducts.length} productos
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {filteredProducts.map(product => (
-                    <div key={product.id} className="border border-neutral-200 rounded-lg p-3 sm:p-4 flex">
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-neutral-100 rounded-lg overflow-hidden mr-3 sm:mr-4 flex-shrink-0">
-                        <img 
-                          src={product.images && product.images[0] ? product.images[0] : '/img/placeholder.png'} 
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-neutral-800 text-sm sm:text-base truncate">{product.name}</h3>
-                        <p className="text-xs sm:text-sm text-neutral-500 mb-1">Stock: {product.stock}</p>
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-primary-600 text-sm sm:text-base">${product.price.toFixed(2)}</span>
+                
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600 mb-4"></div>
+                    <p className="text-gray-500 font-medium">Cargando productos...</p>
+                  </div>
+                ) : filteredProducts.length === 0 ? (
+                  <div className="text-center py-16">
+                    <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg font-medium mb-2">No se encontraron productos</p>
+                    <p className="text-gray-400 text-sm">Intenta ajustar tu búsqueda</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3 lg:gap-4 max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                    {filteredProducts.map(product => (
+                        <div key={product.id} className="group bg-white border-2 border-gray-100 rounded-xl p-3 sm:p-4 hover:border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                        {/* Imagen del producto */}
+                        <div className="relative mb-4">
+                          <div className="w-full h-40 sm:h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
+                            <img 
+                              src={product.images && product.images[0] ? product.images[0] : '/img/placeholder.png'} 
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            />
+                          </div>
+                          {/* Badge de stock */}
+                          <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold ${
+                            product.stock > 10 
+                              ? 'bg-green-100 text-green-700' 
+                              : product.stock > 0 
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-red-100 text-red-700'
+                          }`}>
+                            {product.stock > 0 ? `${product.stock} unid.` : 'Agotado'}
+                          </div>
+                        </div>
+                        
+                        {/* Información del producto */}
+                        <div className="space-y-2 mb-4">
+                          <h4 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
+                            {product.name}
+                          </h4>
+                          <p className="text-gray-500 text-xs bg-gray-50 px-2 py-1 rounded-md inline-block">
+                            {product.category?.name || 'Sin categoría'}
+                          </p>
+                        </div>
+                        
+                        {/* Precio y botón */}
+                        <div className="space-y-3">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-green-600">
+                              ${product.price.toFixed(2)}
+                            </p>
+                          </div>
+                          
                           <button 
                             onClick={() => addToCart(product)}
                             disabled={product.stock <= 0}
-                            className={`text-xs px-2 sm:px-3 py-1 rounded-full ${product.stock > 0 ? 'bg-primary-100 text-primary-700 hover:bg-primary-200' : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'}`}
+                            className={`w-full py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-semibold text-xs sm:text-sm transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
+                              product.stock > 0 
+                                ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md active:scale-95 group-hover:bg-blue-700' 
+                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            }`}
                           >
-                            {product.stock > 0 ? 'Vender' : 'Sin stock'}
+                            {product.stock > 0 ? (
+                              <>
+                                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline">Agregar al Carrito</span>
+                                <span className="sm:hidden">Agregar</span>
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                                Sin Stock
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Carrito de venta */}
-          <div className="space-y-4 sm:space-y-6">
-            <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 sm:p-6 sticky top-4 sm:top-6">
-              <h2 className="text-base sm:text-lg font-semibold text-neutral-700 mb-3 sm:mb-4 flex items-center">
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-primary-600" />
-                Carrito de Venta
-              </h2>
-              
-              {cartItems.length === 0 ? (
-                <div className="text-center py-6 sm:py-8 text-neutral-500 text-sm sm:text-base">
-                  No hay productos en el carrito
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6 max-h-[calc(100vh-20rem)] overflow-y-auto pr-1">
-                  {cartItems.map(item => (
-                    <div key={item.id} className="border-b border-neutral-200 pb-3 sm:pb-4 last:border-0">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-neutral-100 rounded-lg overflow-hidden flex-shrink-0">
-                          <img 
-                            src={item.image} 
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-neutral-800 text-xs sm:text-sm truncate">{item.name}</h3>
-                          <p className="text-xs text-neutral-500">${item.price.toFixed(2)}</p>
-                        </div>
-                        <button 
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-red-500 hover:text-red-700 p-1"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center border border-neutral-300 rounded-lg">
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-neutral-600 hover:bg-neutral-100"
-                          >
-                            <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          </button>
-                          <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs sm:text-sm">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-neutral-600 hover:bg-neutral-100"
-                          >
-                            <Plus className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                          </button>
-                        </div>
-                        <span className="font-semibold text-primary-600 text-xs sm:text-sm">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <div className="border-t border-neutral-200 pt-3 sm:pt-4">
-                <div className="flex justify-between mb-1 sm:mb-2">
-                  <span className="text-neutral-600 text-sm">Subtotal</span>
-                  <span className="font-medium text-sm sm:text-base">${calculateTotal().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between mb-3 sm:mb-4">
-                  <span className="text-neutral-600 text-sm">Total</span>
-                  <span className="font-semibold text-base sm:text-lg">${calculateTotal().toFixed(2)}</span>
-                </div>
-                
-                <button 
-                  onClick={openPaymentModal}
-                  disabled={cartItems.length === 0}
-                  className="btn-primary w-full flex items-center justify-center text-sm sm:text-base py-2 sm:py-2.5"
-                >
-                  <Save className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  Registrar Venta
-                </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Modal de confirmación de venta */}
-      {log.error('🎭 Estado del modal:', showPaymentModal)}
+      {/* Modal de confirmación de venta mejorado */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-          <div className="bg-white  rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold bg-white text-blue-600">Confirmar Venta</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden transform animate-in zoom-in-95 duration-200">
+            {/* Header del modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <CreditCard className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">Procesar Pago</h3>
+                    <p className="text-blue-100 text-sm">Confirma los detalles de la venta</p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6" />
                 </button>
               </div>
-              
-              {/* Debug info */}
-              <div className="mb-4 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
-                Debug: Modal abierto - Método actual: {paymentMethod}
-              </div>
+            </div>
 
-              {/* Resumen de la venta */}
+            <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto custom-scrollbar">
+              {/* Resumen compacto de productos */}
               <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Resumen de la venta:</h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Package className="h-5 w-5 text-blue-600" />
+                  Productos ({cartItems.length})
+                </h4>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
                   {cartItems.map(item => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="truncate">{item.name} x{item.quantity}</span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                    <div key={item.id} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                        <img 
+                          src={item.image || '/img/placeholder.png'} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{item.name}</p>
+                        <p className="text-gray-500 text-xs">{item.quantity} × ${item.price.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600">${(item.price * item.quantity).toFixed(2)}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-                <div className="border-t pt-3 mt-3">
-                  <div className="flex justify-between font-semibold">
-                    <span>Total:</span>
+              </div>
+
+              {/* Resumen financiero */}
+              <div className="mb-6">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} productos):</span>
                     <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>IVA (16%):</span>
+                    <span>${(calculateTotal() * 0.16).toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-gray-300 pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-gray-900">Total a Pagar:</span>
+                      <span className="text-3xl font-bold text-green-600">${(calculateTotal() * 1.16).toFixed(2)}</span>
+                    </div>
+                    <p className="text-gray-500 text-sm text-right">MXN</p>
                   </div>
                 </div>
               </div>
 
-              {/* Método de pago */}
+              {/* Método de pago mejorado */}
               <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">
-                  Método de pago: {paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}
+                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  Método de Pago
                 </h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => {
                       log.error('💰 Cambiando a efectivo')
                       setPaymentMethod('efectivo')
                     }}
-                    className={`relative p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-colors ${
+                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
                       paymentMethod === 'efectivo'
-                        ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-200'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-green-500 bg-green-50 text-green-700 shadow-lg scale-105'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                     }`}
                   >
-                    <DollarSign className="h-5 w-5" />
-                    <span className="font-medium">Efectivo</span>
+                    <div className="flex flex-col items-center gap-2">
+                      <DollarSign className="h-8 w-8" />
+                      <span className="font-semibold">Efectivo</span>
+                      <span className="text-xs text-gray-500">Pago en efectivo</span>
+                    </div>
                     {paymentMethod === 'efectivo' && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-500 rounded-full"></div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
                     )}
                   </button>
                   <button
@@ -1372,41 +1906,73 @@ garantias y devoluciones
                       log.error('💳 Cambiando a tarjeta')
                       setPaymentMethod('tarjeta')
                     }}
-                    className={`relative p-3 rounded-lg border-2 flex items-center justify-center gap-2 transition-colors ${
+                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
                       paymentMethod === 'tarjeta'
-                        ? 'border-primary-500 bg-primary-50 text-primary-700 ring-2 ring-primary-200'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg scale-105'
+                        : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                     }`}
                   >
-                    <CreditCard className="h-5 w-5" />
-                    <span className="font-medium">Tarjeta</span>
+                    <div className="flex flex-col items-center gap-2">
+                      <CreditCard className="h-8 w-8" />
+                      <span className="font-semibold">Tarjeta</span>
+                      <span className="text-xs text-gray-500">Débito/Crédito</span>
+                    </div>
                     {paymentMethod === 'tarjeta' && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary-500 rounded-full"></div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
+                      </div>
                     )}
                   </button>
                 </div>
               </div>
 
-              {/* Botones de acción */}
-              <div className="flex gap-3">
+              {/* Información adicional según método de pago */}
+              {paymentMethod === 'efectivo' && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                    <span className="font-medium text-green-800">Pago en Efectivo</span>
+                  </div>
+                  <p className="text-green-700 text-sm">Asegúrate de tener el cambio exacto disponible.</p>
+                </div>
+              )}
+
+              {paymentMethod === 'tarjeta' && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CreditCard className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium text-blue-800">Pago con Tarjeta</span>
+                  </div>
+                  <p className="text-blue-700 text-sm">El cliente deberá insertar o acercar su tarjeta al terminal.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer con botones de acción */}
+            <div className="bg-gray-50 p-6 border-t border-gray-200">
+              <div className="flex gap-4">
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-red-600 transition-colors"
+                  className="flex-1 py-3 px-6 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2"
                 >
+                  <X className="h-5 w-5" />
                   Cancelar
                 </button>
                 <button
                   onClick={processPhysicalSale}
                   disabled={processingOrder}
-                  className="flex-1 px-4 py-2 bg-primary-600 text-white hover:bg-green-600 bg-red-500 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
+                  className="flex-2 py-3 px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
                 >
                   {processingOrder ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white  mr-2"></div>
-                      Procesando...
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      Procesando Venta...
                     </>
                   ) : (
-                    'Confirmar Venta'
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      Confirmar Pago - ${(calculateTotal() * 1.16).toFixed(2)} MXN
+                    </>
                   )}
                 </button>
               </div>
@@ -1638,6 +2204,229 @@ garantias y devoluciones
         }}
         onClose={() => setShowExternalScanner(false)}
       />
+
+      {/* Modal de ayuda de atajos de teclado */}
+      {showKeyboardHelp && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden transform animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <span className="text-2xl">⌨️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">Atajos de Teclado</h3>
+                    <p className="text-purple-100 text-sm">Acelera tu trabajo con estos atajos</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowKeyboardHelp(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido */}
+            <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto custom-scrollbar">
+              <div className="grid gap-4">
+                {/* Atajos principales */}
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4">
+                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Navegación y Búsqueda
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Enfocar campo de búsqueda</span>
+                      <kbd className="px-3 py-1 bg-blue-200 text-blue-800 rounded-lg font-mono text-sm font-bold">F1</kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Abrir escáner de código</span>
+                      <kbd className="px-3 py-1 bg-blue-200 text-blue-800 rounded-lg font-mono text-sm font-bold">F4</kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Atajos de carrito */}
+                <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4">
+                  <h4 className="font-bold text-green-800 mb-3 flex items-center gap-2">
+                    <ShoppingCart className="h-5 w-5" />
+                    Gestión del Carrito
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Procesar pago</span>
+                      <kbd className="px-3 py-1 bg-green-200 text-green-800 rounded-lg font-mono text-sm font-bold">F2</kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Limpiar carrito</span>
+                      <kbd className="px-3 py-1 bg-green-200 text-green-800 rounded-lg font-mono text-sm font-bold">F3</kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Remover último producto</span>
+                      <div className="flex gap-1">
+                        <kbd className="px-2 py-1 bg-green-200 text-green-800 rounded font-mono text-sm font-bold">Ctrl</kbd>
+                        <span className="text-green-800">+</span>
+                        <kbd className="px-2 py-1 bg-green-200 text-green-800 rounded font-mono text-sm font-bold">-</kbd>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Atajos generales */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4">
+                  <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                    <X className="h-5 w-5" />
+                    Controles Generales
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Cerrar modales</span>
+                      <kbd className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg font-mono text-sm font-bold">Escape</kbd>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700">Mostrar/ocultar esta ayuda</span>
+                      <kbd className="px-3 py-1 bg-gray-200 text-gray-800 rounded-lg font-mono text-sm font-bold">F5</kbd>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Consejos */}
+                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-4 border border-yellow-200">
+                  <h4 className="font-bold text-yellow-800 mb-2 flex items-center gap-2">
+                    💡 Consejos
+                  </h4>
+                  <ul className="text-yellow-700 text-sm space-y-1">
+                    <li>• Los atajos funcionan incluso cuando hay campos de texto enfocados</li>
+                    <li>• Usa F1 para buscar productos rápidamente</li>
+                    <li>• F2 solo funciona si hay productos en el carrito</li>
+                    <li>• Escape cierra cualquier modal abierto</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 p-4 border-t border-gray-200">
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowKeyboardHelp(false)}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <span>Entendido</span>
+                  <kbd className="px-2 py-1 bg-purple-500 text-white rounded text-xs">F5</kbd>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de descuento */}
+      {showDiscountModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-800">💰 Aplicar Descuento</h3>
+              <button
+                onClick={() => setShowDiscountModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Tipo de descuento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de descuento</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setDiscountType('percentage')}
+                    className={`py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
+                      discountType === 'percentage'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Porcentaje (%)
+                  </button>
+                  <button
+                    onClick={() => setDiscountType('fixed')}
+                    className={`py-2 px-4 rounded-lg font-medium text-sm transition-colors ${
+                      discountType === 'fixed'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    Monto fijo ($)
+                  </button>
+                </div>
+              </div>
+              
+              {/* Valor del descuento */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Valor del descuento {discountType === 'percentage' ? '(%)' : '($)'}
+                </label>
+                <input
+                  type="number"
+                  value={discountValue}
+                  onChange={(e) => setDiscountValue(e.target.value)}
+                  placeholder={discountType === 'percentage' ? 'Ej: 10' : 'Ej: 50.00'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  min="0"
+                  max={discountType === 'percentage' ? '100' : undefined}
+                  step={discountType === 'percentage' ? '1' : '0.01'}
+                />
+              </div>
+              
+              {/* Información del descuento */}
+              {discountValue && (
+                <div className="bg-blue-50 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Subtotal actual:</strong> ${calculateSubtotal().toFixed(2)}
+                  </p>
+                  <p className="text-sm text-blue-800">
+                    <strong>Descuento:</strong> ${
+                      discountType === 'percentage'
+                        ? ((calculateSubtotal() * parseFloat(discountValue || '0')) / 100).toFixed(2)
+                        : parseFloat(discountValue || '0').toFixed(2)
+                    }
+                  </p>
+                  <p className="text-sm font-semibold text-blue-900">
+                    <strong>Total con descuento:</strong> ${
+                      discountType === 'percentage'
+                        ? (calculateSubtotal() - (calculateSubtotal() * parseFloat(discountValue || '0')) / 100).toFixed(2)
+                        : (calculateSubtotal() - parseFloat(discountValue || '0')).toFixed(2)
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Botones de acción */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowDiscountModal(false)}
+                className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={applyDiscount}
+                className="flex-1 py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors"
+              >
+                Aplicar Descuento
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

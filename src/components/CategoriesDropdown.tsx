@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, User, Users, Footprints, Baby, Dumbbell, ShoppingBag, Sparkles, Search } from 'lucide-react'
 
 // Definir las categorías y subcategorías
 const categoriesData = {
@@ -66,6 +66,7 @@ interface CategoriesDropdownProps {
 export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>()
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Cerrar el dropdown si se hace clic fuera
   useEffect(() => {
@@ -87,14 +88,37 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
     }
   }, [isOpen, onClose])
 
+  // Filtrar categorías basado en el término de búsqueda
+  const filterCategories = (items: any[]) => {
+    if (!searchTerm) return items
+    return items.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }
+
+  // Iconos para cada categoría
+  const categoryIcons = {
+    mujer: User,
+    hombre: Users,
+    calzado: Footprints,
+    ninos: Baby,
+    deportivo: Dumbbell,
+    bolsos: ShoppingBag,
+    accesorios: Sparkles
+  }
+
   return (
     <div 
       ref={dropdownRef}
-      className={`absolute top-full left-1/2 transform -translate-x-1/2 w-screen max-w-4xl bg-white rounded-lg shadow-lg border border-gray-200 z-50 mt-1 transition-all duration-200 ${
+      className={`absolute top-full left-1/2 transform -translate-x-1/2 w-screen max-w-3xl bg-white rounded-xl shadow-xl border border-gray-100 z-50 mt-2 transition-all duration-300 ease-out backdrop-blur-sm ${
         isOpen 
-          ? 'opacity-100 visible translate-y-0' 
-          : 'opacity-0 invisible -translate-y-2'
+          ? 'opacity-100 visible translate-y-0 scale-100' 
+          : 'opacity-0 invisible -translate-y-4 scale-95'
       }`}
+      style={{
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.8)'
+      }}
       onMouseEnter={() => {
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current)
@@ -106,19 +130,34 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         }, 150)
       }}
     >
-      <div className="grid grid-cols-4 gap-8 p-6">
+      {/* Barra de búsqueda */}
+      <div className="p-4 pb-3 border-b border-gray-100">
+        <div className="relative max-w-sm mx-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder="Buscar categorías..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white text-sm"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4">
         {/* Mujer */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-pink-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-pink-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <User className="text-white" size={14} />
+            </div>
             Mujer
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.mujer.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.mujer).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-pink-600 hover:bg-pink-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-pink-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -129,17 +168,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         </div>
 
         {/* Hombre */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-blue-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Users className="text-white" size={14} />
+            </div>
             Hombre
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.hombre.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.hombre).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-blue-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -150,17 +191,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         </div>
 
         {/* Calzado */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-purple-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Footprints className="text-white" size={14} />
+            </div>
             Calzado
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.calzado.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.calzado).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-purple-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -171,17 +214,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         </div>
 
         {/* Niños */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-green-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Baby className="text-white" size={14} />
+            </div>
             Niños
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.ninos.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.ninos).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-green-600 hover:bg-green-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-green-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -191,17 +236,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
           </ul>
         </div>
         {/* Accesorios */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-yellow-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Sparkles className="text-white" size={14} />
+            </div>
             Accesorios
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.accesorios.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.accesorios).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-yellow-600 hover:bg-yellow-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-yellow-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -212,17 +259,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         </div>
 
         {/* Bolsos */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-cyan-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-cyan-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <ShoppingBag className="text-white" size={14} />
+            </div>
             Bolsos
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.bolsos.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.bolsos).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-cyan-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -233,17 +282,19 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
         </div>
 
         {/* Deportivo */}
-        <div>
-          <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center">
-            <span className="w-2 h-2 bg-orange-500 rounded-full mr-3"></span>
+        <div className="group">
+          <h3 className="font-semibold text-gray-900 text-base mb-3 flex items-center group-hover:text-orange-600 transition-colors">
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg mr-2 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+              <Dumbbell className="text-white" size={14} />
+            </div>
             Deportivo
           </h3>
-          <ul className="space-y-2">
-            {categoriesData.deportivo.map((item) => (
+          <ul className="space-y-0.5">
+            {filterCategories(categoriesData.deportivo).map((item) => (
               <li key={item.name}>
                 <Link 
                   href={item.href}
-                  className="text-gray-700 hover:text-blue-600 transition-colors block py-2 px-2 rounded-lg hover:bg-gray-50"
+                  className="text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200 block py-2 px-3 rounded-lg text-sm font-medium hover:translate-x-1 hover:shadow-sm border border-transparent hover:border-orange-100"
                   onClick={onClose}
                 >
                   {item.name}
@@ -255,10 +306,10 @@ export default function CategoriesDropdown({ isOpen, onClose }: CategoriesDropdo
       </div>
 
       {/* Footer con enlace a todas las categorías */}
-      <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-lg">
+      <div className="border-t border-gray-100 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-b-xl">
         <Link 
           href="/categorias"
-          className="text-blue-600 hover:text-blue-700 font-medium transition-colors flex items-center justify-center group"
+          className="text-blue-600 hover:text-blue-700 font-medium transition-all duration-200 flex items-center justify-center group bg-white hover:bg-blue-50 py-2 px-4 rounded-lg shadow-sm hover:shadow-md border border-blue-100 hover:border-blue-200 text-sm"
           onClick={onClose}
         >
           <span>Ver todas las categorías</span>
@@ -304,12 +355,18 @@ export function CategoriesButton() {
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-1 text-gray-800 hover:text-blue-600 font-medium transition-colors"
+        className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-semibold transition-all duration-200 group ${
+          isOpen 
+            ? 'text-blue-600 bg-blue-50 shadow-sm' 
+            : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+        }`}
       >
         <span>Categorías</span>
         <ChevronDown 
           size={16} 
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          className={`transition-all duration-300 group-hover:scale-110 ${
+            isOpen ? 'rotate-180 text-blue-600' : 'group-hover:text-blue-600'
+          }`}
         />
       </button>
       
@@ -319,4 +376,4 @@ export function CategoriesButton() {
       />
     </div>
   )
-} 
+}

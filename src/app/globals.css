@@ -48,6 +48,39 @@
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-azulrey focus:border-transparent bg-white text-gray-900;
   }
   
+  /* Scrollbar personalizado para el punto de venta */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #3B82F6 #F1F5F9;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #3B82F6;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2563EB;
+  }
+  
+  /* Clases para truncar texto */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
   .text-title {
     @apply text-gray-900 font-bold;
   }
@@ -113,4 +146,4 @@
     transform: scale(1);
     opacity: 1;
   }
-} 
+}

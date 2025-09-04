@@ -126,10 +126,14 @@ export default function ClientesAdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-elegant flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
         <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary-600" />
-          <p className="text-neutral-600">Cargando clientes...</p>
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin absolute top-2 left-1/2 transform -translate-x-1/2"></div>
+          </div>
+          <div className="text-gray-700 text-lg font-semibold animate-pulse">Cargando clientes...</div>
+          <div className="text-gray-500 text-sm mt-2">Por favor espera un momento</div>
         </div>
       </div>
     );
@@ -137,169 +141,294 @@ export default function ClientesAdminPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-elegant flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-            <p className="text-red-800 mb-4">{error}</p>
-            <button 
-              onClick={fetchClients}
-              className="btn-primary"
-            >
-              Intentar de nuevo
-            </button>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-pink-50">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-red-100 max-w-md mx-4">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="h-8 w-8 text-red-600" />
           </div>
+          <div className="text-red-600 text-xl font-bold mb-2">Error al cargar clientes</div>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={fetchClients}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <RefreshCw className="h-4 w-4 inline mr-2" />
+            Reintentar
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-elegant">
-      <div className="bg-white shadow-elegant border-b border-neutral-100">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-neutral-700 truncate">Gestión de Clientes</h1>
-              <p className="text-sm sm:text-base text-neutral-600">
-                {clients.length} cliente{clients.length !== 1 ? 's' : ''} registrado{clients.length !== 1 ? 's' : ''}
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 animate-fade-in">
+      {/* Encabezado mejorado con gradiente */}
+      <div className="bg-gradient-to-r from-white via-blue-50 to-indigo-50 shadow-xl border-b border-blue-100/50 backdrop-blur-sm animate-slide-down">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0">
+            <div className="space-y-2 animate-fade-in-left">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg animate-bounce">
+                  <User className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                    Gestión de Clientes
+                  </h1>
+                  <p className="text-sm sm:text-base text-gray-600 font-medium">
+                    {clients.length} cliente{clients.length !== 1 ? 's' : ''} registrado{clients.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
             </div>
             <button 
               onClick={handleRefresh}
-              className="btn-secondary inline-flex items-center text-sm sm:text-base py-1.5 sm:py-2 px-3 sm:px-4"
+              className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 animate-fade-in-right"
               disabled={loading}
             >
-              <RefreshCw className={`mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Actualizar
             </button>
           </div>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Filtros y búsqueda */}
-        <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-3 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <input
-                  type="text"
-                  placeholder="Buscar cliente..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full text-sm sm:text-base pl-9 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Sección de Estadísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 animate-fade-in-up">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Clientes</p>
+                <p className="text-3xl font-bold">{clients.length}</p>
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-sm sm:text-base px-2 sm:px-3 py-1.5 sm:py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="admin">Administrador</option>
-              </select>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="text-sm sm:text-base px-2 sm:px-3 py-1.5 sm:py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              >
-                <option value="all">Todos los roles</option>
-                <option value="USER">Clientes</option>
-                <option value="ADMIN">Administradores</option>
-              </select>
+              <div className="w-12 h-12 bg-blue-400 bg-opacity-30 rounded-xl flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
+              </div>
             </div>
-            <button className="btn-secondary flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base py-1.5 sm:py-2 px-3 sm:px-4 mt-2 sm:mt-0">
-              <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Exportar ({filteredClients.length})
-            </button>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Clientes Activos</p>
+                <p className="text-3xl font-bold">{clients.filter(c => c.status === 'activo').length}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-400 bg-opacity-30 rounded-xl flex items-center justify-center">
+                <User className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Total Órdenes</p>
+                <p className="text-3xl font-bold">{clients.reduce((sum, client) => sum + client.totalOrders, 0)}</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-400 bg-opacity-30 rounded-xl flex items-center justify-center">
+                <ShoppingBag className="h-6 w-6 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Promedio Órdenes</p>
+                <p className="text-3xl font-bold">
+                  {clients.length > 0 ? (clients.reduce((sum, client) => sum + client.totalOrders, 0) / clients.length).toFixed(1) : '0'}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-400 bg-opacity-30 rounded-xl flex items-center justify-center">
+                <Star className="h-6 w-6 text-white" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Mensaje de no clientes (común para ambas vistas) */}
+        {/* Sección de filtros mejorada */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100/50 p-6 mb-8 animate-fade-in-up">
+          <div className="flex flex-col space-y-6">
+            {/* Título de filtros */}
+            <div className="flex items-center space-x-2">
+              <Filter className="h-5 w-5 text-blue-600" />
+              <h2 className="text-lg font-semibold text-gray-800">Filtros de Búsqueda</h2>
+            </div>
+            
+            {/* Controles de filtros */}
+            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                {/* Barra de búsqueda mejorada */}
+                <div className="relative w-full sm:w-80">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, email, ID o teléfono..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-500"
+                  />
+                </div>
+                
+                {/* Filtros de estado y rol */}
+                <div className="flex gap-3">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium"
+                  >
+                    <option value="all">Todos los estados</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                  <select
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium"
+                  >
+                    <option value="all">Todos los roles</option>
+                    <option value="USER">Clientes</option>
+                    <option value="ADMIN">Administradores</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Botón de exportar mejorado */}
+              <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                <Filter className="mr-2 h-4 w-4" />
+                Exportar ({filteredClients.length})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mensaje de no clientes mejorado */}
         {filteredClients.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-6 text-center">
-            <User className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-neutral-300" />
-            <p className="text-base sm:text-lg font-medium text-neutral-700">No se encontraron clientes</p>
-            <p className="text-xs sm:text-sm text-neutral-500 mt-1">Intenta ajustar los filtros de búsqueda</p>
+          <div className="text-center py-20 bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl shadow-xl border border-gray-100 animate-fade-in">
+            <div className="relative mb-8">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                <User className="h-12 w-12 text-blue-500" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-ping"></div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-3 animate-fade-in-up">No se encontraron clientes</h3>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto animate-fade-in-up">No hay clientes que coincidan con los filtros aplicados. Intenta ajustar los criterios de búsqueda.</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up">
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                  setRoleFilter('all');
+                }}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+              >
+                <RefreshCw className="h-5 w-5" />
+                Limpiar filtros
+              </button>
+              <button
+                onClick={fetchClients}
+                className="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl hover:from-green-600 hover:to-teal-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+              >
+                <Search className="h-5 w-5" />
+                Recargar clientes
+              </button>
+            </div>
           </div>
         ) : (
           <>
-            {/* Vista de tarjetas para móviles */}
-            <div className="block sm:hidden space-y-3">
+            {/* Vista de tarjetas mejorada para móviles */}
+            <div className="block sm:hidden space-y-4 animate-fade-in-up">
               {filteredClients.map((client) => (
-                <div key={client.id} className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-3 overflow-hidden">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <User className="h-4 w-4 text-primary-600" />
+                <div key={client.id} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100/50 p-5 overflow-hidden transform transition-all duration-200 hover:scale-[1.02] hover:shadow-2xl">
+                  {/* Encabezado de la tarjeta */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                        <User className="h-6 w-6 text-white" />
                       </div>
-                      <div className="ml-2">
-                        <div className="text-sm font-medium text-neutral-900 truncate max-w-[180px]">{client.name}</div>
-                        <div className="text-xs text-neutral-500">{roleLabels[client.role]}</div>
+                      <div>
+                        <div className="text-base font-bold text-gray-900 truncate max-w-[180px]">{client.name}</div>
+                        <div className="text-sm text-gray-600 font-medium">{roleLabels[client.role]}</div>
                       </div>
                     </div>
-                    <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${statusColors[client.status]}`}>
+                    <span className={`inline-flex px-3 py-1 text-xs font-bold rounded-full shadow-sm ${statusColors[client.status]}`}>
                       {client.status}
                     </span>
                   </div>
                   
-                  <div className="space-y-1.5 mb-3">
-                    <div className="flex items-center text-xs text-neutral-900">
-                      <Mail className="h-3.5 w-3.5 mr-1.5 text-neutral-400 flex-shrink-0" />
-                      <span className="truncate">{client.email}</span>
+                  {/* Información de contacto */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center text-sm text-gray-800">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mr-3">
+                        <Mail className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <span className="truncate font-medium">{client.email}</span>
                     </div>
                     {client.phone && (
-                      <div className="flex items-center text-xs text-neutral-500">
-                        <Phone className="h-3.5 w-3.5 mr-1.5 text-neutral-400 flex-shrink-0" />
-                        {client.phone}
+                      <div className="flex items-center text-sm text-gray-700">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mr-3">
+                          <Phone className="h-4 w-4 text-green-600" />
+                        </div>
+                        <span className="font-medium">{client.phone}</span>
                       </div>
                     )}
-                    <div className="flex items-center text-xs text-neutral-500">
-                      <Calendar className="h-3.5 w-3.5 mr-1.5 text-neutral-400 flex-shrink-0" />
-                      Registrado: {client.registered}
+                    <div className="flex items-center text-sm text-gray-600">
+                      <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center mr-3">
+                        <Calendar className="h-4 w-4 text-purple-600" />
+                      </div>
+                      <span>Registrado: {client.registered}</span>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between text-xs text-neutral-500 border-t border-neutral-100 pt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center">
-                        <ShoppingBag className="h-3.5 w-3.5 mr-1 text-neutral-400" />
-                        {client.totalOrders}
+                  {/* Estadísticas y acciones */}
+                  <div className="flex items-center justify-between border-t border-blue-100 pt-4">
+                    <div className="flex items-center gap-4">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 mb-1">
+                          <ShoppingBag className="h-4 w-4 text-orange-600" />
+                        </div>
+                        <div className="text-xs font-bold text-gray-800">{client.totalOrders}</div>
+                        <div className="text-xs text-gray-500">Órdenes</div>
                       </div>
-                      <div className="flex items-center">
-                        <Star className="h-3.5 w-3.5 mr-1 text-neutral-400" />
-                        {client.totalReviews}
+                      <div className="text-center">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-yellow-100 mb-1">
+                          <Star className="h-4 w-4 text-yellow-600" />
+                        </div>
+                        <div className="text-xs font-bold text-gray-800">{client.totalReviews}</div>
+                        <div className="text-xs text-gray-500">Reviews</div>
                       </div>
-                      <div className="flex items-center">
-                        <MapPin className="h-3.5 w-3.5 mr-1 text-neutral-400" />
-                        {client.totalAddresses}
+                      <div className="text-center">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 mb-1">
+                          <MapPin className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div className="text-xs font-bold text-gray-800">{client.totalAddresses}</div>
+                        <div className="text-xs text-gray-500">Direcciones</div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                       <Link 
                         href={`/admin/clientes/${client.id}`} 
-                        className="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" 
+                        className="flex items-center justify-center w-10 h-10 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-all duration-200 hover:scale-105 shadow-sm" 
                         title="Ver detalles"
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-4 w-4" />
                       </Link>
                       <button 
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                        className="flex items-center justify-center w-10 h-10 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl transition-all duration-200 hover:scale-105 shadow-sm" 
                         title="Editar"
                       >
-                        <Edit className="h-3.5 w-3.5" />
+                        <Edit className="h-4 w-4" />
                       </button>
                       {client.role !== 'ADMIN' && (
                         <button 
                           onClick={() => openDeleteModal(client.id, client.name)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                          className="flex items-center justify-center w-10 h-10 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-all duration-200 hover:scale-105 shadow-sm" 
                           title="Eliminar"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -309,109 +438,155 @@ export default function ClientesAdminPage() {
             </div>
             
             {/* Tabla para tablets y desktop */}
-            <div className="hidden sm:block bg-white rounded-lg shadow-elegant border border-neutral-100 overflow-hidden">
+            <div className="hidden sm:block bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-fade-in-up">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-50">
+                  <thead className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Cliente</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Contacto</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Estado</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Actividad</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Última Orden</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Acciones</th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Cliente
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4" />
+                          Contacto
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4" />
+                          Estado
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          Actividad
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <ShoppingBag className="h-4 w-4" />
+                          Última Orden
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Edit className="h-4 w-4" />
+                          Acciones
+                        </div>
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-neutral-100">
-                    {filteredClients.map((client) => (
-                      <tr key={client.id} className="hover:bg-neutral-50">
-                        <td className="px-6 py-4">
+                  <tbody className="bg-white divide-y divide-gray-50">
+                    {filteredClients.map((client, index) => (
+                      <tr key={client.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group">
+                        <td className="px-6 py-5">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                                <User className="h-5 w-5 text-primary-600" />
+                            <div className="flex-shrink-0 h-12 w-12">
+                              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                <User className="h-6 w-6 text-white" />
                               </div>
                             </div>
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-neutral-900">{client.name}</div>
-                              <div className="text-sm text-neutral-500">ID: {client.id}</div>
-                              <div className="text-xs text-neutral-400">{roleLabels[client.role]}</div>
+                              <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{client.name}</div>
+                              <div className="text-sm text-gray-600 font-medium">ID: {client.id}</div>
+                              <div className="text-xs">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  client.role === 'ADMIN' 
+                                    ? 'bg-purple-100 text-purple-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {roleLabels[client.role]}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm text-neutral-900">
-                              <Mail className="h-4 w-4 mr-2 text-neutral-400" />
+                        <td className="px-6 py-5">
+                          <div className="space-y-2">
+                            <div className="flex items-center text-sm font-medium text-gray-900">
+                              <Mail className="h-4 w-4 text-blue-500 mr-2" />
                               {client.email}
                             </div>
-                            <div className="flex items-center text-sm text-neutral-500">
-                              <Phone className="h-4 w-4 mr-2 text-neutral-400" />
-                              {client.phone}
-                            </div>
+                            {client.phone && (
+                              <div className="flex items-center text-sm text-gray-600">
+                                <Phone className="h-4 w-4 text-green-500 mr-2" />
+                                {client.phone}
+                              </div>
+                            )}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[client.status]}`}>
+                        <td className="px-6 py-5 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-3 py-1.5 text-sm font-bold rounded-xl shadow-sm ${statusColors[client.status]}`}>
+                            <div className={`w-2 h-2 rounded-full mr-2 ${
+                              client.status === 'activo' ? 'bg-green-200' : 'bg-red-200'
+                            }`}></div>
                             {client.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center text-sm text-neutral-900">
-                              <Calendar className="h-4 w-4 mr-2 text-neutral-400" />
+                        <td className="px-6 py-5">
+                          <div className="space-y-2">
+                            <div className="flex items-center text-sm font-medium text-gray-700">
+                              <Calendar className="h-4 w-4 text-purple-500 mr-2" />
                               Registrado: {client.registered}
                             </div>
-                            <div className="flex items-center text-sm text-neutral-500">
-                              <div className="flex items-center mr-4">
-                                <ShoppingBag className="h-4 w-4 mr-1 text-neutral-400" />
-                                {client.totalOrders} ordenes
-                              </div>
-                              <div className="flex items-center mr-4">
-                                <Star className="h-4 w-4 mr-1 text-neutral-400" />
-                                {client.totalReviews} reviews
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center">
+                                <ShoppingBag className="h-4 w-4 text-orange-500 mr-1" />
+                                <span className="font-bold text-orange-600">{client.totalOrders}</span>
+                                <span className="ml-1">órdenes</span>
                               </div>
                               <div className="flex items-center">
-                                <MapPin className="h-4 w-4 mr-1 text-neutral-400" />
-                                {client.totalAddresses} direcciones
+                                <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                                <span className="font-bold text-yellow-600">{client.totalReviews}</span>
+                                <span className="ml-1">reviews</span>
+                              </div>
+                              <div className="flex items-center">
+                                <MapPin className="h-4 w-4 text-red-500 mr-1" />
+                                <span className="font-bold text-red-600">{client.totalAddresses}</span>
+                                <span className="ml-1">direcciones</span>
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-5">
                           {client.lastOrder ? (
                             <div className="space-y-1">
-                              <div className="text-sm font-medium text-neutral-900">
+                              <div className="text-sm font-bold text-gray-900">
                                 ${client.lastOrder.total.toFixed(2)}
                               </div>
-                              <div className="text-xs text-neutral-500">
+                              <div className="text-xs text-gray-600 font-medium">
                                 {client.lastOrder.date} - {client.lastOrder.status}
                               </div>
                             </div>
                           ) : (
-                            <span className="text-sm text-neutral-400">Sin órdenes</span>
+                            <span className="text-sm text-gray-400 italic">Sin órdenes</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-5 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Link 
                               href={`/admin/clientes/${client.id}`} 
-                              className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" 
+                              className="flex items-center justify-center w-10 h-10 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
                               title="Ver detalles"
                             >
                               <Eye className="h-4 w-4" />
                             </Link>
                             <button 
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
-                              title="Editar"
+                              className="flex items-center justify-center w-10 h-10 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
+                              title="Editar cliente"
                             >
                               <Edit className="h-4 w-4" />
                             </button>
                             {client.role !== 'ADMIN' && (
                               <button 
                                 onClick={() => openDeleteModal(client.id, client.name)}
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
-                                title="Eliminar"
+                                className="flex items-center justify-center w-10 h-10 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
+                                title="Eliminar cliente"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>

@@ -29,17 +29,32 @@ function BuscarContent() {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        setLoading(true)
-        // Agregar timestamp para evitar caché
-        const timestamp = Date.now();
-        const response = await fetch(`/api/productos?t=${timestamp}`)
-        if (!response.ok) {
-          throw new Error('Error al cargar productos')
+        setLoading(true);
+        
+        // Construir URL con parámetros de búsqueda
+        const params = new URLSearchParams();
+        if (query.trim()) {
+          params.append('search', query.trim());
+          params.append('limit', '100'); // Limitar resultados para búsquedas
+        } else {
+          params.append('limit', '50'); // Menos productos si no hay búsqueda
         }
-        const data = await response.json()
+        params.append('t', Date.now().toString());
+        
+
+        
+        const response = await fetch(`/api/productos?${params}`);
+        if (!response.ok) {
+          throw new Error('Error al cargar productos');
+        }
+        const data = await response.json();
+        
         // Manejar tanto array directo como objeto con propiedad productos
         const productsArray = Array.isArray(data) ? data : (data.productos || []);
-        setProductos(productsArray)
+        setProductos(productsArray);
+        
+
+        
       } catch (error) {
         log.error('Error al cargar productos:', error)
         toast.error('Error al cargar productos')
@@ -48,18 +63,19 @@ function BuscarContent() {
       }
     }
 
-    fetchProductos()
-  }, [])
+    fetchProductos();
+  }, [query]) // Ahora se ejecuta cuando cambia la query
 
   const resultados = useMemo(() => {
-    if (!query || !Array.isArray(productos)) return []
-    return productos.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(query) ||
-        p.description?.toLowerCase().includes(query) ||
-        (p.category?.name && p.category.name.toLowerCase().includes(query)) ||
-        (typeof p.id === 'string' && p.id.toLowerCase().includes(query))
-    )
+    // Si no hay query, no mostrar nada
+    if (!query) return [];
+    
+    // Si no hay productos, no mostrar nada
+    if (!Array.isArray(productos)) return [];
+    
+    // Los productos ya vienen filtrados de la API
+    
+    return productos;
   }, [query, productos])
 
   return (

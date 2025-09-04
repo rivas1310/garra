@@ -11,7 +11,7 @@ export default function FeaturedProducts() {
     // Agregar timestamp para evitar caché
     const timestamp = Date.now();
     
-    fetch(`/api/productos?isNew=true&limit=8&t=${timestamp}`)
+    fetch(`/api/productos?conditionTag=LIKE_NEW&limit=8&t=${timestamp}`)
       .then(res => res.json())
       .then(data => {
         // Manejar tanto array directo como objeto con propiedad productos
@@ -27,9 +27,8 @@ export default function FeaturedProducts() {
           rating: p.rating ?? 0,
           reviewCount: p.reviewCount ?? 0,
           category: p.category?.name ?? '',
-          isNew: p.isNew,
+          conditionTag: p.conditionTag,
           isOnSale: p.isOnSale,
-          isSecondHand: p.isSecondHand,
           stock: p.stock ?? 0,
           isActive: p.isActive ?? true,
           isAvailable: p.isAvailable ?? true,

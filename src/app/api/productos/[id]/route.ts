@@ -77,9 +77,8 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       stock,
       barcode,
       isActive,
-      isNew,
+      conditionTag,
       isOnSale,
-      isSecondHand,
       variants = [],
     } = data;
 
@@ -150,9 +149,8 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
         images,
         // barcode: barcode || null, // Incluir código de barras - Temporalmente comentado hasta regenerar Prisma client
-        isNew,
+        conditionTag,
         isOnSale,
-        isSecondHand: !!isSecondHand,
         // isActive se maneja automáticamente en updateProductStock
       },
       include: {

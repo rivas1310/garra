@@ -14,12 +14,32 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateManualBarcode, generateManualEAN13 } from '@/lib/barcodeUtils'
+import ConditionTagSelect from '@/components/ConditionTagSelect'
 
 // Tallas por tipo de producto
 const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const womenShoeSizes = ['2', '3', '4', '5', '6', '7', '8']
 const menShoeSizes = ['2', '3', '4', '5', '6', '7', '8', '9', '10']
-const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Gris']
+const colors = ['Negro', 'Blanco', 'Azul', 'Rojo', 'Verde', 'Amarillo', 'Rosa','naranja','turquesa','cafe','morado','plata','dorado','Multicolor','beige','Gris']
+
+// Opciones de etiquetas de condición
+const conditionTags = [
+  { value: 'LIKE_NEW', label: 'Like New' },
+  { value: 'PRE_LOVED', label: 'Pre Loved' },
+  { value: 'GENTLY_USED', label: 'Gently Used' },
+  { value: 'VINTAGE', label: 'Vintage' },
+  { value: 'RETRO', label: 'Retro' },
+  { value: 'UPCYCLED', label: 'Upcycled' },
+  { value: 'REWORKED', label: 'Reworked' },
+  { value: 'DEADSTOCK', label: 'Deadstock' },
+  { value: 'OUTLET_OVERSTOCK', label: 'Outlet / Overstock' },
+  { value: 'REPURPOSED', label: 'Repurposed' },
+  { value: 'NEARLY_NEW', label: 'Nearly New' },
+  { value: 'DESIGNER_RESALE', label: 'Designer Resale' },
+  { value: 'SUSTAINABLE_FASHION', label: 'Sustainable Fashion' },
+  { value: 'THRIFTED', label: 'Thrifted' },
+  { value: 'CIRCULAR_FASHION', label: 'Circular Fashion' }
+]
 
 // Subcategorías por categoría (slug o id)
 const subcategoriasPorCategoria: Record<string, string[]> = {
@@ -47,10 +67,9 @@ export default function NuevoProductoPage() {
     originalPrice: '',
     stock: '',
     barcode: '', // Campo para código de barras
-    isNew: false,
     isOnSale: false,
-    isActive: true,
-    isSecondHand: false
+    conditionTag: '',
+    isActive: true
   })
   
   const [images, setImages] = useState<string[]>([])
@@ -279,9 +298,8 @@ export default function NuevoProductoPage() {
         stock: formData.stock,
         barcode: formData.barcode || null, // Incluir código de barras
         isActive: formData.isActive,
-        isNew: formData.isNew,
         isOnSale: formData.isOnSale,
-        isSecondHand: formData.isSecondHand,
+        conditionTag: formData.conditionTag || null,
         variants: variants.map(v => ({
           size: v.size,
           color: v.color,
@@ -691,17 +709,7 @@ export default function NuevoProductoPage() {
               <div className="bg-white rounded-lg shadow-sm border border-primary-100 p-4 sm:p-6">
                 <h2 className="text-base sm:text-lg font-semibold text-title mb-3 sm:mb-4">Configuración</h2>
                 
-                <div className="space-y-2 sm:space-y-3">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      name="isNew"
-                      checked={formData.isNew}
-                      onChange={handleInputChange}
-                      className="h-4 w-4"
-                    />
-                    Marcar como nuevo
-                  </label>
+                <div className="space-y-4">
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -712,16 +720,19 @@ export default function NuevoProductoPage() {
                     />
                     Producto en oferta
                   </label>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      name="isSecondHand"
-                      checked={formData.isSecondHand}
-                      onChange={handleInputChange}
-                      className="h-4 w-4"
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Etiqueta de condición
+                    </label>
+                    <ConditionTagSelect
+                      value={formData.conditionTag}
+                      onChange={(value) => setFormData(prev => ({ ...prev, conditionTag: value }))}
+                      options={conditionTags}
+                      placeholder="Sin etiqueta"
                     />
-                    Segunda mano
-                  </label>
+                  </div>
+                  
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"

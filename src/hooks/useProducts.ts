@@ -9,9 +9,8 @@ interface Product {
   category?: { name: string };
   stock: number;
   isActive: boolean;
-  isNew: boolean;
+  conditionTag?: string;
   isOnSale: boolean;
-  isSecondHand: boolean;
   totalStock: number;
   variants: any[];
 }
@@ -33,8 +32,7 @@ interface UseProductsOptions {
   minPrice?: number;
   maxPrice?: number;
   isOnSale?: boolean;
-  isNew?: boolean;
-  isSecondHand?: boolean;
+  conditionTag?: string;
   admin?: boolean;
   initialLimit?: number;
 }
@@ -67,8 +65,7 @@ export function useProducts(options: UseProductsOptions = {}) {
         ...(currentOptions.minPrice !== undefined && { minPrice: currentOptions.minPrice.toString() }),
         ...(currentOptions.maxPrice !== undefined && { maxPrice: currentOptions.maxPrice.toString() }),
         ...(currentOptions.isOnSale && { isOnSale: 'true' }),
-        ...(currentOptions.isNew && { isNew: 'true' }),
-        ...(currentOptions.isSecondHand && { isSecondHand: 'true' }),
+        ...(currentOptions.conditionTag && { conditionTag: currentOptions.conditionTag }),
         ...(currentOptions.admin && { admin: 'true' }),
         t: Date.now().toString(), // Evitar caché
       });

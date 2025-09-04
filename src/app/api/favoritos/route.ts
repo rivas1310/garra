@@ -48,9 +48,8 @@ export async function GET() {
         rating: product.rating || 0,
         reviewCount: product.reviewCount || 0,
         category: product.category?.name || '',
-        isNew: product.isNew,
+        conditionTag: product.conditionTag,
         isOnSale: product.isOnSale,
-        isSecondHand: product.isSecondHand,
         totalStock,
         isActive: product.isActive,
         isAvailable: totalStock > 0 && product.isActive,
@@ -103,4 +102,4 @@ export async function POST(req: Request) {
     log.error('Error al agregar a favoritos:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
-} 
+}

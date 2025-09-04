@@ -6,7 +6,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import SessionProviderWrapper from '@/components/SessionProviderWrapper'
 import CartNotification from '@/components/CartNotification'
-import CountdownTimer from '@/components/CountdownTimer'
+
 
 const inter = Inter({ subsets: ['latin'] })
 

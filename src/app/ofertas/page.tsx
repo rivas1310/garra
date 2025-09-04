@@ -61,9 +61,8 @@ export default function OfertasPage() {
                 rating: product.rating ?? 0,
                 reviewCount: product.reviewCount ?? 0,
                 category: product.category?.name ?? '',
-                isNew: product.isNew,
+                conditionTag: product.conditionTag,
                 isSale: product.isOnSale,
-                isSecondHand: product.isSecondHand,
               }} />
             ))
           )}
