@@ -663,41 +663,44 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
 
   return (
     <div className="mb-12">
-      {/* Header mejorado */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-3">
-          
-          <h3 className="text-2xl font-bold text-white">
+      {/* Header optimizado para móvil */}
+      <div className="text-center mb-4 sm:mb-6 lg:mb-8">
+        <div className="flex items-center justify-center mb-2 sm:mb-3 lg:mb-4">
+          <div className="bg-gradient-to-r from-primary-500/20 to-secondary-500/20 backdrop-blur-sm rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 border border-white/20">
             
-          </h3>
+          </div>
         </div>
-        <p className="text-white/80 text-sm max-w-2xl mx-auto">
-          
-        </p>
+       
       </div>
 
-      {/* Subcategorías Grid mejorado */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+      {/* Subcategorías Grid mejorado con distribución optimizada */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2 sm:gap-3 md:gap-4 lg:gap-5 xl:gap-6 2xl:gap-7 max-w-7xl mx-auto px-2 sm:px-4">
         {/* Botón "Todas" mejorado */}
         <button
           onClick={() => onSubcatChange("")}
-          className={`group relative h-20 sm:h-24 md:h-32 rounded-lg sm:rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
+          className={`group relative h-16 sm:h-20 md:h-24 lg:h-28 xl:h-32 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-95 ${
             subcatSeleccionada === "" 
-              ? "ring-2 sm:ring-4 ring-primary-400 shadow-xl sm:shadow-2xl transform scale-105" 
-              : "hover:shadow-lg sm:hover:shadow-xl hover:ring-1 sm:hover:ring-2 hover:ring-primary-300"
+              ? "ring-1 sm:ring-2 md:ring-3 ring-primary-400 shadow-lg sm:shadow-xl transform scale-[1.02] z-10" 
+              : "hover:shadow-md sm:hover:shadow-lg hover:ring-1 hover:ring-primary-300/50 shadow-sm"
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-600"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <Grid className="h-4 w-4 sm:h-6 sm:w-6 md:h-8 md:w-8 mx-auto mb-1 sm:mb-2 opacity-90 group-hover:scale-110 transition-transform duration-300" />
-              <div className="text-xs sm:text-sm md:text-lg font-bold mb-0.5 sm:mb-1">Todas</div>
-              <div className="text-xs opacity-90 hidden sm:block">Ver todo</div>
+            <div className="text-center text-white px-1 sm:px-2">
+              <Grid className="h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 xl:h-7 xl:w-7 mx-auto mb-0.5 sm:mb-1 opacity-90 group-hover:scale-110 transition-transform duration-300 drop-shadow-lg" />
+              <div className="text-[10px] sm:text-xs md:text-sm lg:text-base xl:text-lg font-bold mb-0 sm:mb-0.5 drop-shadow-md">Todas</div>
+              <div className="text-[8px] sm:text-[10px] opacity-90 hidden sm:block font-medium">Ver todo</div>
             </div>
           </div>
-          {/* Efecto de brillo */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          {/* Efecto de brillo mejorado */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          {/* Efecto de partículas */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="absolute top-2 left-2 w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
+            <div className="absolute top-4 right-3 w-1 h-1 bg-white/40 rounded-full animate-pulse delay-300"></div>
+            <div className="absolute bottom-3 left-4 w-1 h-1 bg-white/50 rounded-full animate-pulse delay-700"></div>
+          </div>
         </button>
 
         {/* Subcategorías con imágenes mejoradas */}
@@ -705,79 +708,101 @@ export default function SubcategoryGrid({ categoriaSlug, subcatSeleccionada, onS
           <button
             key={subcat.name}
             onClick={() => onSubcatChange(subcat.name)}
-            className={`group relative h-20 sm:h-24 md:h-32 rounded-lg sm:rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 ${
+            className={`group relative h-16 sm:h-20 md:h-24 lg:h-28 xl:h-32 rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-95 ${
               subcatSeleccionada === subcat.name 
-                ? "ring-2 sm:ring-4 ring-primary-400 shadow-xl sm:shadow-2xl transform scale-105" 
-                : "hover:shadow-lg sm:hover:shadow-xl hover:ring-1 sm:hover:ring-2 hover:ring-primary-300"
+                ? "ring-1 sm:ring-2 md:ring-3 ring-primary-400 shadow-lg sm:shadow-xl transform scale-[1.02] z-10" 
+                : "hover:shadow-md sm:hover:shadow-lg hover:ring-1 hover:ring-primary-300/50 shadow-sm"
             }`}
           >
-            {/* Imagen de fondo mejorada */}
+            {/* Imagen de fondo mejorada con mejor calidad */}
             <img
               src={subcat.image}
               alt={subcat.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 filter group-hover:brightness-110"
+              loading="lazy"
             />
             
-            {/* Overlay gradiente mejorado */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+            {/* Overlay gradiente mejorado con mejor contraste */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent"></div>
             
-            {/* Gradiente de color personalizado */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${subcat.color} opacity-20 group-hover:opacity-30 transition-opacity duration-300`}></div>
+            {/* Gradiente de color personalizado más sutil */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${subcat.color} opacity-15 group-hover:opacity-25 transition-opacity duration-300`}></div>
             
-            {/* Badges mejorados */}
-            <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex flex-col gap-0.5 sm:gap-1">
+            {/* Badges optimizados para móvil */}
+            <div className="absolute top-0.5 sm:top-1 md:top-2 left-0.5 sm:left-1 md:left-2 flex flex-col gap-0.5">
               {subcat.isNew && (
-                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-primary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
-                  <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5 sm:mr-1" />
+                <span className="inline-flex items-center px-1 sm:px-1.5 md:px-2 py-0.5 text-[8px] sm:text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg backdrop-blur-sm border border-white/20 animate-pulse">
+                  <Sparkles className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-2.5 md:w-2.5 mr-0.5 animate-spin" />
                   <span className="hidden sm:inline">Nuevo</span>
+                  <span className="sm:hidden">N</span>
                 </span>
               )}
               {subcat.isTrending && (
-                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-secondary-500 text-white rounded-full shadow-lg backdrop-blur-sm">
-                  <TrendingUp className="h-2 w-2 sm:h-2.5 sm:w-2.5 mr-0.5 sm:mr-1" />
+                <span className="inline-flex items-center px-1 sm:px-1.5 md:px-2 py-0.5 text-[8px] sm:text-[10px] font-bold bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full shadow-lg backdrop-blur-sm border border-white/20">
+                  <TrendingUp className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-2.5 md:w-2.5 mr-0.5" />
                   <span className="hidden sm:inline">Hot</span>
+                  <span className="sm:hidden">🔥</span>
                 </span>
               )}
               {subcat.discount && (
-                <span className="inline-flex items-center px-1 sm:px-2 py-0.5 sm:py-1 text-xs font-semibold bg-accent-500 text-white rounded-full shadow-lg backdrop-blur-sm">
+                <span className="inline-flex items-center px-1 sm:px-1.5 md:px-2 py-0.5 text-[8px] sm:text-[10px] font-bold bg-gradient-to-r from-yellow-500 to-amber-500 text-white rounded-full shadow-lg backdrop-blur-sm border border-white/20 animate-bounce">
+                  <Star className="h-1.5 w-1.5 sm:h-2 sm:w-2 md:h-2.5 md:w-2.5 mr-0.5" />
                   {subcat.discount}
                 </span>
               )}
             </div>
 
-            {/* Contenido mejorado */}
-            <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-2 md:p-3 text-white">
-              <div className="text-xs sm:text-sm font-bold mb-0.5 sm:mb-1 truncate">{subcat.name}</div>
-              <div className="text-xs opacity-90 mb-0.5 sm:mb-1 line-clamp-1 hidden sm:block">{subcat.description}</div>
+            {/* Contenido optimizado para móvil */}
+            <div className="absolute bottom-0 left-0 right-0 p-1 sm:p-1.5 md:p-2 lg:p-3 text-white">
+              <div className="text-[10px] sm:text-xs md:text-sm lg:text-base font-bold mb-0.5 sm:mb-1 truncate drop-shadow-lg">{subcat.name}</div>
+              <div className="text-[8px] sm:text-[10px] opacity-90 mb-0.5 line-clamp-1 hidden md:block font-medium">{subcat.description}</div>
               <div className="flex items-center justify-between">
-                <div className="text-xs opacity-75 bg-black/30 px-1 sm:px-1.5 py-0.5 rounded-full">
+                <div className="text-[8px] sm:text-[10px] opacity-90 bg-black/40 backdrop-blur-sm px-1 sm:px-1.5 md:px-2 py-0.5 sm:py-1 rounded-full border border-white/20 font-medium">
                   <span className="hidden sm:inline">{getProductCount(subcat.name)} productos</span>
                   <span className="sm:hidden">{getProductCount(subcat.name)}</span>
                 </div>
-                <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 opacity-60 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
+                <div className="bg-white/20 backdrop-blur-sm rounded-full p-0.5 sm:p-1 md:p-1.5 group-hover:bg-white/30 transition-all duration-300">
+                  <ArrowRight className="h-2 w-2 sm:h-2.5 sm:w-2.5 md:h-3 md:w-3 opacity-80 group-hover:translate-x-1 group-hover:opacity-100 transition-all duration-300" />
+                </div>
               </div>
             </div>
 
-            {/* Efecto hover mejorado */}
-            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            {/* Efecto hover mejorado con múltiples capas */}
+            <div className="absolute inset-0 bg-gradient-to-t from-primary-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             
-            {/* Efecto de brillo */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            {/* Efecto de brillo mejorado */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            
+            {/* Efecto de partículas en hover */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+              <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white/60 rounded-full animate-ping"></div>
+              <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-white/40 rounded-full animate-ping delay-300"></div>
+              <div className="absolute bottom-1/4 left-3/4 w-1 h-1 bg-white/50 rounded-full animate-ping delay-700"></div>
+            </div>
           </button>
         ))}
       </div>
 
-      {/* Información adicional mejorada */}
-      <div className="mt-6 text-center">
-        <div className="inline-flex items-center bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 text-white/80">
+      {/* Información adicional mejorada con mejor diseño */}
+      <div className="mt-4 sm:mt-6 text-center">
+        <div className="inline-flex items-center bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-md rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-white/90 border border-white/20 shadow-lg">
           {loading ? (
-            <span className="text-sm">Cargando productos...</span>
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+              <span className="text-sm font-medium">Cargando productos...</span>
+            </div>
           ) : error ? (
-            <span className="text-sm text-yellow-300">Usando datos por defecto</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-yellow-300">Usando datos por defecto</span>
+            </div>
           ) : (
-            <span className="text-sm">
-              Total: {Object.values(counts).reduce((sum, count) => sum + count, 0)} productos en {categoriaSlug}
-            </span>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-sm font-medium">
+                Total: <span className="font-bold text-primary-300">{Object.values(counts).reduce((sum, count) => sum + count, 0)}</span> productos en <span className="capitalize font-semibold">{categoriaSlug}</span>
+              </span>
+            </div>
           )}
         </div>
       </div>

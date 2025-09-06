@@ -221,24 +221,24 @@ export default function PedidosAdminPage() {
                     </Link>
                     <button 
                       onClick={() => handleEditOrder(order)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" 
+                      className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200" 
                       title="Editar pedido"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                     <button 
                       onClick={() => handleShippingLabel(order)}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" 
+                      className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" 
                       title="Generar etiqueta de envío"
                     >
-                      <Truck className="h-4 w-4" />
+                      <Truck className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                     <button 
                       onClick={() => openDeleteModal(order.id, `Pedido #${order.id}`)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                      className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200" 
                       title="Eliminar"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </button>
                   </div>
                 </td>
@@ -249,54 +249,60 @@ export default function PedidosAdminPage() {
       </div>
 
       {/* Vista de tarjetas para dispositivos móviles */}
-      <div className="md:hidden space-y-4 px-4">
+      <div className="md:hidden space-y-3">
         {filteredOrders.map((order) => (
-          <div key={order.id} className="bg-white rounded-lg shadow-sm border border-neutral-100 p-4">
+          <div key={order.id} className="bg-white rounded-lg shadow-elegant border border-neutral-100 p-4 hover:shadow-lg transition-shadow duration-200">
             <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-xs text-neutral-500">ID</p>
-                <p className="font-mono text-sm truncate">{order.id}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-neutral-500 mb-1">Pedido</p>
+                <p className="font-mono text-sm font-medium truncate">{order.id}</p>
               </div>
-              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[order.status]}`}>
+              <span className={`inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${statusColors[order.status]} ml-2`}>
                 {order.status}
               </span>
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="space-y-3 mb-4">
               <div>
-                <p className="text-xs text-neutral-500">Usuario</p>
+                <p className="text-xs text-neutral-500 mb-1">Usuario</p>
                 <p className="text-sm truncate">{order.user?.email || '-'}</p>
               </div>
-              <div>
-                <p className="text-xs text-neutral-500">Total</p>
-                <p className="text-sm font-medium">${order.total}</p>
-              </div>
-              <div>
-                <p className="text-xs text-neutral-500">Fecha</p>
-                <p className="text-sm">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-neutral-500 mb-1">Total</p>
+                  <p className="text-sm font-semibold text-green-600">${order.total}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-neutral-500 mb-1">Fecha</p>
+                  <p className="text-sm">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</p>
+                </div>
               </div>
             </div>
             
             <div className="flex items-center justify-between border-t border-neutral-100 pt-3">
-              <Link href={`/admin/pedidos/${order.id}`} className="flex items-center gap-1 text-xs text-primary-600">
-                <Eye className="h-3 w-3" /> Ver detalles
+              <Link href={`/admin/pedidos/${order.id}`} className="flex items-center gap-2 text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors">
+                <Eye className="h-4 w-4" /> Ver detalles
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center space-x-1">
                 <button 
                   onClick={() => handleEditOrder(order)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                  title="Editar"
                 >
                   <Edit className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => handleShippingLabel(order)}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                  title="Envío"
                 >
                   <Truck className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => openDeleteModal(order.id, `Pedido #${order.id}`)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                  title="Eliminar"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -11,8 +11,43 @@ import CartNotification from '@/components/CartNotification'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Bazar Fashion - Tu tienda de moda online',
-  description: 'Descubre las últimas tendencias en moda. Ropa, accesorios y más en Bazar Fashion.',
+  title: {
+    default: 'Garra Tienda - Tu tienda de moda online',
+    template: '%s | Garra Tienda'
+  },
+  description: 'Descubre las últimas tendencias en moda. Ropa, calzado, accesorios y más en Garra Tienda. Envíos a toda la República Mexicana.',
+  keywords: 'moda, ropa, calzado, accesorios, tienda online, México, envíos, tendencias',
+  authors: [{ name: 'Garra Tienda' }],
+  creator: 'Garra Tienda',
+  publisher: 'Garra Tienda',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_ES',
+    url: 'https://garra-tienda.com',
+    siteName: 'Garra Tienda',
+    title: 'Garra Tienda - Tu tienda de moda online',
+    description: 'Descubre las últimas tendencias en moda. Ropa, calzado, accesorios y más en Garra Tienda.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Garra Tienda - Tu tienda de moda online',
+    description: 'Descubre las últimas tendencias en moda. Ropa, calzado, accesorios y más en Garra Tienda.',
+    creator: '@garra_tienda',
+  },
+  verification: {
+    google: 'google-site-verification-code',
+  },
 }
 
 export default function RootLayout({

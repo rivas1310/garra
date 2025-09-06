@@ -547,6 +547,7 @@ export default function VentaFisicaPage() {
               width: 48mm;
               max-width: 48mm;
               background: white;
+              font-weight: bold;
             }
             table { 
               width: 100%; 
@@ -576,7 +577,7 @@ export default function VentaFisicaPage() {
         </head>
         <body>
           <table>
-            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></tr>
+            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="150" height="150" alt="Logo" /></td></tr>
             <tr><td class="center small" colspan="2">Venta Física</td></tr>
             <tr><td class="divider" colspan="2"></td></tr>
             
@@ -691,6 +692,7 @@ export default function VentaFisicaPage() {
               color: black;
               width: 58mm;
               max-width: 58mm;
+              font-weight: bold;
             }
             .header { 
               text-align: center; 
@@ -798,7 +800,7 @@ export default function VentaFisicaPage() {
         </head>
         <body>
           <table>
-            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></td></tr>
+            <tr><td class="center bold" colspan="2"><img src="/logos/diseno-sin-titulo-5.png" width="150" height="150" alt="Logo" /></td></tr>
             <tr><td class="center small" colspan="2">Venta Física</td></tr>
             <tr><td class="divider" colspan="2"></td></tr>
             
@@ -1019,7 +1021,7 @@ export default function VentaFisicaPage() {
         <body>
           <!-- Header con Logo -->
           <div class="header">
-            <div class="logo"><img src="/logos/diseno-sin-titulo-5.png" width="100" height="100" alt="Logo" /></div>
+            <div class="logo"><img src="/logos/diseno-sin-titulo-5.png" width="180" height="180" alt="Logo" /></div>
             <div class="title">Garras Felinas</div>
             <div class="subtitle">GARRAS FELINAS</div>
             <div class="subtitle">Venta Física</div>
@@ -1799,18 +1801,18 @@ garantias y devoluciones
 
       {/* Modal de confirmación de venta mejorado */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden transform animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-1 sm:p-2 animate-in fade-in duration-200">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-2xl sm:max-w-4xl lg:max-w-5xl w-full max-h-[98vh] overflow-hidden transform animate-in zoom-in-95 duration-200">
             {/* Header del modal */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <CreditCard className="h-6 w-6 text-white" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">Procesar Pago</h3>
-                    <p className="text-blue-100 text-sm">Confirma los detalles de la venta</p>
+                    <h3 className="text-lg sm:text-2xl font-bold">Procesar Pago</h3>
+                    <p className="text-blue-100 text-xs sm:text-sm">Confirma los detalles de la venta</p>
                   </div>
                 </div>
                 <button
@@ -1822,17 +1824,17 @@ garantias y devoluciones
               </div>
             </div>
 
-            <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto custom-scrollbar">
+            <div className="p-3 sm:p-6 max-h-[calc(98vh-120px)] overflow-y-auto custom-scrollbar">
               {/* Resumen compacto de productos */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Package className="h-5 w-5 text-blue-600" />
+              <div className="mb-4 sm:mb-6">
+                <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   Productos ({cartItems.length})
                 </h4>
-                <div className="bg-gray-50 rounded-xl p-4 space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+                <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-48 sm:max-h-60 overflow-y-auto custom-scrollbar">
                   {cartItems.map(item => (
-                    <div key={item.id} className="flex items-center gap-3 bg-white rounded-lg p-3 shadow-sm">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <div key={item.id} className="flex items-center gap-2 sm:gap-3 bg-white rounded-lg p-2 sm:p-3 shadow-sm">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         <img 
                           src={item.image || '/img/placeholder.png'} 
                           alt={item.name}
@@ -1840,11 +1842,11 @@ garantias y devoluciones
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm truncate">{item.name}</p>
+                        <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{item.name}</p>
                         <p className="text-gray-500 text-xs">{item.quantity} × ${item.price.toFixed(2)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-blue-600">${(item.price * item.quantity).toFixed(2)}</p>
+                        <p className="font-bold text-blue-600 text-xs sm:text-sm">${(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
@@ -1852,48 +1854,48 @@ garantias y devoluciones
               </div>
 
               {/* Resumen financiero */}
-              <div className="mb-6">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between text-sm text-gray-600">
+              <div className="mb-4 sm:mb-6">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
+                  <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                     <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} productos):</span>
                     <span>${calculateTotal().toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-600">
+                  <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                     <span>IVA (16%):</span>
                     <span>${(calculateTotal() * 0.16).toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-gray-300 pt-3">
+                  <div className="border-t border-gray-300 pt-2 sm:pt-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-gray-900">Total a Pagar:</span>
-                      <span className="text-3xl font-bold text-green-600">${(calculateTotal() * 1.16).toFixed(2)}</span>
+                      <span className="text-base sm:text-xl font-bold text-gray-900">Total a Pagar:</span>
+                      <span className="text-xl sm:text-3xl font-bold text-green-600">${(calculateTotal() * 1.16).toFixed(2)}</span>
                     </div>
-                    <p className="text-gray-500 text-sm text-right">MXN</p>
+                    <p className="text-gray-500 text-xs sm:text-sm text-right">MXN</p>
                   </div>
                 </div>
               </div>
 
               {/* Método de pago mejorado */}
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-blue-600" />
+              <div className="mb-4 sm:mb-6">
+                <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                   Método de Pago
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                   <button
                     onClick={() => {
                       log.error('💰 Cambiando a efectivo')
                       setPaymentMethod('efectivo')
                     }}
-                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`relative p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 ${
                       paymentMethod === 'efectivo'
                         ? 'border-green-500 bg-green-50 text-green-700 shadow-lg scale-105'
                         : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <DollarSign className="h-8 w-8" />
-                      <span className="font-semibold">Efectivo</span>
-                      <span className="text-xs text-gray-500">Pago en efectivo</span>
+                    <div className="flex flex-col items-center gap-1 sm:gap-2">
+                      <DollarSign className="h-6 w-6 sm:h-8 sm:w-8" />
+                      <span className="font-semibold text-xs sm:text-sm">Efectivo</span>
+                      <span className="text-xs text-gray-500 hidden sm:block">Pago en efectivo</span>
                     </div>
                     {paymentMethod === 'efectivo' && (
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
@@ -1906,16 +1908,16 @@ garantias y devoluciones
                       log.error('💳 Cambiando a tarjeta')
                       setPaymentMethod('tarjeta')
                     }}
-                    className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
+                    className={`relative p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 transition-all duration-200 ${
                       paymentMethod === 'tarjeta'
                         ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-lg scale-105'
                         : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex flex-col items-center gap-2">
-                      <CreditCard className="h-8 w-8" />
-                      <span className="font-semibold">Tarjeta</span>
-                      <span className="text-xs text-gray-500">Débito/Crédito</span>
+                    <div className="flex flex-col items-center gap-1 sm:gap-2">
+                      <CreditCard className="h-6 w-6 sm:h-8 sm:w-8" />
+                      <span className="font-semibold text-xs sm:text-sm">Tarjeta</span>
+                      <span className="text-xs text-gray-500 hidden sm:block">Débito/Crédito</span>
                     </div>
                     {paymentMethod === 'tarjeta' && (
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
@@ -1928,50 +1930,52 @@ garantias y devoluciones
 
               {/* Información adicional según método de pago */}
               {paymentMethod === 'efectivo' && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-800">Pago en Efectivo</span>
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                    <span className="font-medium text-green-800 text-sm sm:text-base">Pago en Efectivo</span>
                   </div>
-                  <p className="text-green-700 text-sm">Asegúrate de tener el cambio exacto disponible.</p>
+                  <p className="text-green-700 text-xs sm:text-sm">Asegúrate de tener el cambio exacto disponible.</p>
                 </div>
               )}
 
               {paymentMethod === 'tarjeta' && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CreditCard className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-800">Pago con Tarjeta</span>
+                <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl">
+                  <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                    <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                    <span className="font-medium text-blue-800 text-sm sm:text-base">Pago con Tarjeta</span>
                   </div>
-                  <p className="text-blue-700 text-sm">El cliente deberá insertar o acercar su tarjeta al terminal.</p>
+                  <p className="text-blue-700 text-xs sm:text-sm">El cliente deberá insertar o acercar su tarjeta al terminal.</p>
                 </div>
               )}
             </div>
 
             {/* Footer con botones de acción */}
-            <div className="bg-gray-50 p-6 border-t border-gray-200">
-              <div className="flex gap-4">
+            <div className="bg-gray-50 p-3 sm:p-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <button
                   onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 py-3 px-6 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-2 sm:py-3 px-4 sm:px-6 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                   Cancelar
                 </button>
                 <button
                   onClick={processPhysicalSale}
                   disabled={processingOrder}
-                  className="flex-2 py-3 px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                  className="flex-2 py-2 sm:py-3 px-4 sm:px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
                 >
                   {processingOrder ? (
                     <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                      Procesando Venta...
+                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
+                      <span className="hidden sm:inline">Procesando Venta...</span>
+                      <span className="sm:hidden">Procesando...</span>
                     </>
                   ) : (
                     <>
-                      <CreditCard className="h-5 w-5" />
-                      Confirmar Pago - ${(calculateTotal() * 1.16).toFixed(2)} MXN
+                      <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="hidden sm:inline">Confirmar Pago - ${(calculateTotal() * 1.16).toFixed(2)} MXN</span>
+                      <span className="sm:hidden">Confirmar - ${(calculateTotal() * 1.16).toFixed(2)}</span>
                     </>
                   )}
                 </button>
@@ -1983,45 +1987,45 @@ garantias y devoluciones
 
       {/* Modal de éxito con opción de imprimir */}
       {lastSale && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Save className="h-6 w-6 text-green-600" />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full transform animate-in zoom-in-95 duration-300">
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <Save className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">¡Venta Registrada!</h3>
-                <p className="text-gray-600">La venta se ha procesado correctamente.</p>
+                <h3 className="text-3xl font-bold text-gray-900 mb-3">¡Venta Registrada!</h3>
+                <p className="text-lg text-gray-600">La venta se ha procesado correctamente.</p>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Ticket #:</span>
-                  <span className="font-medium">{lastSale.id}</span>
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 mb-8 border border-gray-200">
+                <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
+                  <span className="text-lg text-gray-700 font-medium">Ticket #:</span>
+                  <span className="text-lg font-bold text-blue-600">{lastSale.id}</span>
                 </div>
-                <div className="flex justify-between mb-2">
-                  <span className="text-gray-600">Total:</span>
-                  <span className="font-medium">${lastSale.total.toFixed(2)}</span>
+                <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
+                  <span className="text-lg text-gray-700 font-medium">Total:</span>
+                  <span className="text-2xl font-bold text-green-600">${lastSale.total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Método:</span>
-                  <span className="font-medium">{paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg text-gray-700 font-medium">Método:</span>
+                  <span className="text-lg font-bold text-purple-600">{paymentMethod === 'efectivo' ? 'Efectivo' : 'Tarjeta'}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-3">
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-4">
                   <button
                     onClick={() => setLastSale(null)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-red-600 hover:text-white transition-colors"
+                    className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 font-semibold text-lg shadow-md hover:shadow-lg transform hover:scale-105"
                   >
                     Cerrar
                   </button>
                   <button
                     onClick={printTicket}
-                    className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg bg-blue-500 hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-3 font-semibold text-lg shadow-md hover:shadow-lg transform hover:scale-105"
                   >
-                    <Printer className="h-4 w-4" />
+                    <Printer className="h-5 w-5" />
                     Imprimir Ticket
                   </button>
                 </div>
@@ -2030,9 +2034,9 @@ garantias y devoluciones
                 <button
                   onClick={() => printTicketBluetooth(lastSale)}
                   disabled={!isPrinterConnected}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-md hover:shadow-lg transform hover:scale-105 disabled:transform-none"
                 >
-                  <Bluetooth className="h-3 w-3" />
+                  <Bluetooth className="h-4 w-4" />
                   {isPrinterConnected ? 'Imprimir Bluetooth' : 'Conectar Impresora'}
                 </button>
                 
@@ -2041,9 +2045,9 @@ garantias y devoluciones
                 {/* Botón alternativo de impresión */}
                 <button
                   onClick={printTicketAlternative}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-200 flex items-center justify-center gap-3 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
                 >
-                  <Printer className="h-3 w-3" />
+                  <Printer className="h-4 w-4" />
                   Imprimir (Método Alternativo)
                 </button>
               </div>

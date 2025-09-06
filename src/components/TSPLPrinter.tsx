@@ -75,7 +75,7 @@ export function TSPLPrinter({
   } = useTSPLPrinter()
 
   // Estados locales para configuración
-  const [labelSize, setLabelSize] = useState('51x25')
+  const [labelSize, setLabelSize] = useState('30x21')
   const [copies, setCopies] = useState(1)
   const [showDebugInfo, setShowDebugInfo] = useState(false)
   const [validateCommands, setValidateCommands] = useState(true)
@@ -403,140 +403,13 @@ export function TSPLPrinter({
           </button>
 
           {/* Etiqueta de prueba */}
-          <button
-            onClick={handlePrintTest}
-            disabled={!isConnected || isPrinting}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              backgroundColor: 'white',
-              color: '#374151',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: (!isConnected || isPrinting) ? 0.6 : 1
-            }}
-          >
-            {isPrinting ? (
-              <>
-                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                Imprimiendo...
-              </>
-            ) : (
-              <>
-                <TestTube style={{ width: '16px', height: '16px' }} />
-                Etiqueta de Prueba
-              </>
-            )}
-          </button>
+         
 
           {/* Prueba con nuevas configuraciones */}
-          <button
-            onClick={() => printUpdatedTestLabel(labelSize)}
-            disabled={!isConnected || isPrinting}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #059669',
-              borderRadius: '6px',
-              backgroundColor: '#ecfdf5',
-              color: '#059669',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: (!isConnected || isPrinting) ? 0.6 : 1
-            }}
-          >
-            {isPrinting ? (
-              <>
-                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                Imprimiendo...
-              </>
-            ) : (
-              <>
-                <TestTube style={{ width: '16px', height: '16px' }} />
-                Prueba Centrado Actualizado
-              </>
-            )}
-          </button>
+          
 
           {/* Patrón de centrado */}
-          <button
-            onClick={() => printCenteringTestPattern(labelSize)}
-            disabled={!isConnected || isPrinting}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #7c3aed',
-              borderRadius: '6px',
-              backgroundColor: '#faf5ff',
-              color: '#7c3aed',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: (!isConnected || isPrinting) ? 0.6 : 1
-            }}
-          >
-            {isPrinting ? (
-              <>
-                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                Imprimiendo...
-              </>
-            ) : (
-              <>
-                <TestTube style={{ width: '16px', height: '16px' }} />
-                Patrón de Centrado
-              </>
-            )}
-          </button>
-
-          {/* Patrón de márgenes */}
-          <button
-            onClick={() => printMarginTestPattern(labelSize)}
-            disabled={!isConnected || isPrinting}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #dc2626',
-              borderRadius: '6px',
-              backgroundColor: '#fef2f2',
-              color: '#dc2626',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: (!isConnected || isPrinting) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: (!isConnected || isPrinting) ? 0.6 : 1
-            }}
-          >
-            {isPrinting ? (
-              <>
-                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                Imprimiendo...
-              </>
-            ) : (
-              <>
-                <TestTube style={{ width: '16px', height: '16px' }} />
-                Patrón de Márgenes
-              </>
-            )}
-          </button>
+          
 
 
         </div>

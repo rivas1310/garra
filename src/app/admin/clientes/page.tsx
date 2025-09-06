@@ -247,36 +247,37 @@ export default function ClientesAdminPage() {
           </div>
         </div>
 
-        {/* Sección de filtros mejorada */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100/50 p-6 mb-8 animate-fade-in-up">
-          <div className="flex flex-col space-y-6">
+        {/* Sección de filtros mejorada responsive */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-blue-100/50 p-4 md:p-6 mb-8 animate-fade-in-up">
+          <div className="space-y-4">
             {/* Título de filtros */}
             <div className="flex items-center space-x-2">
-              <Filter className="h-5 w-5 text-blue-600" />
-              <h2 className="text-lg font-semibold text-gray-800">Filtros de Búsqueda</h2>
+              <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+              <h2 className="text-base sm:text-lg font-semibold text-gray-800">Filtros de Búsqueda</h2>
             </div>
             
-            {/* Controles de filtros */}
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                {/* Barra de búsqueda mejorada */}
-                <div className="relative w-full sm:w-80">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    placeholder="Buscar por nombre, email, ID o teléfono..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-500"
-                  />
-                </div>
-                
+            {/* Controles de filtros responsive */}
+            <div className="space-y-4">
+              {/* Barra de búsqueda mejorada */}
+              <div className="relative w-full">
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-blue-400 h-4 w-4 sm:h-5 sm:w-5" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, email, ID o teléfono..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-500 text-sm sm:text-base"
+                />
+              </div>
+              
+              {/* Filtros y botón de exportar */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-between">
                 {/* Filtros de estado y rol */}
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 flex-1">
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium text-sm sm:text-base"
                   >
                     <option value="all">Todos los estados</option>
                     <option value="activo">Activo</option>
@@ -286,18 +287,17 @@ export default function ClientesAdminPage() {
                   <select
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-700 font-medium text-sm sm:text-base"
                   >
                     <option value="all">Todos los roles</option>
                     <option value="USER">Clientes</option>
                     <option value="ADMIN">Administradores</option>
                   </select>
                 </div>
-              </div>
-              
-              {/* Botón de exportar mejorado */}
-              <button className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
-                <Filter className="mr-2 h-4 w-4" />
+                
+                {/* Botón de exportar mejorado */}
+                <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-sm sm:text-base">
+                  <Filter className="mr-2 h-4 w-4" />
                 Exportar ({filteredClients.length})
               </button>
             </div>
@@ -437,46 +437,46 @@ export default function ClientesAdminPage() {
               ))}
             </div>
             
-            {/* Tabla para tablets y desktop */}
+            {/* Tabla responsive para tablets y desktop */}
             <div className="hidden sm:block bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-fade-in-up">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          Cliente
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Cliente</span>
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4" />
-                          Contacto
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider hidden md:table-cell">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Mail className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden lg:inline">Contacto</span>
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Star className="h-4 w-4" />
-                          Estado
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Star className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Estado</span>
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          Actividad
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider hidden lg:table-cell">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden xl:inline">Actividad</span>
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <ShoppingBag className="h-4 w-4" />
-                          Última Orden
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider hidden xl:table-cell">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span>Última Orden</span>
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-sm font-bold text-white uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <Edit className="h-4 w-4" />
-                          Acciones
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold text-white uppercase tracking-wider">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                          <span className="hidden sm:inline">Acciones</span>
                         </div>
                       </th>
                     </tr>
@@ -484,17 +484,26 @@ export default function ClientesAdminPage() {
                   <tbody className="bg-white divide-y divide-gray-50">
                     {filteredClients.map((client, index) => (
                       <tr key={client.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 group">
-                        <td className="px-6 py-5">
+                        <td className="px-3 sm:px-6 py-3 sm:py-5">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-12 w-12">
-                              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                                <User className="h-6 w-6 text-white" />
+                            <div className="flex-shrink-0 h-8 w-8 sm:h-12 sm:w-12">
+                              <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                                <User className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                               </div>
                             </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors">{client.name}</div>
-                              <div className="text-sm text-gray-600 font-medium">ID: {client.id}</div>
-                              <div className="text-xs">
+                            <div className="ml-2 sm:ml-4">
+                              <div className="text-xs sm:text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate max-w-[120px] sm:max-w-none">{client.name}</div>
+                              <div className="text-xs text-gray-600 font-medium sm:block hidden">ID: {client.id}</div>
+                              <div className="text-xs sm:hidden">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  client.role === 'ADMIN' 
+                                    ? 'bg-purple-100 text-purple-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {roleLabels[client.role]}
+                                </span>
+                              </div>
+                              <div className="text-xs hidden sm:block">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                   client.role === 'ADMIN' 
                                     ? 'bg-purple-100 text-purple-800' 
@@ -505,58 +514,68 @@ export default function ClientesAdminPage() {
                               </div>
                             </div>
                           </div>
+                          {/* Información adicional para móvil en tablet */}
+                          <div className="sm:hidden mt-2 space-y-1">
+                            <div className="text-xs text-gray-600 truncate">{client.email}</div>
+                            <span className={`inline-flex items-center px-2 py-0.5 text-xs font-bold rounded-full shadow-sm ${statusColors[client.status]}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                                client.status === 'activo' ? 'bg-green-200' : 'bg-red-200'
+                              }`}></div>
+                              {client.status}
+                            </span>
+                          </div>
                         </td>
-                        <td className="px-6 py-5">
-                          <div className="space-y-2">
-                            <div className="flex items-center text-sm font-medium text-gray-900">
-                              <Mail className="h-4 w-4 text-blue-500 mr-2" />
-                              {client.email}
+                        <td className="px-3 sm:px-6 py-3 sm:py-5 hidden md:table-cell">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="flex items-center text-xs sm:text-sm font-medium text-gray-900">
+                              <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 mr-1 sm:mr-2" />
+                              <span className="truncate max-w-[150px] lg:max-w-none">{client.email}</span>
                             </div>
                             {client.phone && (
-                              <div className="flex items-center text-sm text-gray-600">
-                                <Phone className="h-4 w-4 text-green-500 mr-2" />
+                              <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                                <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 mr-1 sm:mr-2" />
                                 {client.phone}
                               </div>
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-3 py-1.5 text-sm font-bold rounded-xl shadow-sm ${statusColors[client.status]}`}>
-                            <div className={`w-2 h-2 rounded-full mr-2 ${
+                        <td className="px-3 sm:px-6 py-3 sm:py-5 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded-xl shadow-sm ${statusColors[client.status]}`}>
+                            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1 sm:mr-2 ${
                               client.status === 'activo' ? 'bg-green-200' : 'bg-red-200'
                             }`}></div>
-                            {client.status}
+                            <span className="hidden sm:inline">{client.status}</span>
                           </span>
                         </td>
-                        <td className="px-6 py-5">
-                          <div className="space-y-2">
-                            <div className="flex items-center text-sm font-medium text-gray-700">
-                              <Calendar className="h-4 w-4 text-purple-500 mr-2" />
-                              Registrado: {client.registered}
+                        <td className="px-3 sm:px-6 py-3 sm:py-5 hidden lg:table-cell">
+                          <div className="space-y-1 sm:space-y-2">
+                            <div className="flex items-center text-xs sm:text-sm font-medium text-gray-700">
+                              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500 mr-1 sm:mr-2" />
+                              <span className="hidden xl:inline">Registrado: </span>{client.registered}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                               <div className="flex items-center">
-                                <ShoppingBag className="h-4 w-4 text-orange-500 mr-1" />
+                                <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 text-orange-500 mr-1" />
                                 <span className="font-bold text-orange-600">{client.totalOrders}</span>
-                                <span className="ml-1">órdenes</span>
+                                <span className="ml-1 hidden xl:inline">órdenes</span>
                               </div>
                               <div className="flex items-center">
-                                <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                                <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 mr-1" />
                                 <span className="font-bold text-yellow-600">{client.totalReviews}</span>
-                                <span className="ml-1">reviews</span>
+                                <span className="ml-1 hidden xl:inline">reviews</span>
                               </div>
                               <div className="flex items-center">
-                                <MapPin className="h-4 w-4 text-red-500 mr-1" />
+                                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-red-500 mr-1" />
                                 <span className="font-bold text-red-600">{client.totalAddresses}</span>
-                                <span className="ml-1">direcciones</span>
+                                <span className="ml-1 hidden xl:inline">direcciones</span>
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="px-3 sm:px-6 py-3 sm:py-5 hidden xl:table-cell">
                           {client.lastOrder ? (
                             <div className="space-y-1">
-                              <div className="text-sm font-bold text-gray-900">
+                              <div className="text-xs sm:text-sm font-bold text-gray-900">
                                 ${client.lastOrder.total.toFixed(2)}
                               </div>
                               <div className="text-xs text-gray-600 font-medium">
@@ -564,31 +583,31 @@ export default function ClientesAdminPage() {
                               </div>
                             </div>
                           ) : (
-                            <span className="text-sm text-gray-400 italic">Sin órdenes</span>
+                            <span className="text-xs sm:text-sm text-gray-400 italic">Sin órdenes</span>
                           )}
                         </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
+                        <td className="px-3 sm:px-6 py-3 sm:py-5 whitespace-nowrap">
+                          <div className="flex items-center gap-1 sm:gap-2">
                             <Link 
                               href={`/admin/clientes/${client.id}`} 
-                              className="flex items-center justify-center w-10 h-10 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
+                              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
                               title="Ver detalles"
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Link>
                             <button 
-                              className="flex items-center justify-center w-10 h-10 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
+                              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
                               title="Editar cliente"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
                             {client.role !== 'ADMIN' && (
                               <button 
                                 onClick={() => openDeleteModal(client.id, client.name)}
-                                className="flex items-center justify-center w-10 h-10 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
+                                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-red-100 hover:bg-red-200 text-red-700 rounded-xl transition-all duration-200 hover:scale-110 shadow-sm" 
                                 title="Eliminar cliente"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                               </button>
                             )}
                           </div>
@@ -616,6 +635,7 @@ export default function ClientesAdminPage() {
         message="¿Estás seguro de que quieres eliminar este cliente? Esta acción no se puede deshacer."
         itemName={deleteModal.clientName}
       />
+      </div>
     </div>
   );
 }
