@@ -90,7 +90,7 @@ export default function CheckoutPage() {
       // Preparar datos del pedido
       const orderData = {
         items: cartItems.map(item => ({
-          productId: item.id,
+          productId: item.id, // Ahora item.id siempre será el productId correcto
           name: item.name,
           price: item.price,
           quantity: item.quantity,

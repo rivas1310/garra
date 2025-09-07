@@ -62,6 +62,18 @@ export async function POST(req: Request) {
     const data = await req.json()
     log.error('Datos recibidos para crear pedido:', data)
     
+    // Log específico de items para debugging
+    if (data.items && Array.isArray(data.items)) {
+      log.error('Items recibidos:', data.items.map((item: any, index: number) => ({
+        index,
+        productId: item.productId,
+        hasProductId: !!item.productId,
+        productIdType: typeof item.productId,
+        quantity: item.quantity,
+        price: item.price
+      })))
+    }
+    
     const {
       stripeSessionId,
       items,
@@ -117,6 +129,38 @@ export async function POST(req: Request) {
 
     // Log para debugging
     console.log(`Creando nueva orden para session: ${stripeSessionId}`)
+    
+    // Validar que todos los productIds existan en la base de datos
+    const productIds = items.filter((item: any) => item.productId).map((item: any) => item.productId)
+    if (productIds.length === 0) {
+      return NextResponse.json(
+        { error: 'No se encontraron productos válidos en la orden' },
+        { status: 400 }
+      )
+    }
+    
+    const existingProducts = await prisma.product.findMany({
+      where: {
+        id: {
+          in: productIds
+        }
+      },
+      select: { id: true }
+    })
+    
+    const existingProductIds = existingProducts.map(p => p.id)
+    const invalidProductIds = productIds.filter(id => !existingProductIds.includes(id))
+    
+    if (invalidProductIds.length > 0) {
+      log.error('ProductIds inválidos encontrados:', invalidProductIds)
+      return NextResponse.json(
+        { 
+          error: 'Algunos productos no existen en la base de datos',
+          invalidProducts: invalidProductIds
+        },
+        { status: 400 }
+      )
+    }
 
     // Buscar o crear usuario
     let user = await prisma.user.findUnique({
@@ -164,8 +208,8 @@ export async function POST(req: Request) {
         customerCountry: customer.pais || null,
         customerReferences: customer.referencias || null,
         items: {
-          create: items.map((item: any) => ({
-            productId: item.productId || 'unknown',
+          create: items.filter((item: any) => item.productId).map((item: any) => ({
+            productId: item.productId,
             quantity: item.quantity,
             price: item.price,
             variantId: item.variantId || null,
@@ -185,6 +229,11 @@ export async function POST(req: Request) {
     
     for (const item of order.items) {
       try {
+        if (!item.productId) {
+          log.error(`⚠️ Item sin productId válido, saltando descuento de stock`);
+          continue;
+        }
+        
         log.error(`📦 Descontando stock para producto ID: ${item.productId} - Cantidad: ${item.quantity}`)
         
         if (item.variantId) {

@@ -8,6 +8,15 @@ import BarcodeScanner from './BarcodeScanner'
 interface VentaFisicaModalProps {
   isOpen: boolean
   onClose: () => void
+  onSaleCompleted?: (saleData: any) => void
+}
+
+interface ProductVariant {
+  id: string
+  size?: string
+  color?: string
+  stock: number
+  price?: number
 }
 
 interface Product {
@@ -16,16 +25,26 @@ interface Product {
   price: number
   stock: number
   barcode?: string
+  variants?: ProductVariant[]
 }
 
-export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalProps) {
+interface CartItem {
+  product: Product
+  quantity: number
+  selectedVariant?: ProductVariant
+}
+
+export default function VentaFisicaModal({ isOpen, onClose, onSaleCompleted }: VentaFisicaModalProps) {
   const [showScanner, setShowScanner] = useState(false)
   const [manualBarcode, setManualBarcode] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cart, setCart] = useState<{ [key: string]: { product: Product; quantity: number } }>({})
+  const [cart, setCart] = useState<{ [key: string]: CartItem }>({})
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [showVariantSelector, setShowVariantSelector] = useState(false)
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null)
 
   // Buscar producto por código de barras
   const searchProductByBarcode = async (barcode: string) => {
@@ -94,13 +113,18 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
       }
       
       if (response.ok) {
-        log.error('✅ Producto encontrado:', {
+        log.error('✅ Producto encontrado por código de barras:', {
           id: data.id,
           name: data.name,
           barcode: data.barcode,
-          barcodeLength: data.barcode?.length
+          barcodeLength: data.barcode?.length,
+          hasVariants: !!data.variants,
+          variantsCount: data.variants?.length || 0,
+          variants: data.variants
         })
-        addToCart(data)
+        
+        // Usar handleProductSelect para manejar variantes correctamente
+        handleProductSelect(data)
         setManualBarcode('')
       } else if (response.status === 404) {
         log.error('❌ Producto no encontrado:', data)
@@ -139,11 +163,22 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
     setError(null)
 
     try {
-      const response = await fetch(`/api/productos?search=${encodeURIComponent(term.trim())}`)
+      const response = await fetch(`/api/productos?search=${encodeURIComponent(term.trim())}&limit=50`)
       
       if (response.ok) {
         const data = await response.json()
-        setProducts(data.products || [])
+        // La API devuelve productos en data.productos, no data.products
+        const productos = data.productos || []
+        log.error('🔍 Productos encontrados en búsqueda:', {
+          count: productos.length,
+          productos: productos.map((p: Product) => ({
+            id: p.id,
+            name: p.name,
+            hasVariants: !!p.variants,
+            variantsCount: p.variants?.length || 0
+          }))
+        })
+        setProducts(productos)
       } else {
         setError('Error al buscar productos')
       }
@@ -155,41 +190,68 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
     }
   }
 
+  // Mostrar selector de variantes o agregar directamente
+  const handleProductSelect = (product: Product) => {
+    log.error('🎯 Producto seleccionado:', {
+      id: product.id,
+      name: product.name,
+      hasVariants: !!product.variants,
+      variantsLength: product.variants?.length || 0,
+      variants: product.variants
+    })
+    
+    if (product.variants && product.variants.length > 0) {
+      log.error('✅ Mostrando selector de variantes')
+      setSelectedProduct(product)
+      setSelectedVariant(null)
+      setShowVariantSelector(true)
+    } else {
+      log.error('➕ Agregando producto sin variantes al carrito')
+      addToCart(product)
+    }
+  }
+
   // Agregar producto al carrito
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, variant?: ProductVariant) => {
+    const cartKey = variant ? `${product.id}-${variant.id}` : product.id
+    
     setCart(prev => {
-      const existing = prev[product.id]
+      const existing = prev[cartKey]
       return {
         ...prev,
-        [product.id]: {
+        [cartKey]: {
           product,
-          quantity: existing ? existing.quantity + 1 : 1
+          quantity: existing ? existing.quantity + 1 : 1,
+          selectedVariant: variant
         }
       }
     })
     setError(null)
+    setShowVariantSelector(false)
+    setSelectedProduct(null)
+    setSelectedVariant(null)
   }
 
   // Remover producto del carrito
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = (cartKey: string) => {
     setCart(prev => {
       const newCart = { ...prev }
-      delete newCart[productId]
+      delete newCart[cartKey]
       return newCart
     })
   }
 
   // Actualizar cantidad
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (cartKey: string, quantity: number) => {
     if (quantity <= 0) {
-      removeFromCart(productId)
+      removeFromCart(cartKey)
       return
     }
 
     setCart(prev => ({
       ...prev,
-      [productId]: {
-        ...prev[productId],
+      [cartKey]: {
+        ...prev[cartKey],
         quantity
       }
     }))
@@ -197,7 +259,8 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
 
   // Calcular total
   const total = Object.values(cart).reduce((sum, item) => {
-    return sum + (item.product.price * item.quantity)
+    const price = item.selectedVariant?.price || item.product.price
+    return sum + (price * item.quantity)
   }, 0)
 
   // Manejar escaneo de código de barras
@@ -219,6 +282,77 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     searchProductByBarcode(manualBarcode)
+  }
+
+  // Finalizar venta
+  const handleFinalizarVenta = async () => {
+    if (Object.keys(cart).length === 0) {
+      setError('El carrito está vacío')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Preparar los items del carrito con información de variantes
+      const items = Object.values(cart).map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        price: item.selectedVariant?.price || item.product.price,
+        // Incluir información de la variante si existe
+        ...(item.selectedVariant && {
+          productVariantId: item.selectedVariant.id,
+          variantInfo: {
+            size: item.selectedVariant.size,
+            color: item.selectedVariant.color
+          }
+        })
+      }))
+
+      const response = await fetch('/api/ventas-fisicas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          items,
+          total,
+          subtotal: total,
+          tax: 0,
+          orderType: 'FISICA',
+          paymentMethod: 'EFECTIVO' // Por defecto, se puede hacer configurable
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        // Limpiar el carrito
+        setCart({})
+        setSearchTerm('')
+        setProducts([])
+        setManualBarcode('')
+        
+        // Mostrar mensaje de éxito
+        alert(`Venta registrada exitosamente. ID: ${result.id}`)
+        
+        // Llamar al callback con los datos de la venta si existe
+        if (onSaleCompleted) {
+          onSaleCompleted(result)
+        }
+        
+        // Cerrar el modal
+        onClose()
+      } else {
+        setError(result.error || 'Error al procesar la venta')
+      }
+    } catch (err) {
+      log.error('Error al finalizar venta:', err)
+      setError('Error de conexión al procesar la venta')
+    } finally {
+      setLoading(false)
+    }
   }
 
   // Buscar productos cuando cambie el término de búsqueda
@@ -315,12 +449,17 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
                         <div
                           key={product.id}
                           className="p-3 border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer"
-                          onClick={() => addToCart(product)}
+                          onClick={() => handleProductSelect(product)}
                         >
                           <div className="font-medium">{product.name}</div>
                           <div className="text-sm text-neutral-600">
                             ${product.price.toFixed(2)} - Stock: {product.stock}
                           </div>
+                          {product.variants && product.variants.length > 0 && (
+                            <div className="text-xs text-blue-600">
+                              {product.variants.length} variante(s) disponible(s)
+                            </div>
+                          )}
                           {product.barcode && (
                             <div className="text-xs text-neutral-500">
                               Código: {product.barcode}
@@ -350,17 +489,24 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {Object.entries(cart).map(([productId, item]) => (
-                    <div key={productId} className="p-3 border border-neutral-200 rounded-lg">
+                  {Object.entries(cart).map(([cartKey, item]) => (
+                    <div key={cartKey} className="p-3 border border-neutral-200 rounded-lg">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="font-medium">{item.product.name}</div>
+                          {item.selectedVariant && (
+                            <div className="text-xs text-blue-600 mb-1">
+                              {item.selectedVariant.color && `Color: ${item.selectedVariant.color}`}
+                              {item.selectedVariant.color && item.selectedVariant.size && ' • '}
+                              {item.selectedVariant.size && `Talla: ${item.selectedVariant.size}`}
+                            </div>
+                          )}
                           <div className="text-sm text-neutral-600">
-                            ${item.product.price.toFixed(2)} c/u
+                            ${(item.selectedVariant?.price || item.product.price).toFixed(2)} c/u
                           </div>
                         </div>
                         <button
-                          onClick={() => removeFromCart(productId)}
+                          onClick={() => removeFromCart(cartKey)}
                           className="text-red-500 hover:text-red-700 ml-2"
                         >
                           <X className="h-4 w-4" />
@@ -369,21 +515,21 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => updateQuantity(productId, item.quantity - 1)}
+                            onClick={() => updateQuantity(cartKey, item.quantity - 1)}
                             className="w-6 h-6 bg-neutral-200 hover:bg-neutral-300 rounded flex items-center justify-center"
                           >
                             -
                           </button>
                           <span className="w-8 text-center">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(productId, item.quantity + 1)}
+                            onClick={() => updateQuantity(cartKey, item.quantity + 1)}
                             className="w-6 h-6 bg-neutral-200 hover:bg-neutral-300 rounded flex items-center justify-center"
                           >
                             +
                           </button>
                         </div>
                         <div className="font-medium">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          ${((item.selectedVariant?.price || item.product.price) * item.quantity).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -397,13 +543,11 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
                   </div>
 
                   <button
-                    onClick={() => {
-                      // Aquí implementarías la lógica de finalizar venta
-                      alert('Funcionalidad de finalizar venta en desarrollo')
-                    }}
-                    className="w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors"
+                    onClick={handleFinalizarVenta}
+                    disabled={Object.keys(cart).length === 0 || loading}
+                    className="w-full py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
                   >
-                    Finalizar Venta
+                    {loading ? 'Procesando...' : 'Finalizar Venta'}
                   </button>
                 </div>
               )}
@@ -418,6 +562,86 @@ export default function VentaFisicaModal({ isOpen, onClose }: VentaFisicaModalPr
           onScan={handleBarcodeScan}
           onClose={() => setShowScanner(false)}
         />
+      )}
+
+      {/* Modal de selección de variantes */}
+      {showVariantSelector && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Seleccionar Variante</h3>
+              <button
+                onClick={() => {
+                  setShowVariantSelector(false)
+                  setSelectedProduct(null)
+                  setSelectedVariant(null)
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="font-medium mb-2">{selectedProduct.name}</h4>
+              <p className="text-sm text-gray-600">Selecciona una variante:</p>
+            </div>
+
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {selectedProduct.variants?.map((variant) => (
+                <div
+                  key={variant.id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedVariant?.id === variant.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  onClick={() => setSelectedVariant(variant)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium">
+                        {variant.color && `${variant.color}`}
+                        {variant.color && variant.size && ' - '}
+                        {variant.size && `Talla ${variant.size}`}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        ${variant.price?.toFixed(2)} • Stock: {variant.stock}
+                      </div>
+                    </div>
+                    {variant.stock <= 0 && (
+                      <span className="text-xs text-red-500 font-medium">Sin stock</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowVariantSelector(false)
+                  setSelectedProduct(null)
+                  setSelectedVariant(null)
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedVariant && selectedProduct) {
+                    addToCart(selectedProduct, selectedVariant)
+                  }
+                }}
+                disabled={!selectedVariant || (selectedVariant && selectedVariant.stock <= 0)}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Agregar al Carrito
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

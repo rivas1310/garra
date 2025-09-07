@@ -35,11 +35,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No hay productos en la venta' }, { status: 400 })
     }
     
-    // Verificar stock de productos
+    // Verificar stock de productos y variantes
     for (const item of items) {
       const product = await prisma.product.findUnique({
         where: { id: item.productId },
-        select: { id: true, name: true, stock: true }
+        select: { 
+          id: true, 
+          name: true, 
+          stock: true,
+          variants: {
+            select: {
+              id: true,
+              color: true,
+              size: true,
+              stock: true
+            }
+          }
+        }
       })
       
       if (!product) {
@@ -48,10 +60,27 @@ export async function POST(req: Request) {
         }, { status: 404 })
       }
       
-      if (product.stock < item.quantity) {
-        return NextResponse.json({ 
-          error: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}` 
-        }, { status: 400 })
+      // Si hay variante seleccionada, verificar stock de la variante
+      if (item.variantId) {
+        const variant = product.variants.find(v => v.id === item.variantId)
+        if (!variant) {
+          return NextResponse.json({ 
+            error: `Variante no encontrada para ${product.name}` 
+          }, { status: 404 })
+        }
+        
+        if (variant.stock < item.quantity) {
+          return NextResponse.json({ 
+            error: `Stock insuficiente para ${product.name} (${variant.color} - ${variant.size}). Disponible: ${variant.stock}` 
+          }, { status: 400 })
+        }
+      } else {
+        // Si no hay variante, verificar stock del producto principal
+        if (product.stock < item.quantity) {
+          return NextResponse.json({ 
+            error: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}` 
+          }, { status: 400 })
+        }
       }
     }
     
@@ -74,6 +103,7 @@ export async function POST(req: Request) {
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
+            variantId: item.variantId || null
           }))
         }
       },
@@ -93,16 +123,33 @@ export async function POST(req: Request) {
       }
     })
     
-    // Actualizar stock de productos
+    // Actualizar stock de productos y variantes
     for (const item of items) {
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: { stock: true }
-      })
-      
-      if (product) {
-        const newStock = Math.max(0, product.stock - item.quantity)
-        await updateProductStock(item.productId, newStock)
+      if (item.variantId) {
+        // Actualizar stock de la variante
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: item.variantId },
+          select: { stock: true }
+        })
+        
+        if (variant) {
+          const newVariantStock = Math.max(0, variant.stock - item.quantity)
+          await prisma.productVariant.update({
+            where: { id: item.variantId },
+            data: { stock: newVariantStock }
+          })
+        }
+      } else {
+        // Actualizar stock del producto principal
+        const product = await prisma.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true }
+        })
+        
+        if (product) {
+          const newStock = Math.max(0, product.stock - item.quantity)
+          await updateProductStock(item.productId, newStock)
+        }
       }
     }
     

@@ -161,13 +161,14 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
 
     try {
       addToCart({
-        id: selectedVariant.id,
+        id: producto.id, // Usar el ID del producto padre
         name: producto.name,
         price: selectedVariant.price || producto.price,
         image: producto.images?.[0] || "/img/placeholder.png",
         color: selectedVariant.color,
         size: selectedVariant.size,
-        stock: selectedVariant.stock
+        stock: selectedVariant.stock,
+        variantId: selectedVariant.id // Agregar el ID de la variante
       });
       
       setAddToCartMessage({ text: "Producto agregado al carrito", type: "success" });
@@ -339,17 +340,22 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
           )}
 
           {/* Stock disponible */}
-          {selectedVariant && (
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-orange-500" />
-              <span className="text-sm text-gray-600">
-                {selectedVariant.stock > 0 
-                  ? `${selectedVariant.stock} unidades disponibles`
-                  : 'Sin stock'
-                }
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-orange-500" />
+            <span className="text-sm text-gray-600">
+              {selectedVariant 
+                ? (selectedVariant.stock > 0 
+                    ? `${selectedVariant.stock} unidades disponibles`
+                    : 'Sin stock'
+                  )
+                : (() => {
+                    // Calcular stock total cuando no hay variante seleccionada
+                    const totalStock = producto.variants?.reduce((sum: number, variant: Variante) => sum + variant.stock, 0) || 0;
+                    return totalStock > 0 ? `${totalStock} unidades disponibles` : 'Sin stock';
+                  })()
+              }
+            </span>
+          </div>
 
           {/* Botón agregar al carrito */}
           <button
@@ -358,7 +364,10 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <ShoppingCart className="h-5 w-5" />
-            {selectedVariant && selectedVariant.stock > 0 ? 'Agregar al Carrito' : 'Sin Stock'}
+            {selectedVariant 
+              ? (selectedVariant.stock > 0 ? 'Agregar al Carrito' : 'Sin Stock')
+              : 'Selecciona color y talla'
+            }
           </button>
 
           {/* Mensaje de confirmación */}

@@ -61,6 +61,9 @@ export default function VentaFisicaPage() {
   const [discountType, setDiscountType] = useState('percentage') // 'percentage', 'fixed'
   const [discountValue, setDiscountValue] = useState('')
   const [showDiscountModal, setShowDiscountModal] = useState(false)
+  const [showVariantModal, setShowVariantModal] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [selectedVariant, setSelectedVariant] = useState<any>(null)
 
   
   // Hook de impresión Bluetooth
@@ -233,46 +236,83 @@ export default function VentaFisicaPage() {
   })
 
   // Agregar producto al carrito
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, variant?: any) => {
+    // Si el producto tiene variantes y no se especificó una variante
+    if (product.variants && product.variants.length > 0 && !variant) {
+      // Si solo hay una variante, agregarla automáticamente
+      if (product.variants.length === 1) {
+        addToCart(product, product.variants[0])
+        return
+      }
+      // Si hay múltiples variantes, abrir modal de selección
+      setSelectedProduct(product)
+      setShowVariantModal(true)
+      return
+    }
+
+    // Usar el stock de la variante si existe, sino el stock del producto
+    const availableStock = variant ? variant.stock : product.stock
+    const productPrice = variant ? (variant.price || product.price) : product.price
+    
     // Verificar si hay stock disponible
-    if (product.stock <= 0) {
+    if (availableStock <= 0) {
       toast.error(`${product.name} no tiene stock disponible`)
       return
     }
 
-    // Verificar si el producto ya está en el carrito
-    const existingItem = cartItems.find(item => item.id === product.id)
+    // Crear una clave única para el item del carrito (incluye variante si existe)
+    const cartKey = variant ? `${product.id}-${variant.id}` : product.id
+    
+    // Verificar si el producto (con esta variante específica) ya está en el carrito
+    const existingItem = cartItems.find(item => {
+      if (variant) {
+        return item.id === product.id && item.variantId === variant.id
+      }
+      return item.id === product.id && !item.variantId
+    })
     
     if (existingItem) {
       // Si la cantidad a agregar excede el stock disponible
-      if (existingItem.quantity >= product.stock) {
-        toast.error(`No hay suficiente stock de ${product.name}`)
+      if (existingItem.quantity >= availableStock) {
+        const variantInfo = variant ? ` (${variant.color || ''} ${variant.size || ''})`.trim() : ''
+        toast.error(`No hay suficiente stock de ${product.name}${variantInfo}`)
         return
       }
       
       // Incrementar cantidad
-      const updatedItems = cartItems.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 } 
+      const updatedItems = cartItems.map(item => {
+        if (variant) {
+          return item.id === product.id && item.variantId === variant.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        }
+        return item.id === product.id && !item.variantId
+          ? { ...item, quantity: item.quantity + 1 }
           : item
-      )
+      })
       setCartItems(updatedItems)
     } else {
       // Agregar nuevo item
-      setCartItems([
-        ...cartItems, 
-        { 
-          id: product.id, 
-          name: product.name, 
-          price: product.price, 
-          image: product.images && product.images[0] ? product.images[0] : '/img/placeholder.png',
-          quantity: 1,
-          stock: product.stock
-        }
-      ])
+      const newItem = { 
+        id: product.id, 
+        name: product.name, 
+        price: productPrice, 
+        image: product.images && product.images[0] ? product.images[0] : '/img/placeholder.png',
+        quantity: 1,
+        stock: availableStock,
+        ...(variant && {
+          variantId: variant.id,
+          variantInfo: {
+            color: variant.color,
+            size: variant.size
+          }
+        })
+      }
+      setCartItems([...cartItems, newItem])
     }
     
-    toast.success(`${product.name} agregado al carrito`)
+    const variantInfo = variant ? ` (${variant.color || ''} ${variant.size || ''})`.trim() : ''
+    toast.success(`${product.name}${variantInfo} agregado al carrito`)
   }
 
   // Buscar producto por código de barras/QR
@@ -318,14 +358,14 @@ export default function VentaFisicaPage() {
   }
 
   // Remover producto del carrito
-  const removeFromCart = (productId: string) => {
-    setCartItems(cartItems.filter(item => item.id !== productId))
+  const removeFromCart = (cartKey: string) => {
+    setCartItems(cartItems.filter(item => item.cartKey !== cartKey))
     toast.success('Producto eliminado del carrito')
   }
 
   // Actualizar cantidad de producto en el carrito
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    const product = cartItems.find(item => item.id === productId)
+  const updateQuantity = (cartKey: string, newQuantity: number) => {
+    const product = cartItems.find(item => item.cartKey === cartKey)
     
     if (!product) return
     
@@ -338,7 +378,7 @@ export default function VentaFisicaPage() {
     }
     
     const updatedItems = cartItems.map(item => 
-      item.id === productId 
+      item.cartKey === cartKey 
         ? { ...item, quantity: newQuantity } 
         : item
     )
@@ -466,7 +506,12 @@ export default function VentaFisicaPage() {
           items: cartItems.map(item => ({
             productId: item.id,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            // Incluir información de la variante si existe
+            ...(item.variantId && {
+              variantId: item.variantId,
+              variantInfo: item.variantInfo
+            })
           })),
           total: calculateTotal(),
           subtotal: calculateTotal(),
@@ -1331,7 +1376,7 @@ garantias y devoluciones
                 ) : (
                   <div className="space-y-3 mb-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
                     {cartItems.map(item => (
-                      <div key={item.id} className="group bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 transition-all duration-200">
+                      <div key={item.cartKey} className="group bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg p-4 transition-all duration-200">
                         <div className="flex items-center gap-4">
                           {/* Imagen del producto */}
                           <div className="relative flex-shrink-0">
@@ -1347,13 +1392,28 @@ garantias y devoluciones
                           {/* Información del producto */}
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900 text-sm truncate mb-1">{item.name}</h3>
+                            {/* Mostrar información de variante si existe */}
+                            {item.variantInfo && (
+                              <div className="flex gap-2 mb-1">
+                                {item.variantInfo.color && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Color: {item.variantInfo.color}
+                                  </span>
+                                )}
+                                {item.variantInfo.size && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Talla: {item.variantInfo.size}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             <p className="text-gray-500 text-xs mb-2">${item.price.toFixed(2)} c/u</p>
                             
                             {/* Controles de cantidad */}
                             <div className="flex items-center gap-3">
                               <div className="flex items-center bg-white border-2 border-gray-300 rounded-lg shadow-sm">
                                 <button 
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.cartKey, item.quantity - 1)}
                                   className="p-2 text-gray-600 hover:bg-gray-50 hover:text-red-600 transition-colors rounded-l-lg"
                                 >
                                   <Minus className="h-4 w-4" />
@@ -1362,7 +1422,7 @@ garantias y devoluciones
                                   {item.quantity}
                                 </span>
                                 <button 
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.cartKey, item.quantity + 1)}
                                   className="p-2 text-gray-600 hover:bg-gray-50 hover:text-green-600 transition-colors rounded-r-lg"
                                 >
                                   <Plus className="h-4 w-4" />
@@ -1380,7 +1440,7 @@ garantias y devoluciones
                           
                           {/* Botón eliminar */}
                           <button 
-                            onClick={() => removeFromCart(item.id)}
+                            onClick={() => removeFromCart(item.cartKey)}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
                             title="Eliminar producto"
                           >
@@ -2427,6 +2487,101 @@ garantias y devoluciones
               >
                 Aplicar Descuento
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección de variantes */}
+      {showVariantModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Seleccionar Variante
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowVariantModal(false)
+                    setSelectedProduct(null)
+                    setSelectedVariant(null)
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-900 mb-2">{selectedProduct.name}</h4>
+                <p className="text-sm text-gray-600">Precio base: ${selectedProduct.price}</p>
+              </div>
+              
+              <div className="space-y-3 mb-6">
+                <h5 className="font-medium text-gray-700">Variantes disponibles:</h5>
+                {selectedProduct.variants?.map((variant: any) => (
+                  <div
+                    key={variant.id}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                      selectedVariant?.id === variant.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() => setSelectedVariant(variant)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {variant.color && <span className="text-blue-600">{variant.color}</span>}
+                          {variant.color && variant.size && <span className="text-gray-400"> • </span>}
+                          {variant.size && <span className="text-green-600">{variant.size}</span>}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Stock: {variant.stock} unidades
+                          {variant.price && variant.price !== selectedProduct.price && (
+                            <span className="ml-2 text-blue-600 font-medium">
+                              ${variant.price}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {variant.stock <= 0 && (
+                        <span className="text-xs text-red-500 font-medium">Sin stock</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowVariantModal(false)
+                    setSelectedProduct(null)
+                    setSelectedVariant(null)
+                  }}
+                  className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (selectedVariant) {
+                      addToCart(selectedProduct, selectedVariant)
+                      setShowVariantModal(false)
+                      setSelectedProduct(null)
+                      setSelectedVariant(null)
+                    } else {
+                      toast.error('Por favor selecciona una variante')
+                    }
+                  }}
+                  disabled={!selectedVariant || selectedVariant.stock <= 0}
+                  className="flex-1 py-2 px-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                >
+                  Agregar al Carrito
+                </button>
+              </div>
             </div>
           </div>
         </div>
