@@ -5,6 +5,7 @@ import { log } from '@/lib/secureLogger';
 import { useParams } from "next/navigation";
 import { ShoppingCart, Star, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 interface Variante {
   id: string;
@@ -183,7 +184,21 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumbs */}
+      <div className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <Breadcrumbs 
+            items={[
+              { label: 'Inicio', href: '/' },
+              { label: 'Productos', href: '/productos' },
+              { label: producto?.name || 'Cargando...', href: '#' }
+            ]}
+          />
+        </div>
+      </div>
+      
+      <div className="max-w-6xl mx-auto py-8 md:py-12 px-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
         {/* Imagen con slider */}
         <div className="bg-white rounded-xl shadow-lg p-6">
@@ -566,6 +581,7 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

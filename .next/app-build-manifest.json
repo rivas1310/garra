@@ -6,15 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/admin/layout": [
+    "/categorias/[slug]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/layout.js"
+      "static/chunks/app/categorias/[slug]/page.js"
     ],
-    "/admin/pedidos/page": [
+    "/api/categorias/[slug]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/pedidos/page.js"
+      "static/chunks/app/api/categorias/[slug]/route.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
@@ -26,75 +26,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/profile/route.js"
     ],
-    "/api/pedidos/route": [
+    "/api/productos/subcategory-counts/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/pedidos/route.js"
-    ],
-    "/admin/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/page.js"
-    ],
-    "/api/productos/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/productos/route.js"
-    ],
-    "/admin/clientes/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/clientes/page.js"
-    ],
-    "/api/admin/users/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/admin/users/route.js"
-    ],
-    "/admin/productos/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/productos/page.js"
-    ],
-    "/admin/productos/[id]/editar/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/productos/[id]/editar/page.js"
-    ],
-    "/api/categorias/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/categorias/route.js"
+      "static/chunks/app/api/productos/subcategory-counts/route.js"
     ],
     "/api/productos/[id]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/productos/[id]/route.js"
     ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/api/favoritos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/favoritos/route.js"
     ],
-    "/categorias/[slug]/page": [
+    "/productos/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/categorias/[slug]/page.js"
+      "static/chunks/app/productos/[id]/page.js"
     ],
-    "/api/categorias/[slug]/route": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/categorias/[slug]/route.js"
-    ],
-    "/api/productos/subcategory-counts/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/productos/subcategory-counts/route.js"
+      "static/chunks/app/page.js"
     ]
   }
 }

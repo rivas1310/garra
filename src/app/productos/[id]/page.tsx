@@ -9,7 +9,11 @@ interface ProductPageProps {
 // Función para obtener datos del producto
 async function getProduct(id: string) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    // Construir la URL base correcta para el entorno
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    
     const res = await fetch(`${baseUrl}/api/productos/${id}`, {
       cache: 'no-store'
     });

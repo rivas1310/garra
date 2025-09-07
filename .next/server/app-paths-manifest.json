@@ -1,19 +1,8 @@
 {
+  "/api/productos/[id]/route": "app/api/productos/[id]/route.js",
   "/api/profile/route": "app/api/profile/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/pedidos/route": "app/api/pedidos/route.js",
-  "/api/productos/route": "app/api/productos/route.js",
-  "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/api/categorias/route": "app/api/categorias/route.js",
-  "/api/productos/[id]/route": "app/api/productos/[id]/route.js",
-  "/api/favoritos/route": "app/api/favoritos/route.js",
-  "/api/categorias/[slug]/route": "app/api/categorias/[slug]/route.js",
-  "/api/productos/subcategory-counts/route": "app/api/productos/subcategory-counts/route.js",
-  "/page": "app/page.js",
   "/categorias/[slug]/page": "app/categorias/[slug]/page.js",
-  "/admin/pedidos/page": "app/admin/pedidos/page.js",
-  "/admin/page": "app/admin/page.js",
-  "/admin/clientes/page": "app/admin/clientes/page.js",
-  "/admin/productos/[id]/editar/page": "app/admin/productos/[id]/editar/page.js",
-  "/admin/productos/page": "app/admin/productos/page.js"
+  "/page": "app/page.js",
+  "/productos/[id]/page": "app/productos/[id]/page.js"
 }
