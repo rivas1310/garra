@@ -6,15 +6,15 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/categorias/[slug]/page": [
+    "/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/categorias/[slug]/page.js"
+      "static/chunks/app/page.js"
     ],
-    "/api/categorias/[slug]/route": [
+    "/api/productos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/categorias/[slug]/route.js"
+      "static/chunks/app/api/productos/route.js"
     ],
     "/api/auth/[...nextauth]/route": [
       "static/chunks/webpack.js",
@@ -26,30 +26,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/api/profile/route.js"
     ],
-    "/api/productos/subcategory-counts/route": [
+    "/api/favoritos/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/productos/subcategory-counts/route.js"
+      "static/chunks/app/api/favoritos/route.js"
     ],
     "/api/productos/[id]/route": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/productos/[id]/route.js"
     ],
-    "/api/favoritos/route": [
+    "/categorias/[slug]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/api/favoritos/route.js"
+      "static/chunks/app/categorias/[slug]/page.js"
+    ],
+    "/api/categorias/[slug]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/categorias/[slug]/route.js"
+    ],
+    "/api/productos/subcategory-counts/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/productos/subcategory-counts/route.js"
     ],
     "/productos/[id]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/productos/[id]/page.js"
-    ],
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
     ]
   }
 }

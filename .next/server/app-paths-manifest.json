@@ -1,8 +1,7 @@
 {
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/productos/[id]/route": "app/api/productos/[id]/route.js",
   "/api/profile/route": "app/api/profile/route.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/categorias/[slug]/page": "app/categorias/[slug]/page.js",
-  "/page": "app/page.js",
-  "/productos/[id]/page": "app/productos/[id]/page.js"
+  "/productos/[id]/page": "app/productos/[id]/page.js",
+  "/categorias/[slug]/page": "app/categorias/[slug]/page.js"
 }

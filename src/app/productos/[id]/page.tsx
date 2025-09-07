@@ -1,9 +1,33 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ProductDetailClient from './ProductDetailClient';
+import prisma from '@/lib/prisma';
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
+}
+
+// Configurar el comportamiento dinámico
+export const dynamicParams = true; // Permitir rutas dinámicas no pre-generadas
+export const revalidate = 3600; // Revalidar cada hora
+
+// Generar parámetros estáticos para las rutas más comunes
+export async function generateStaticParams() {
+  try {
+    // Obtener los primeros 50 productos para pre-generar
+    const products = await prisma.product.findMany({
+      take: 50,
+      select: { id: true },
+      where: { isActive: true }
+    });
+    
+    return products.map((product) => ({
+      id: product.id,
+    }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    return [];
+  }
 }
 
 // Función para obtener datos del producto
