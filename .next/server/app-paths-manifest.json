@@ -1,7 +1,10 @@
 {
+  "/api/categorias/[slug]/route": "app/api/categorias/[slug]/route.js",
+  "/api/productos/subcategory-counts/route": "app/api/productos/subcategory-counts/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/favoritos/route": "app/api/favoritos/route.js",
   "/api/productos/[id]/route": "app/api/productos/[id]/route.js",
   "/api/profile/route": "app/api/profile/route.js",
-  "/productos/[id]/page": "app/productos/[id]/page.js",
-  "/categorias/[slug]/page": "app/categorias/[slug]/page.js"
+  "/categorias/[slug]/page": "app/categorias/[slug]/page.js",
+  "/productos/[id]/page": "app/productos/[id]/page.js"
 }

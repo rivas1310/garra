@@ -97,15 +97,17 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
       }
     };
     
-    // Cargar el producto inicialmente
-    loadProduct();
+    // Solo cargar si no tenemos datos iniciales
+    if (!initialProduct) {
+      loadProduct();
+    }
     
     // Configurar un intervalo para actualizar el stock cada 10 segundos
     const intervalId = setInterval(loadProduct, 10000);
     
     // Limpiar el intervalo cuando el componente se desmonte
     return () => clearInterval(intervalId);
-  }, [id]);
+  }, [id, initialProduct]);
 
   // Actualizar estado cuando cambie initialProduct
   useEffect(() => {

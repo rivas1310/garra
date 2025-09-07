@@ -1,154 +1,124 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import ProductDetailClient from './ProductDetailClient';
-import prisma from '@/lib/prisma';
+import { notFound } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import ProductDetailClient from './ProductDetailClient'
+import { Metadata } from 'next'
 
-interface ProductPageProps {
-  params: Promise<{ id: string }>;
-}
+// Configuración para Next.js
+export const dynamicParams = true
+export const revalidate = 3600
 
-// Configurar el comportamiento dinámico
-export const dynamicParams = true; // Permitir rutas dinámicas no pre-generadas
-export const revalidate = 3600; // Revalidar cada hora
-
-// Generar parámetros estáticos para las rutas más comunes
+// Generar rutas estáticas para los productos más populares
 export async function generateStaticParams() {
   try {
-    // Obtener los primeros 50 productos para pre-generar
     const products = await prisma.product.findMany({
+      where: {
+        isActive: true
+      },
+      select: {
+        id: true
+      },
       take: 50,
-      select: { id: true },
-      where: { isActive: true }
-    });
-    
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
     return products.map((product) => ({
-      id: product.id,
-    }));
+      id: product.id
+    }))
   } catch (error) {
-    console.error('Error generating static params:', error);
-    return [];
+    console.error('Error generating static params:', error)
+    return []
   }
 }
 
-// Función para obtener datos del producto
+// Función para obtener el producto directamente desde la base de datos
 async function getProduct(id: string) {
   try {
-    // Construir la URL base correcta para el entorno
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    
-    const res = await fetch(`${baseUrl}/api/productos/${id}`, {
-      cache: 'no-store'
-    });
-    
-    if (!res.ok) {
-      return null;
+    const product = await prisma.product.findUnique({
+      where: { 
+        id: id,
+        isActive: true 
+      },
+      include: {
+        category: true,
+        variants: true
+      }
+    })
+
+    if (!product) {
+      return null
     }
-    
-    return await res.json();
+
+    // Calcular stock total
+    const totalStock = product.variants && product.variants.length > 0
+      ? product.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0)
+      : product.stock || 0
+
+    return {
+      ...product,
+      totalStock,
+      isAvailable: totalStock > 0
+    }
   } catch (error) {
-    console.error('Error fetching product:', error);
-    return null;
+    console.error('Error fetching product:', error)
+    return null
   }
 }
 
 // Generar metadatos dinámicos
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const product = await getProduct(id);
-  
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const product = await getProduct(params.id)
+
   if (!product) {
     return {
       title: 'Producto no encontrado',
-      description: 'El producto que buscas no está disponible.'
-    };
+      description: 'El producto que buscas no existe o no está disponible.'
+    }
   }
-
-  const title = `${product.name} - Garra Tienda`;
-  const description = product.description || `Compra ${product.name} al mejor precio. ${product.variants?.length ? 'Disponible en múltiples colores y tallas.' : ''}`;
-  const images = product.images?.length ? product.images.map((img: string) => ({
-    url: img,
-    alt: product.name
-  })) : [];
 
   return {
-    title,
-    description,
-    keywords: `${product.name}, ${product.category?.name || ''}, ${product.subcategory?.name || ''}, tienda online, comprar`,
+    title: `${product.name} - Garra Felinas`,
+    description: product.description || `Compra ${product.name} en Garra Felinas. Precio: $${product.price}`,
     openGraph: {
-      title,
-      description,
-      type: 'website',
-      images,
-      siteName: 'Garra Tienda',
-      locale: 'es_ES'
+      title: product.name,
+      description: product.description || `Compra ${product.name} en Garra Felinas`,
+      images: product.images && product.images.length > 0 ? [product.images[0]] : [],
     },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: images.length ? [images[0].url] : []
-    },
-    alternates: {
-      canonical: `/productos/${id}`
-    }
-  };
+  }
 }
 
-// Componente servidor
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = await params;
-  const product = await getProduct(id);
-  
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const product = await getProduct(params.id)
+
   if (!product) {
-    notFound();
+    notFound()
   }
 
-  // Datos estructurados JSON-LD
+  // Datos estructurados para SEO
   const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    "name": product.name,
-    "description": product.description,
-    "image": product.images || [],
-    "brand": {
-      "@type": "Brand",
-      "name": "Garra Tienda"
-    },
-    "category": product.category?.name,
-    "offers": {
-      "@type": "AggregateOffer",
-      "priceCurrency": "MXN",
-      "lowPrice": product.price,
-      "highPrice": product.price,
-      "availability": product.variants?.some((v: any) => v.stock > 0) 
-        ? "https://schema.org/InStock" 
-        : "https://schema.org/OutOfStock",
-      "seller": {
-        "@type": "Organization",
-        "name": "Garra Tienda"
-      }
-    },
-    "aggregateRating": product.rating ? {
-      "@type": "AggregateRating",
-      "ratingValue": product.rating,
-      "ratingCount": product.reviewCount || 1
-    } : undefined
-  };
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description,
+    image: product.images,
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'MXN',
+      availability: product.isAvailable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+    }
+  }
 
   return (
     <>
-      {/* Datos estructurados */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(structuredData)
         }}
       />
-      
-      {/* Componente cliente */}
       <ProductDetailClient initialProduct={product} />
     </>
-  );
+  )
 }
