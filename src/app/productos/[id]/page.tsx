@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import ProductDetailClient from './ProductDetailClient'
 import { Metadata } from 'next'
+import { Suspense } from 'react'
 
 // Configuración para Next.js
 export const dynamicParams = true
@@ -120,7 +121,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           __html: JSON.stringify(structuredData)
         }}
       />
-      <ProductDetailClient initialProduct={product} />
+      <Suspense fallback={<div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div></div>}>
+        <ProductDetailClient initialProduct={product} />
+      </Suspense>
     </>
   )
 }

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { log } from '@/lib/secureLogger'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { 
   ArrowLeft, 
   Save, 
@@ -69,34 +69,42 @@ const subcategoriasPorCategoria: Record<string, string[]> = {
 
 };
 
-// Datos simulados del producto
-const mockProduct = {
-  id: 1,
-  name: 'Vestido Floral de Verano',
-  description: 'Hermoso vestido floral perfecto para el verano. Fabricado con materiales de alta calidad y diseño elegante.',
-  category: 'mujer',
-  price: 89.99,
-  originalPrice: 120.00,
-  stock: 15,
-  images: [
-    'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2028&q=80',
-    'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80'
-  ],
-  variants: [
-    { size: 'S', color: 'Azul', stock: 5 },
-    { size: 'M', color: 'Azul', stock: 8 },
-    { size: 'L', color: 'Azul', stock: 2 }
-  ],
-  conditionTag: 'LIKE_NEW',
-  isOnSale: true,
-  isActive: true,
-  createdAt: '2024-01-15',
-  updatedAt: '2024-01-20'
-}
+// Solo usar datos reales de la base de datos
 
 export default function EditarProductoPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const productId = params.id
+
+  // Manejar parámetros de navegación
+  useEffect(() => {
+    const fromParam = searchParams.get('from')
+    const pageParam = searchParams.get('page')
+    const categoryParam = searchParams.get('category')
+    const searchParam = searchParams.get('search')
+    const inactiveParam = searchParams.get('showInactive')
+    
+    console.log('🔗 EditarProducto - Parámetros de URL:', {
+      from: fromParam,
+      page: pageParam,
+      category: categoryParam,
+      search: searchParam,
+      showInactive: inactiveParam
+    })
+    
+    if (fromParam === 'admin') {
+      // Guardar estado de navegación para regreso
+      const navigationState = {
+        page: parseInt(pageParam || '1'),
+        category: categoryParam || 'all',
+        search: searchParam || '',
+        showInactive: inactiveParam === 'true',
+        timestamp: Date.now()
+      }
+      console.log('💾 EditarProducto - Guardando estado:', navigationState)
+      sessionStorage.setItem('adminProductsNavigationState', JSON.stringify(navigationState))
+    }
+  }, [searchParams])
 
   const [formData, setFormData] = useState({
     name: '',
@@ -392,7 +400,37 @@ export default function EditarProductoPage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-              <Link href="/admin/productos" className="btn-secondary text-xs sm:text-sm py-2 px-3">
+              <Link 
+                href="/admin/productos" 
+                className="btn-secondary text-xs sm:text-sm py-2 px-3"
+                onClick={() => {
+                  // Restaurar estado de navegación al hacer clic en volver
+                  const savedState = sessionStorage.getItem('adminProductsNavigationState')
+                  if (savedState) {
+                    try {
+                      const state = JSON.parse(savedState)
+                      if ((Date.now() - state.timestamp) < 30 * 60 * 1000) {
+                        // Construir URL con parámetros restaurados
+                        const returnUrl = new URL('/admin/productos', window.location.origin)
+                        returnUrl.searchParams.set('page', (state.page || 1).toString())
+                        if (state.category && state.category !== 'all') {
+                          returnUrl.searchParams.set('category', state.category)
+                        }
+                        if (state.search) {
+                          returnUrl.searchParams.set('search', state.search)
+                        }
+                        if (state.showInactive) {
+                          returnUrl.searchParams.set('showInactive', 'true')
+                        }
+                        window.location.href = returnUrl.toString()
+                        return false // Prevenir navegación normal
+                      }
+                    } catch (error) {
+                      console.error('Error restoring admin navigation state:', error)
+                    }
+                  }
+                }}
+              >
                 <ArrowLeft className="mr-1 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Volver</span>
                 <span className="sm:hidden">Atrás</span>

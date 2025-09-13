@@ -9,10 +9,8 @@ export default function Footer() {
           {/* Logo y descripción */}
           <div className="lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
-              <span className="text-xl font-bold">Bazar Fashion</span>
+              
+              <span className="text-xl font-bold">Garras Felinas</span>
             </div>
             <p className="text-gray-300 mb-6">
               Tu destino de moda online. Descubre las últimas tendencias en ropa, 
@@ -136,7 +134,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-300 text-sm">
-              © 2024 Bazar Fashion. Todos los derechos reservados.
+              © 2024 Garras Felinas. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacidad" className="text-gray-300 hover:text-blue-400 text-sm transition-colors">

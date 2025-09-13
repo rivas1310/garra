@@ -152,116 +152,8 @@ export default function InventarioPage() {
   // Usar datos reales del inventario
   const { inventario, loading: inventarioLoading, error: inventarioError, refreshInventario, updateProductStatus, deleteProduct, updateProduct } = useInventario()
   
-  // Mantener compatibilidad con datos simulados como fallback
-  const [inventarioFallback, setInventarioFallback] = useState([
-    {
-      id: 1,
-      nombre: 'Jeringa Desechable 5ml',
-      sku: 'JER-005',
-      categoria: 'Consumibles',
-      stock: 150,
-      stockMinimo: 50,
-      precio: 0.75,
-      proveedor: 'MedSupply',
-      fechaVencimiento: '2024-12-31',
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 2,
-      nombre: 'Amalgama Dental Premium',
-      sku: 'AMA-001',
-      categoria: 'Materiales',
-      stock: 25,
-      stockMinimo: 10,
-      precio: 45.50,
-      proveedor: 'DentalCorp',
-      fechaVencimiento: '2025-06-15',
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 3,
-      nombre: 'Espejo Dental Profesional',
-      sku: 'ESP-001',
-      categoria: 'Instrumental',
-      stock: 8,
-      stockMinimo: 15,
-      precio: 12.30,
-      proveedor: 'InstruMed',
-      fechaVencimiento: null,
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 4,
-      nombre: 'Anestesia Local Lidocaína',
-      sku: 'ANE-002',
-      categoria: 'Medicamentos',
-      stock: 0,
-      stockMinimo: 20,
-      precio: 8.90,
-      proveedor: 'PharmaDent',
-      fechaVencimiento: '2024-08-20',
-      activo: false,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 5,
-      nombre: 'Sillón Dental Eléctrico',
-      sku: 'SIL-001',
-      categoria: 'Equipos',
-      stock: 2,
-      stockMinimo: 1,
-      precio: 2500.00,
-      proveedor: 'DentalTech',
-      fechaVencimiento: null,
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 6,
-      nombre: 'Guantes de Látex Caja x100',
-      sku: 'GUA-100',
-      categoria: 'Consumibles',
-      stock: 45,
-      stockMinimo: 20,
-      precio: 15.99,
-      proveedor: 'MedSupply',
-      fechaVencimiento: '2025-03-10',
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 7,
-      nombre: 'Resina Compuesta A2',
-      sku: 'RES-A2',
-      categoria: 'Materiales',
-      stock: 12,
-      stockMinimo: 8,
-      precio: 89.50,
-      proveedor: 'DentalCorp',
-      fechaVencimiento: '2025-12-01',
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    },
-    {
-      id: 8,
-      nombre: 'Turbina Dental NSK',
-      sku: 'TUR-NSK',
-      categoria: 'Equipos',
-      stock: 3,
-      stockMinimo: 2,
-      precio: 450.00,
-      proveedor: 'DentalTech',
-      fechaVencimiento: null,
-      activo: true,
-      imagen: '/api/placeholder/60/60'
-    }
-  ])
-
-  // Usar datos reales si están disponibles, sino usar fallback
-  const inventarioActual = inventario.length > 0 ? inventario : inventarioFallback
+  // Solo usar datos reales de la base de datos
+  const inventarioActual = inventario
 
   // Función para obtener el estado del stock
   const getStockStatus = (item: InventarioItem) => {
@@ -275,18 +167,18 @@ export default function InventarioPage() {
   }
 
   // Filtrar inventario
-  const filteredInventario = inventarioActual.filter(item => {
-    const matchesSearch = item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredInventario = inventarioActual.filter((item: any) => {
+    const matchesSearch = (item.nombre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.sku || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === 'Todos' || item.categoria === selectedCategory
     const matchesStatus = selectedStatus === 'Todos' || 
                          (selectedStatus === 'Activo' && item.activo) ||
                          (selectedStatus === 'Inactivo' && !item.activo) ||
                          (selectedStatus === 'Sin Stock' && item.stock === 0) ||
-                         (selectedStatus === 'Stock Bajo' && item.stock <= item.stockMinimo && item.stock > 0)
+                         (selectedStatus === 'Stock Bajo' && item.stock <= (item.stockMinimo || 0) && item.stock > 0)
     const matchesStockMin = !stockMinFilter || item.stock >= parseInt(stockMinFilter)
     const matchesStockMax = !stockMaxFilter || item.stock <= parseInt(stockMaxFilter)
-    const matchesProveedor = !proveedorFilter || item.proveedor.toLowerCase().includes(proveedorFilter.toLowerCase())
+    const matchesProveedor = !proveedorFilter || (item.proveedor || '').toLowerCase().includes(proveedorFilter.toLowerCase())
     
     return matchesSearch && matchesCategory && matchesStatus && matchesStockMin && matchesStockMax && matchesProveedor
   })
@@ -316,10 +208,10 @@ export default function InventarioPage() {
   // Estadísticas
   const stats = {
     total: inventarioActual.length,
-    activos: inventarioActual.filter(item => item.activo).length,
-    sinStock: inventarioActual.filter(item => item.stock === 0).length,
-    stockBajo: inventarioActual.filter(item => item.stock <= item.stockMinimo && item.stock > 0).length,
-    valorTotal: inventarioActual.reduce((sum, item) => sum + (item.precio * item.stock), 0)
+    activos: inventarioActual.filter((item: any) => item.activo).length,
+    sinStock: inventarioActual.filter((item: any) => item.stock === 0).length,
+    stockBajo: inventarioActual.filter((item: any) => item.stock <= (item.stockMinimo || 0) && item.stock > 0).length,
+    valorTotal: inventarioActual.reduce((sum: number, item: any) => sum + ((item.precio || 0) * (item.stock || 0)), 0)
   }
 
   // Componente de Loading Skeleton
@@ -394,7 +286,7 @@ export default function InventarioPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(paginatedInventario.map(item => item.id))
+      setSelectedItems(paginatedInventario.map((item: any) => item.id))
     } else {
       setSelectedItems([])
     }
@@ -411,7 +303,7 @@ export default function InventarioPage() {
   const handleSaveEdit = async () => {
     setIsSaving(true)
     try {
-      const item = inventarioActual.find(item => item.id === editingItem)
+      const item = inventarioActual.find((item: any) => item.id === editingItem)
       if (item && editingItem !== null) {
         await updateProduct(editingItem.toString(), {
           stock: parseInt(editValues.stock.toString()),
@@ -457,9 +349,9 @@ export default function InventarioPage() {
   const handleToggleActive = async (id: number) => {
     setTogglingId(id)
     try {
-      const item = inventarioActual.find(item => item.id === id)
+      const item = inventarioActual.find((item: any) => item.id === id)
       if (item) {
-        await updateProductStatus(id, !item.activo)
+        await updateProductStatus(id, !(item as any).activo)
         // Refrescar inventario para obtener datos actualizados
         refreshInventario()
       }
@@ -906,7 +798,7 @@ export default function InventarioPage() {
           /* Vista de Tarjetas Rediseñadas */
           <div className="p-6 lg:p-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-              {paginatedInventario.map((item) => (
+              {paginatedInventario.map((item: any) => (
                 <div key={item.id} className="group relative bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 hover:border-blue-300 hover:-translate-y-1 overflow-hidden">
                   {/* Gradiente de fondo */}
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -1166,7 +1058,7 @@ export default function InventarioPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {paginatedInventario.map((item, index) => (
+                {paginatedInventario.map((item: any, index: number) => (
                   <tr key={item.id} className={`group hover:bg-slate-50 transition-all duration-200 ${
                     index % 2 === 0 ? 'bg-white' : 'bg-slate-25'
                   }`}>

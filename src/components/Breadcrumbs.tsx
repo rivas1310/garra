@@ -31,6 +31,16 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
               href={item.href} 
               className="hover:text-orange-600 transition-colors duration-200 truncate max-w-[150px] md:max-w-none"
               title={item.label}
+              onClick={() => {
+                console.log('🍞 Breadcrumb - Navegando a:', item.href);
+                console.log('🍞 Breadcrumb - Label:', item.label);
+                
+                // DEBUGGING: Log detallado del clic en breadcrumb
+                console.log('🐛 DEBUG - Breadcrumb Click - URL completa:', item.href);
+                console.log('🐛 DEBUG - Breadcrumb Click - Contiene Abrigos?:', item.href?.includes('Abrigos'));
+                console.log('🐛 DEBUG - Breadcrumb Click - Contiene vestidos?:', item.href?.includes('vestidos'));
+                console.log('🐛 DEBUG - Breadcrumb Click - URL actual antes del clic:', window.location.href);
+              }}
             >
               {item.label}
             </Link>

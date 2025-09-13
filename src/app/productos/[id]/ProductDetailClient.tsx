@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { log } from '@/lib/secureLogger';
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ShoppingCart, Star, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import { useCart } from "@/hooks/useCart";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -21,6 +21,7 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ initialProduct }: ProductDetailClientProps) {
   const params = useParams();
+  const searchParams = useSearchParams();
   const { id } = params;
   const [producto, setProducto] = useState<any>(initialProduct);
   const [selectedSize, setSelectedSize] = useState<string>("");
@@ -29,6 +30,39 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [addToCartMessage, setAddToCartMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const { addToCart, getItemQuantity } = useCart();
+
+  // Efecto para manejar parámetros de navegación desde URL
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    const subcatParam = searchParams.get('subcat');
+    const fromParam = searchParams.get('from');
+    
+    console.log('🔗 ProductDetail - Parámetros de URL:', {
+      from: fromParam,
+      category: categoryParam,
+      subcat: subcatParam
+    });
+    
+    if (fromParam === 'category' && categoryParam) {
+      // DEBUGGING: Log detallado antes de guardar estado
+      console.log('🐛 DEBUG - ProductDetail - Parámetros recibidos:', {
+        fromParam,
+        categoryParam,
+        subcatParam,
+        fullURL: window.location.href,
+        searchString: window.location.search
+      });
+      
+      // Actualizar sessionStorage con la información de navegación
+      const navigationState = {
+        categoria: categoryParam,
+        subcategoria: subcatParam || '',
+        timestamp: Date.now()
+      };
+      console.log('💾 ProductDetail - Guardando estado:', navigationState);
+      sessionStorage.setItem('categoryNavigationState', JSON.stringify(navigationState));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!id) return;
@@ -186,18 +220,65 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
     }
   };
 
+  // Función para obtener breadcrumbs dinámicos basados en el estado de navegación
+  const getBreadcrumbs = () => {
+    const defaultBreadcrumbs = [
+      { label: 'Inicio', href: '/' },
+      { label: 'Productos', href: '/productos' },
+      { label: producto?.name || 'Cargando...', href: '#' }
+    ];
+
+    // Intentar obtener el estado de navegación guardado
+    if (typeof window !== 'undefined') {
+      try {
+        const savedState = sessionStorage.getItem('categoryNavigationState');
+        console.log('🍞 ProductDetail - Estado guardado para breadcrumbs:', savedState);
+        
+        if (savedState) {
+          const state = JSON.parse(savedState);
+          console.log('🍞 ProductDetail - Estado parseado para breadcrumbs:', state);
+          
+          // Solo usar si no ha pasado más de 30 minutos
+          if ((Date.now() - state.timestamp) < 30 * 60 * 1000) {
+            // DEBUGGING: Log detallado de construcción de URL
+            console.log('🐛 DEBUG - Breadcrumb - Estado completo:', state);
+            console.log('🐛 DEBUG - Breadcrumb - Subcategoría original:', state.subcategoria);
+            console.log('🐛 DEBUG - Breadcrumb - Subcategoría encoded:', encodeURIComponent(state.subcategoria));
+            
+            const categoryUrl = `/categorias/${state.categoria}?from=category${state.subcategoria ? `&subcat=${encodeURIComponent(state.subcategoria)}` : ''}`;
+            console.log('🍞 ProductDetail - URL del breadcrumb construida:', categoryUrl);
+            
+            // DEBUGGING: Verificar que la URL se construyó correctamente
+            console.log('🐛 DEBUG - Breadcrumb - URL final verificada:', categoryUrl);
+            console.log('🐛 DEBUG - Breadcrumb - Contiene Abrigos?:', categoryUrl.includes('Abrigos'));
+            console.log('🐛 DEBUG - Breadcrumb - Contiene vestidos?:', categoryUrl.includes('vestidos'));
+            
+            const categoryBreadcrumbs = [
+              { label: 'Inicio', href: '/' },
+              { label: 'Categorías', href: '/categorias' },
+              { 
+                label: state.categoria.charAt(0).toUpperCase() + state.categoria.slice(1), 
+                href: categoryUrl
+              },
+              { label: producto?.name || 'Cargando...', href: '#' }
+            ];
+            return categoryBreadcrumbs;
+          }
+        }
+      } catch (error) {
+        console.error('Error getting navigation state for breadcrumbs:', error);
+      }
+    }
+
+    return defaultBreadcrumbs;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumbs */}
       <div className="bg-white border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Breadcrumbs 
-            items={[
-              { label: 'Inicio', href: '/' },
-              { label: 'Productos', href: '/productos' },
-              { label: producto?.name || 'Cargando...', href: '#' }
-            ]}
-          />
+          <Breadcrumbs items={getBreadcrumbs()} />
         </div>
       </div>
       

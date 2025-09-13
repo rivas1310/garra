@@ -68,3 +68,4 @@ export function filterProductsBySearch(products: any[], searchTerm: string): any
     return searchInFields(searchTerm, fieldsToSearch);
   });
 }
+

@@ -167,7 +167,7 @@ export default function PaginatedProductGrid({
       {/* Grid de productos */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {productos.map((producto) => (
-          <ProductCard key={producto.id} product={producto} />
+          <ProductCard key={producto.id} product={producto} subcategoria={subcategoria} />
         ))}
       </div>
 

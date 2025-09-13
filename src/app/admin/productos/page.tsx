@@ -3,7 +3,7 @@
 // Página de administración de productos con paginación optimizada - v4.2
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { log } from '@/lib/secureLogger'
 import { normalizeText } from '@/utils/searchUtils'
@@ -20,6 +20,7 @@ const categories = [
 
 export default function ProductosAdminPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,11 +40,153 @@ export default function ProductosAdminPage() {
   // Debug: Verificar estado del modal
   console.log('Estado del modal:', showImageModal, 'Imagen seleccionada:', selectedImage);
 
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [showInactive, setShowInactive] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1);
+  // Inicializar estado desde URL
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get('category') || 'all'
+    }
+    return 'all'
+  })
+  const [searchTerm, setSearchTerm] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get('search') || ''
+    }
+    return ''
+  })
+  const [showInactive, setShowInactive] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      return urlParams.get('showInactive') === 'true'
+    }
+    return false
+  })
+  const [currentPage, setCurrentPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      return parseInt(urlParams.get('page') || '1')
+    }
+    return 1
+  });
   const [pagination, setPagination] = useState<any>(null);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  // Función para guardar el estado de navegación
+  const saveNavigationState = (page: number, category: string, search: string, inactive: boolean) => {
+    if (typeof window !== 'undefined') {
+      const navigationState = {
+        page,
+        category,
+        search,
+        showInactive: inactive,
+        timestamp: Date.now()
+      }
+      console.log('💾 Guardando estado de navegación admin:', navigationState)
+      sessionStorage.setItem('adminProductsNavigationState', JSON.stringify(navigationState))
+    }
+  }
+
+  // Función para restaurar el estado de navegación
+  const restoreNavigationState = () => {
+    console.log('🔍 Restaurando estado de navegación admin')
+    
+    const fromParam = searchParams.get('from')
+    const pageFromUrl = searchParams.get('page')
+    const categoryFromUrl = searchParams.get('category')
+    const searchFromUrl = searchParams.get('search')
+    const inactiveFromUrl = searchParams.get('showInactive')
+    
+    console.log('📋 Parámetros de URL admin - from:', fromParam, 'page:', pageFromUrl, 'category:', categoryFromUrl)
+    
+    // Si viene de un producto, restaurar estado guardado
+    if (fromParam === 'admin' && typeof window !== 'undefined') {
+      try {
+        const savedState = sessionStorage.getItem('adminProductsNavigationState')
+        if (savedState) {
+          const state = JSON.parse(savedState)
+          if ((Date.now() - state.timestamp) < 30 * 60 * 1000) {
+            console.log('✅ Restaurando desde sessionStorage admin:', state)
+            setIsRestoring(true)
+            setCurrentPage(state.page || 1)
+            setSelectedCategory(state.category || 'all')
+            setSearchTerm(state.search || '')
+            setShowInactive(state.showInactive || false)
+            
+            // Actualizar la URL para reflejar el estado restaurado
+            const newUrl = new URL(window.location.href)
+            newUrl.searchParams.set('page', (state.page || 1).toString())
+            if (state.category && state.category !== 'all') {
+              newUrl.searchParams.set('category', state.category)
+            } else {
+              newUrl.searchParams.delete('category')
+            }
+            if (state.search) {
+              newUrl.searchParams.set('search', state.search)
+            } else {
+              newUrl.searchParams.delete('search')
+            }
+            if (state.showInactive) {
+              newUrl.searchParams.set('showInactive', 'true')
+        } else {
+              newUrl.searchParams.delete('showInactive')
+            }
+            newUrl.searchParams.delete('from') // Limpiar parámetro from
+            window.history.replaceState({}, '', newUrl.toString())
+            console.log('🔗 URL actualizada con estado restaurado admin:', newUrl.toString())
+            
+            return true
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring admin navigation state:', error)
+      }
+    }
+    
+    // Si hay parámetros en URL, usarlos
+    if (pageFromUrl || categoryFromUrl || searchFromUrl || inactiveFromUrl) {
+      console.log('✅ Usando parámetros desde URL admin')
+      setIsRestoring(true)
+      if (pageFromUrl) setCurrentPage(parseInt(pageFromUrl))
+      if (categoryFromUrl) setSelectedCategory(categoryFromUrl)
+      if (searchFromUrl) setSearchTerm(searchFromUrl)
+      if (inactiveFromUrl) setShowInactive(inactiveFromUrl === 'true')
+      return true
+    }
+    
+    console.log('🚫 No se restauró el estado admin - navegación normal')
+    return false
+  }
+
+  // Función para actualizar URL
+  const updateURL = (page: number, category: string, search: string, inactive: boolean) => {
+    if (typeof window === 'undefined') return
+    
+    const newUrl = new URL(window.location.href)
+    newUrl.searchParams.set('page', page.toString())
+    
+    if (category && category !== 'all') {
+      newUrl.searchParams.set('category', category)
+    } else {
+      newUrl.searchParams.delete('category')
+    }
+    
+    if (search) {
+      newUrl.searchParams.set('search', search)
+    } else {
+      newUrl.searchParams.delete('search')
+    }
+    
+    if (inactive) {
+      newUrl.searchParams.set('showInactive', 'true')
+    } else {
+      newUrl.searchParams.delete('showInactive')
+    }
+    
+    window.history.replaceState({}, '', newUrl.toString())
+    console.log('🔗 URL actualizada admin:', newUrl.toString())
+  }
 
   // Función para cargar productos
   const fetchProducts = async (page: number = 1) => {
@@ -76,6 +219,10 @@ export default function ProductosAdminPage() {
       setPagination(data.pagination);
       setCurrentPage(page);
       
+      // Actualizar URL y guardar estado
+      updateURL(page, selectedCategory, searchTerm, showInactive);
+      saveNavigationState(page, selectedCategory, searchTerm, showInactive);
+      
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       console.error('Error fetching products:', err);
@@ -84,16 +231,37 @@ export default function ProductosAdminPage() {
     }
   };
 
-  // Cargar productos iniciales
+  // Cargar productos iniciales y restaurar estado
   useEffect(() => {
-    fetchProducts(1);
+    // Intentar restaurar estado primero
+    const restored = restoreNavigationState()
+    if (!restored) {
+      // Si no se restauró, cargar página 1
+      fetchProducts(1)
+    }
+    // Marcar que ya no es el primer render
+    setIsFirstRender(false)
+    // Si se restauró, el estado se cargará en el siguiente useEffect
   }, []);
 
-  // Recargar cuando cambien los filtros
+  // Cargar productos cuando cambie currentPage (incluyendo restauración)
   useEffect(() => {
-    // Siempre recargar cuando cambien los filtros, independientemente si hay productos o no
-    fetchProducts(1);
-  }, [selectedCategory, searchTerm]);
+    if (currentPage > 0) {
+      fetchProducts(currentPage)
+    }
+  }, [currentPage])
+
+  // Recargar cuando cambien los filtros (resetear a página 1)
+  useEffect(() => {
+    // No ejecutar en el primer render o durante la restauración
+    if (isFirstRender || isRestoring) {
+      if (isRestoring) setIsRestoring(false)
+      return
+    }
+    // Resetear a página 1 cuando cambien los filtros
+    setCurrentPage(1);
+    // El fetchProducts se ejecutará automáticamente por el useEffect de currentPage
+  }, [selectedCategory, searchTerm, showInactive, isFirstRender]);
 
   // Mapeo de productos para asegurar que stock sea numérico y status correcto
   const mappedProducts = products.map((p: any) => {
@@ -169,10 +337,20 @@ export default function ProductosAdminPage() {
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
+    // Actualizar URL inmediatamente
+    updateURL(1, category, searchTerm, showInactive);
   };
 
   const handleSearch = (search: string) => {
     setSearchTerm(search);
+    // Actualizar URL inmediatamente
+    updateURL(1, selectedCategory, search, showInactive);
+  };
+
+  const handleShowInactiveChange = (inactive: boolean) => {
+    setShowInactive(inactive);
+    // Actualizar URL inmediatamente
+    updateURL(1, selectedCategory, searchTerm, inactive);
   };
 
   const goToPage = (pageNum: number) => {
@@ -261,7 +439,7 @@ export default function ProductosAdminPage() {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
                     }`}
                   >
-                    {category.name}
+                  {category.name}
                   </button>
                 ))}
               </div>
@@ -377,7 +555,13 @@ export default function ProductosAdminPage() {
                       {/* Acciones */}
                       <div className="mt-2 flex items-center space-x-2">
                         <button
-                          onClick={() => router.push(`/admin/productos/${product.id}/editar`)}
+                          onClick={() => {
+                            // Guardar estado actual antes de navegar
+                            saveNavigationState(currentPage, selectedCategory, searchTerm, showInactive);
+                            // Navegar con parámetros de regreso
+                            const editUrl = `/admin/productos/${product.id}/editar?from=admin&page=${currentPage}&category=${selectedCategory}&search=${searchTerm}&showInactive=${showInactive}`;
+                            router.push(editUrl);
+                          }}
                           className="flex-1 bg-blue-50 text-blue-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-blue-100 transition-colors duration-200"
                         >
                           Editar
@@ -391,13 +575,13 @@ export default function ProductosAdminPage() {
                           className="flex-1 bg-red-50 text-red-600 px-2 py-1.5 rounded-md text-xs font-medium hover:bg-red-100 transition-colors duration-200"
                         >
                           Eliminar
-                        </button>
-                      </div>
+              </button>
+            </div>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
+          </div>
 
             {/* Tabla responsive optimizada para tablet y desktop */}
             <div className="hidden sm:block bg-white rounded-lg shadow-sm overflow-hidden">
@@ -406,35 +590,35 @@ export default function ProductosAdminPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Producto
-                      </th>
+                    Producto
+                  </th>
                       <th className="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <span className="hidden sm:inline">Categoría</span>
-                      </th>
+                  </th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Precio
-                      </th>
+                    Precio
+                  </th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Stock
-                      </th>
+                    Stock
+                  </th>
                       <th className="hidden lg:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <span className="hidden sm:inline">Estado</span>
-                      </th>
+                  </th>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProducts.map((product) => (
                       <tr key={product.id} className="hover:bg-gray-50 border-b border-gray-100">
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
-                          <div className="flex items-center">
+                      <div className="flex items-center">
                             <div className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 flex-shrink-0 relative group">
-                              <img
+                        <img
                                 className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 rounded-lg object-cover border border-gray-200 shadow-sm group-hover:shadow-md transition-all duration-200"
-                                src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
-                                alt={product.name}
+                          src={Array.isArray(product.images) && product.images[0] ? product.images[0] : '/img/placeholder.png'}
+                          alt={product.name}
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = '/img/placeholder.png';
@@ -472,20 +656,20 @@ export default function ProductosAdminPage() {
                               <div className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-md inline-block">ID: {product.id}</div>
                               {/* Mostrar categoría en tablet cuando está oculta */}
                               <div className="md:hidden text-xs text-gray-600 mt-1">{product.category?.name || 'Sin categoría'}</div>
-                            </div>
-                          </div>
-                        </td>
+                        </div>
+                      </div>
+                    </td>
                         <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 align-middle">
                           <div className="font-medium">{product.category?.name || 'Sin categoría'}</div>
-                        </td>
+                    </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 align-middle">
                           <div className="font-semibold text-green-600">${product.price}</div>
-                          {product.originalPrice && product.originalPrice > product.price && (
+                      {product.originalPrice && product.originalPrice > product.price && (
                             <div className="text-xs text-gray-500 line-through">
                               ${product.originalPrice}
                             </div>
-                          )}
-                        </td>
+                      )}
+                    </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 align-middle">
                           <div className="font-medium">{product.stock}</div>
                           {product.variants && product.variants.length > 0 && (
@@ -497,14 +681,20 @@ export default function ProductosAdminPage() {
                           <div className="lg:hidden mt-1">
                             {getStatusBadge(product.status)}
                           </div>
-                        </td>
+                    </td>
                         <td className="hidden lg:table-cell px-3 sm:px-6 py-3 sm:py-4 align-middle">
                           {getStatusBadge(product.status)}
-                        </td>
+                    </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium align-middle">
                           <div className="flex items-center gap-1 sm:gap-2">
                             <button
-                              onClick={() => router.push(`/admin/productos/${product.id}/editar`)}
+                              onClick={() => {
+                            // Guardar estado actual antes de navegar
+                            saveNavigationState(currentPage, selectedCategory, searchTerm, showInactive);
+                            // Navegar con parámetros de regreso
+                            const editUrl = `/admin/productos/${product.id}/editar?from=admin&page=${currentPage}&category=${selectedCategory}&search=${searchTerm}&showInactive=${showInactive}`;
+                            router.push(editUrl);
+                          }}
                               className="p-1 sm:p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
                               title="Editar producto"
                         >

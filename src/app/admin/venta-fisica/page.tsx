@@ -212,9 +212,9 @@ export default function VentaFisicaPage() {
   const filteredProducts = products.filter(product => {
     // Filtro de búsqueda por texto
     const matchesSearch = searchTerm === '' || 
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase()))
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase()))
     
     // Filtro por categoría
     const matchesCategory = categoryFilter === '' || 
@@ -283,8 +283,8 @@ export default function VentaFisicaPage() {
       const updatedItems = cartItems.map(item => {
         if (variant) {
           return item.id === product.id && item.variantId === variant.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          ? { ...item, quantity: item.quantity + 1 } 
+          : item
         }
         return item.id === product.id && !item.variantId
           ? { ...item, quantity: item.quantity + 1 }
@@ -294,11 +294,11 @@ export default function VentaFisicaPage() {
     } else {
       // Agregar nuevo item
       const newItem = { 
-        id: product.id, 
-        name: product.name, 
+          id: product.id, 
+          name: product.name, 
         price: productPrice, 
-        image: product.images && product.images[0] ? product.images[0] : '/img/placeholder.png',
-        quantity: 1,
+          image: product.images && product.images[0] ? product.images[0] : '/img/placeholder.png',
+          quantity: 1,
         stock: availableStock,
         ...(variant && {
           variantId: variant.id,
@@ -1683,83 +1683,83 @@ garantias y devoluciones
                 <h3 className="text-lg font-semibold text-gray-700 mb-3">📱 Escanear Código</h3>
                 <form onSubmit={handleBarcodeSearch} className="space-y-3">
                   <div className="relative">
-                    <input
-                      type="text"
-                      value={barcodeInput}
-                      onChange={(e) => setBarcodeInput(e.target.value)}
+                  <input
+                    type="text"
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
                       placeholder="Escanea código de barras/QR..."
                       className="w-full px-4 py-3 pl-10 text-lg border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
+                  />
                     <QrCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  </div>
+                </div>
                   
                   <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      type="submit" 
+                  <button 
+                    type="submit" 
                       className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm"
-                    >
+                  >
                       🔍 Buscar
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => setShowScanner(true)}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowScanner(true)}
                       className="w-full py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-semibold text-sm"
                     >
                       📷 Cámara
-                    </button>
-                  </div>
-                </form>
-                
-                {/* Escáner de códigos de barras */}
-                {showScanner && (
+                  </button>
+                </div>
+              </form>
+              
+              {/* Escáner de códigos de barras */}
+              {showScanner && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <BarcodeScanner 
-                      onScan={async (decodedText) => {
-                        setBarcodeInput(decodedText);
-                        setShowScanner(false);
+                  <BarcodeScanner 
+                    onScan={async (decodedText) => {
+                      setBarcodeInput(decodedText);
+                      setShowScanner(false);
+                      
+                      try {
+                        // Primero intentar buscar por código de barras usando la API
+                        const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
                         
-                        try {
-                          // Primero intentar buscar por código de barras usando la API
-                          const barcodeResponse = await fetch(`/api/productos/barcode/${decodedText.trim()}`);
+                        if (barcodeResponse.ok) {
+                          const product = await barcodeResponse.json();
+                          log.error('Producto encontrado por código de barras:', product);
                           
-                          if (barcodeResponse.ok) {
-                            const product = await barcodeResponse.json();
-                            log.error('Producto encontrado por código de barras:', product);
-                            
-                            if (product.isAvailable) {
-                              addToCart(product);
-                              setBarcodeInput('');
-                              toast.success(`Producto agregado: ${product.name}`);
-                            } else {
-                              toast.error(`Producto encontrado pero sin stock: ${product.name}`);
-                            }
-                            return;
-                          }
-                          
-                          // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
-                          const product = products.find(p => 
-                            p.id === decodedText.trim() || 
-                            p.slug === decodedText.trim()
-                          );
-                          
-                          if (product) {
+                          if (product.isAvailable) {
                             addToCart(product);
                             setBarcodeInput('');
-                            toast.success(`${product.name} agregado al carrito`);
+                            toast.success(`Producto agregado: ${product.name}`);
                           } else {
-                            toast.error('Producto no encontrado');
+                            toast.error(`Producto encontrado pero sin stock: ${product.name}`);
                           }
-                        } catch (error) {
-                          log.error('Error al buscar producto:', error);
-                          toast.error('Error al buscar el producto');
+                          return;
                         }
-                      }}
-                      onClose={() => setShowScanner(false)}
-                    />
-                  </div>
-                )}
-              </div>
-              
+                        
+                        // Si no se encuentra por código de barras, buscar por ID o slug en la lista local
+                        const product = products.find(p => 
+                          p.id === decodedText.trim() || 
+                          p.slug === decodedText.trim()
+                        );
+                        
+                        if (product) {
+                          addToCart(product);
+                          setBarcodeInput('');
+                          toast.success(`${product.name} agregado al carrito`);
+                        } else {
+                          toast.error('Producto no encontrado');
+                        }
+                      } catch (error) {
+                        log.error('Error al buscar producto:', error);
+                        toast.error('Error al buscar el producto');
+                      }
+                    }}
+                    onClose={() => setShowScanner(false)}
+                  />
+                </div>
+              )}
+            </div>
+            
               {/* Lista de productos mejorada */}
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 lg:mb-6 gap-2">
@@ -1770,32 +1770,32 @@ garantias y devoluciones
                   <div className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 sm:px-3 py-1 rounded-full self-start sm:self-auto">
                     {filteredProducts.length} productos
                   </div>
-                </div>
-                
-                {loading ? (
+              </div>
+              
+              {loading ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600 mb-4"></div>
                     <p className="text-gray-500 font-medium">Cargando productos...</p>
-                  </div>
-                ) : filteredProducts.length === 0 ? (
+                </div>
+              ) : filteredProducts.length === 0 ? (
                   <div className="text-center py-16">
                     <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 text-lg font-medium mb-2">No se encontraron productos</p>
                     <p className="text-gray-400 text-sm">Intenta ajustar tu búsqueda</p>
-                  </div>
-                ) : (
+                </div>
+              ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3 lg:gap-4 max-h-[500px] lg:max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                    {filteredProducts.map(product => (
+                  {filteredProducts.map(product => (
                         <div key={product.id} className="group bg-white border-2 border-gray-100 rounded-xl p-3 sm:p-4 hover:border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
                         {/* Imagen del producto */}
                         <div className="relative mb-4">
                           <div className="w-full h-40 sm:h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
-                            <img 
-                              src={product.images && product.images[0] ? product.images[0] : '/img/placeholder.png'} 
-                              alt={product.name}
+                        <img 
+                          src={product.images && product.images[0] ? product.images[0] : '/img/placeholder.png'} 
+                          alt={product.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
-                          </div>
+                        />
+                      </div>
                           {/* Badge de stock */}
                           <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold ${
                             product.stock > 10 
@@ -1848,14 +1848,14 @@ garantias y devoluciones
                               </>
                             )}
                           </button>
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+                </div>
         </div>
       </div>
 
@@ -1866,23 +1866,23 @@ garantias y devoluciones
             {/* Header del modal */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
                     <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
+                        </div>
                   <div>
                     <h3 className="text-lg sm:text-2xl font-bold">Procesar Pago</h3>
                     <p className="text-blue-100 text-xs sm:text-sm">Confirma los detalles de la venta</p>
-                  </div>
-                </div>
-                <button
+                        </div>
+                      </div>
+                          <button 
                   onClick={() => setShowPaymentModal(false)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
                   <X className="h-6 w-6" />
-                </button>
-              </div>
-            </div>
+                          </button>
+                        </div>
+                      </div>
 
             <div className="p-3 sm:p-6 max-h-[calc(98vh-120px)] overflow-y-auto custom-scrollbar">
               {/* Resumen compacto de productos */}
@@ -1900,18 +1900,18 @@ garantias y devoluciones
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />
-                      </div>
+                </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">{item.name}</p>
                         <p className="text-gray-500 text-xs">{item.quantity} × ${item.price.toFixed(2)}</p>
-                      </div>
+                </div>
                       <div className="text-right">
                         <p className="font-bold text-blue-600 text-xs sm:text-sm">${(item.price * item.quantity).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
+            </div>
+                  ))}
+        </div>
+      </div>
 
               {/* Resumen financiero */}
               <div className="mb-4 sm:mb-6">
@@ -1919,11 +1919,11 @@ garantias y devoluciones
                   <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                     <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} productos):</span>
                     <span>${calculateTotal().toFixed(2)}</span>
-                  </div>
+              </div>
                   <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                     <span>IVA (16%):</span>
                     <span>${(calculateTotal() * 0.16).toFixed(2)}</span>
-                  </div>
+              </div>
                   <div className="border-t border-gray-300 pt-2 sm:pt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-base sm:text-xl font-bold text-gray-900">Total a Pagar:</span>
