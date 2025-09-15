@@ -338,7 +338,7 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
     return (
       <div className="bg-white rounded-lg shadow-sm p-4 flex gap-4 border border-primary-100">
         {/* Product Image with Link */}
-        <Link href={createProductUrl()} className="relative w-32 h-32 flex-shrink-0 block">
+        <Link href={createProductUrl()} className="relative w-48 h-48 flex-shrink-0 block">
           <img
             src={product.image}
             alt={product.name}
@@ -431,7 +431,7 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
   return (
     <div className="group card overflow-hidden">
       {/* Product Image with Link */}
-      <Link href={createProductUrl()} className="block relative h-64 overflow-hidden">
+      <Link href={createProductUrl()} className="block relative h-80 overflow-hidden">
         <img
           src={product.image}
           alt={product.name}

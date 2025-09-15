@@ -293,6 +293,12 @@
       "namedRegex": "^/admin/reportes(?:/)?$"
     },
     {
+      "page": "/admin/test-logs",
+      "regex": "^/admin/test\\-logs(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/admin/test\\-logs(?:/)?$"
+    },
+    {
       "page": "/admin/venta-fisica",
       "regex": "^/admin/venta\\-fisica(?:/)?$",
       "routeKeys": {},

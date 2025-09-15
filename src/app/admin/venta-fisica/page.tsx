@@ -190,8 +190,8 @@ export default function VentaFisicaPage() {
   const fetchProducts = async () => {
     setLoading(true)
     try {
-      // Usar paginación en lugar de cargar todos los productos
-      const response = await fetch(`/api/productos?admin=true&limit=50&t=${Date.now()}`)
+      // Para admin, cargar más productos (hasta 1000 para venta física)
+      const response = await fetch(`/api/productos?admin=true&limit=1000&t=${Date.now()}`)
       const data = await response.json()
       log.error('Datos recibidos en venta física:', data);
       if (Array.isArray(data.productos)) {
@@ -214,7 +214,9 @@ export default function VentaFisicaPage() {
     const matchesSearch = searchTerm === '' || 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase()))
+    (product.slug && product.slug.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
     
     // Filtro por categoría
     const matchesCategory = categoryFilter === '' || 
@@ -229,8 +231,8 @@ export default function VentaFisicaPage() {
     // Filtro por stock
     const matchesStock = 
       stockFilter === 'all' ||
-      (stockFilter === 'in_stock' && product.stock > 0) ||
-      (stockFilter === 'low_stock' && product.stock > 0 && product.stock <= 5)
+      (stockFilter === 'in_stock' && (product.totalStock || product.stock) > 0) ||
+      (stockFilter === 'low_stock' && (product.totalStock || product.stock) > 0 && (product.totalStock || product.stock) <= 5)
     
     return matchesSearch && matchesCategory && matchesPrice && matchesStock
   })
