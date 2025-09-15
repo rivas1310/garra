@@ -562,7 +562,7 @@ export default function VentaFisicaPage() {
     }
     
     try {
-      const printWindow = window.open('', '_blank', 'width=200,height=600')
+      const printWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
       if (!printWindow) {
         toast.error('No se pudo abrir la ventana de impresión. Verifica que el bloqueador de popups esté desactivado.')
         return
@@ -698,7 +698,7 @@ export default function VentaFisicaPage() {
     }
     
     try {
-      const printWindow = window.open('', '_blank', 'width=600,height=800')
+      const printWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
       if (!printWindow) {
         toast.error('No se pudo abrir la ventana de impresión. Verifica que el bloqueador de popups esté desactivado.')
         return
@@ -731,15 +731,26 @@ export default function VentaFisicaPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 14px; 
-              line-height: 1.4;
+              font-size: 18px; 
+              line-height: 1.6;
               margin: 0; 
-              padding: 4px; 
+              padding: 20px; 
               background: white;
               color: black;
-              width: 58mm;
-              max-width: 58mm;
+              width: 100%;
+              max-width: 600px;
               font-weight: bold;
+            }
+            
+            /* Estilos para impresión - formato 58mm */
+            @media print {
+              body { 
+                font-size: 14px; 
+                line-height: 1.4;
+                padding: 4px; 
+                width: 58mm;
+                max-width: 58mm;
+              }
             }
             .header { 
               text-align: center; 
@@ -940,15 +951,26 @@ export default function VentaFisicaPage() {
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
               font-family: 'Courier New', 'Monaco', 'Menlo', monospace; 
-              font-size: 12px; 
+              font-size: 18px; 
               font-weight: bold;
-              line-height: 1.3;
+              line-height: 1.6;
               margin: 0; 
-              padding: 4px; 
+              padding: 20px; 
               background: white;
               color: black;
-              width: 58mm;
-              max-width: 58mm;
+              width: 100%;
+              max-width: 600px;
+            }
+            
+            /* Estilos para impresión - formato 58mm */
+            @media print {
+              body { 
+                font-size: 12px; 
+                line-height: 1.3;
+                padding: 4px; 
+                width: 58mm;
+                max-width: 58mm;
+              }
             }
             .header { 
               text-align: center; 
@@ -1178,7 +1200,7 @@ export default function VentaFisicaPage() {
     
 
     // Crear una nueva ventana con el contenido simple
-    const printWindow = window.open('', '_blank', 'width=200,height=600')
+    const printWindow = window.open('', '_blank', 'width=800,height=1000,scrollbars=yes,resizable=yes')
     if (printWindow) {
       printWindow.document.write(ticketHTML)
       printWindow.document.close()
@@ -1864,7 +1886,7 @@ garantias y devoluciones
       {/* Modal de confirmación de venta mejorado */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-1 sm:p-2 animate-in fade-in duration-200">
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-2xl sm:max-w-4xl lg:max-w-5xl w-full max-h-[98vh] overflow-hidden transform animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-2xl sm:max-w-4xl lg:max-w-5xl w-full max-h-[98vh] overflow-hidden transform animate-in zoom-in-95 duration-200 flex flex-col">
             {/* Header del modal */}
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white">
               <div className="flex items-center justify-between">
@@ -1886,7 +1908,39 @@ garantias y devoluciones
                         </div>
                       </div>
 
-            <div className="p-3 sm:p-6 max-h-[calc(98vh-120px)] overflow-y-auto custom-scrollbar">
+            <div className="flex-1 flex flex-col p-3 sm:p-6 max-h-[calc(98vh-120px)] overflow-y-auto custom-scrollbar">
+              {/* Botones de acción prominentes */}
+              <div className="mb-6 sm:mb-8">
+                <div className="flex justify-center gap-4 sm:gap-6">
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base min-w-[120px] sm:min-w-[140px]"
+                  >
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={processPhysicalSale}
+                    disabled={processingOrder}
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base min-w-[160px] sm:min-w-[200px]"
+                  >
+                    {processingOrder ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
+                        <span className="hidden sm:inline">Procesando Venta...</span>
+                        <span className="sm:hidden">Procesando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="hidden sm:inline">Confirmar Pago - ${(calculateTotal() * 1.16).toFixed(2)} MXN</span>
+                        <span className="sm:hidden">Confirmar - ${(calculateTotal() * 1.16).toFixed(2)}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
               {/* Resumen compacto de productos */}
               <div className="mb-4 sm:mb-6">
                 <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
@@ -2012,37 +2066,6 @@ garantias y devoluciones
               )}
             </div>
 
-            {/* Footer con botones de acción */}
-            <div className="bg-gray-50 p-3 sm:p-6 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                <button
-                  onClick={() => setShowPaymentModal(false)}
-                  className="flex-1 py-2 sm:py-3 px-4 sm:px-6 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base"
-                >
-                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Cancelar
-                </button>
-                <button
-                  onClick={processPhysicalSale}
-                  disabled={processingOrder}
-                  className="flex-2 py-2 sm:py-3 px-4 sm:px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base"
-                >
-                  {processingOrder ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent"></div>
-                      <span className="hidden sm:inline">Procesando Venta...</span>
-                      <span className="sm:hidden">Procesando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
-                      <span className="hidden sm:inline">Confirmar Pago - ${(calculateTotal() * 1.16).toFixed(2)} MXN</span>
-                      <span className="sm:hidden">Confirmar - ${(calculateTotal() * 1.16).toFixed(2)}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -2075,22 +2098,23 @@ garantias y devoluciones
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => setLastSale(null)}
-                    className="flex-1 px-6 py-4 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 font-semibold text-lg shadow-md hover:shadow-lg transform hover:scale-105"
-                  >
-                    Cerrar
-                  </button>
-                  <button
-                    onClick={printTicket}
-                    className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center justify-center gap-3 font-semibold text-lg shadow-md hover:shadow-lg transform hover:scale-105"
-                  >
-                    <Printer className="h-5 w-5" />
-                    Imprimir Ticket
-                  </button>
-                </div>
+              <div className="flex flex-col gap-6">
+                {/* Botón principal de imprimir - más grande y verde */}
+                <button
+                  onClick={printTicket}
+                  className="w-full px-8 py-6 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center gap-4 font-bold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 active:scale-95"
+                >
+                  <Printer className="h-8 w-8" />
+                  <span>🖨️ IMPRIMIR TICKET</span>
+                </button>
+                
+                {/* Botón secundario de cerrar */}
+                <button
+                  onClick={() => setLastSale(null)}
+                  className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all duration-200 font-semibold text-lg shadow-md hover:shadow-lg transform hover:scale-105 mx-auto"
+                >
+                  Cerrar
+                </button>
                 
                 {/* Botón de impresión Bluetooth */}
                 <button
