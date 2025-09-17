@@ -110,7 +110,16 @@ export async function GET(request: Request) {
     const isOnSale = searchParams.get("isOnSale") === "true";
     const conditionTag = searchParams.get("conditionTag");
     const admin = searchParams.get("admin") === "true";
+    const showInactive = searchParams.get("showInactive") === "true";
     const timestamp = searchParams.get("t") || Date.now().toString();
+    
+    console.log('🔍 API - Parámetros recibidos:', { 
+      admin, 
+      showInactive, 
+      timestamp,
+      searchParams: Object.fromEntries(searchParams.entries())
+    });
+    
 
     // LIMITAR el límite máximo para evitar sobrecarga
     // Permitir límites más altos para admin (etiquetas-códigos necesita todos los productos)
@@ -135,21 +144,11 @@ export async function GET(request: Request) {
 
     // Filtrar por búsqueda si se proporciona (con búsqueda normalizada)
     if (search) {
-
-      
       // Búsqueda más estricta - solo en nombre del producto
-      where.OR = [
-        {
-          name: {
-            contains: search,
-            mode: "insensitive",
-          },
-        }
-      ];
-      
-
-    } else {
-
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
     }
 
     // Filtrar por rango de precios
@@ -174,8 +173,24 @@ export async function GET(request: Request) {
     }
 
     // Si no es admin, solo mostrar productos activos
+    // Si es admin y showInactive es false, mostrar solo productos activos
+    // Si es admin y showInactive es true, mostrar SOLO productos inactivos
+    console.log('🔍 API - admin:', admin, 'showInactive:', showInactive);
+    console.log('🔍 API - Evaluando condiciones:');
+    console.log('  - !admin:', !admin);
+    console.log('  - admin && !showInactive:', admin && !showInactive);
+    console.log('  - admin && showInactive:', admin && showInactive);
+    
     if (!admin) {
       where.isActive = true;
+      console.log('🔍 API - Filtro aplicado: solo activos (no admin)');
+    } else if (admin && !showInactive) {
+      where.isActive = true;
+      console.log('🔍 API - Filtro aplicado: solo activos (admin sin showInactive)');
+    } else if (admin && showInactive) {
+      // Cuando admin=true y showInactive=true, mostrar SOLO productos inactivos
+      where.isActive = false;
+      console.log('🔍 API - Filtro aplicado: solo inactivos (admin con showInactive)');
     }
 
     // Calcular el número de elementos a saltar para la paginación
@@ -200,6 +215,10 @@ export async function GET(request: Request) {
         orderBy = { createdAt: "desc" };
     }
 
+    // Debug: Mostrar el objeto where antes de la consulta
+    console.log('🔍 API - Objeto where antes de consulta:', JSON.stringify(where, null, 2));
+    console.log('🔍 API - Valor específico de isActive en where:', where.isActive);
+    
     // Obtener los productos con paginación y filtros
     const productos = await prisma.product.findMany({
       where,
@@ -215,7 +234,10 @@ export async function GET(request: Request) {
       },
     });
 
-
+    console.log('📦 API - Productos encontrados:', productos.length);
+    console.log('❌ API - Productos inactivos encontrados:', productos.filter(p => !p.isActive).length);
+    console.log('📋 API - Ejemplos de productos inactivos:', productos.filter(p => !p.isActive).map(p => ({ id: p.id, name: p.name, isActive: p.isActive })));
+    console.log('🔍 API - Todos los productos con isActive:', productos.map(p => ({ id: p.id, name: p.name, isActive: p.isActive })));
 
     // Obtener el total de productos para la paginación
     const total = await prisma.product.count({ where });

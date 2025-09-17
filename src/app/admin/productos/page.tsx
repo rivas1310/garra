@@ -1,7 +1,7 @@
 'use client'
 
 // Página de administración de productos con paginación optimizada - v4.2
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
@@ -196,20 +196,30 @@ export default function ProductosAdminPage() {
       
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '25',
+        limit: showInactive ? '1000' : '25', // Más productos cuando se muestran inactivos
         admin: 'true',
         ...(selectedCategory !== 'all' && { category: selectedCategory }),
         ...(searchTerm && { search: searchTerm }),
+        ...(showInactive && { showInactive: 'true' }),
         t: Date.now().toString(),
       });
 
-      const response = await fetch(`/api/productos?${params}`);
+      const url = `/api/productos?${params}`;
+      console.log('🔍 FRONTEND - URL construida:', url);
+      console.log('🔍 FRONTEND - Parámetros:', Object.fromEntries(params.entries()));
+      console.log('🔍 FRONTEND - showInactive:', showInactive);
+
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      
+      console.log('📦 Respuesta API:', data);
+      console.log('📊 Productos recibidos:', data.productos?.length || 0);
+      console.log('❌ Productos inactivos en respuesta:', data.productos?.filter((p: any) => !p.isActive).length || 0);
       
       if (data.error) {
         throw new Error(data.error);
@@ -258,9 +268,16 @@ export default function ProductosAdminPage() {
       if (isRestoring) setIsRestoring(false)
       return
     }
-    // Resetear a página 1 cuando cambien los filtros
-    setCurrentPage(1);
-    // El fetchProducts se ejecutará automáticamente por el useEffect de currentPage
+    console.log('🔄 USEEFFECT - Filtros cambiaron, recargando productos...');
+    console.log('🔄 USEEFFECT - showInactive:', showInactive);
+    
+    // Si currentPage ya es 1, hacer fetch directamente
+    if (currentPage === 1) {
+      fetchProducts(1);
+    } else {
+      // Si no, resetear a página 1 (el otro useEffect hará el fetch)
+      setCurrentPage(1);
+    }
   }, [selectedCategory, searchTerm, showInactive, isFirstRender]);
 
   // Mapeo de productos para asegurar que stock sea numérico y status correcto
@@ -271,12 +288,13 @@ export default function ProductosAdminPage() {
     // Primero verificar si el producto está activo
     if (p.isActive === false) {
       status = 'inactive';
+      console.log(`🔍 Mapeo - Producto "${p.name}" marcado como INACTIVO (isActive: ${p.isActive})`);
     } else {
       // Si está activo, determinar el estado basado en el stock
       status = stock === 0 ? 'out-of-stock' : stock < 5 ? 'low-stock' : 'active';
     }
     
-      return {
+    return {
     ...p,
     stock,
     status,
@@ -284,13 +302,23 @@ export default function ProductosAdminPage() {
   });
 
   const filteredProducts = mappedProducts.filter(product => {
-    // Filtrar por estado activo/inactivo
-    if (!showInactive && product.status === 'inactive') {
-      return false;
+    // Si showInactive está activado, mostrar SOLO productos inactivos
+    if (showInactive) {
+      const isInactive = product.status === 'inactive';
+      console.log(`🔍 Producto "${product.name}" - status: ${product.status}, isInactive: ${isInactive}`);
+      return isInactive;
     }
     
-    return true;
+    // Si showInactive está desactivado, mostrar SOLO productos activos
+    return product.status !== 'inactive';
   });
+
+  console.log('🔍 Filtro - showInactive:', showInactive);
+  console.log('📊 Productos mapeados:', mappedProducts.length);
+  console.log('📊 Productos después del filtro:', filteredProducts.length);
+  console.log('❌ Productos inactivos en mapeados:', mappedProducts.filter(p => p.status === 'inactive').length);
+  console.log('❌ Productos inactivos en filtrados:', filteredProducts.filter(p => p.status === 'inactive').length);
+  console.log('🔘 BOTÓN - Estado actual showInactive:', showInactive);
 
   const handleDelete = async (productId: string) => {
     try {
@@ -448,15 +476,42 @@ export default function ProductosAdminPage() {
             {/* Controles adicionales */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
               {/* Mostrar inactivos */}
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={showInactive}
-                  onChange={(e) => setShowInactive(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Mostrar inactivos</span>
-              </label>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🔘 BOTÓN - Click detectado!');
+                    console.log('🔘 BOTÓN - Antes del click, showInactive:', showInactive);
+                    setShowInactive(!showInactive);
+                    console.log('🔘 BOTÓN - Después del click, nuevo valor:', !showInactive);
+                  }}
+                  onMouseDown={() => console.log('🔘 BOTÓN - Mouse down detectado')}
+                  onMouseUp={() => console.log('🔘 BOTÓN - Mouse up detectado')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2 ${
+                    showInactive 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                  style={{ zIndex: 9999 }}
+                >
+                  <span className="text-sm">
+                    {showInactive ? 'Mostrando inactivos' : 'Mostrar inactivos'}
+                  </span>
+                </button>
+                
+                {/* Contador de productos */}
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  showInactive 
+                    ? 'bg-red-100 text-red-800' 
+                    : 'bg-green-100 text-green-800'
+                }`}>
+                  {showInactive 
+                    ? `${mappedProducts.filter(p => p.status === 'inactive').length} inactivos`
+                    : `${mappedProducts.filter(p => p.status !== 'inactive').length} activos`
+                  }
+                </div>
+              </div>
 
               {/* Botón nuevo producto - Más prominente en móvil */}
               <button
@@ -489,7 +544,18 @@ export default function ProductosAdminPage() {
             {/* Vista de tarjetas para móvil */}
             <div className="block sm:hidden space-y-3">
               {filteredProducts.map((product) => (
-                <div key={product.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
+                <div key={product.id} className={`rounded-lg shadow-sm border p-3 ${
+                  product.status === 'inactive' 
+                    ? 'bg-red-50 border-red-200 ring-2 ring-red-300' 
+                    : 'bg-white border-gray-200'
+                }`}>
+                  {/* Banner de producto inactivo */}
+                  {product.status === 'inactive' && (
+                    <div className="bg-red-600 text-white text-center py-2 px-3 rounded-t-lg -mx-3 -mt-3 mb-3 font-semibold text-sm">
+                      ⚠️ PRODUCTO INACTIVO
+                    </div>
+                  )}
+                  
                   <div className="flex items-start space-x-3">
                     {/* Imagen del producto */}
                     <div className="flex-shrink-0">
@@ -611,7 +677,22 @@ export default function ProductosAdminPage() {
               </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                 {filteredProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 border-b border-gray-100">
+                  <Fragment key={product.id}>
+                    {/* Banner de producto inactivo para vista de escritorio */}
+                    {product.status === 'inactive' && (
+                      <tr className="bg-red-100 border-b border-red-200">
+                        <td colSpan={8} className="px-3 sm:px-6 py-2 text-center">
+                          <div className="bg-red-600 text-white py-1 px-4 rounded-full inline-block font-semibold text-sm">
+                            ⚠️ PRODUCTO INACTIVO
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    <tr className={`border-b border-gray-100 ${
+                      product.status === 'inactive' 
+                        ? 'bg-red-50 hover:bg-red-100 border-red-200' 
+                        : 'hover:bg-gray-50'
+                    }`}>
                         <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div className="flex items-center">
                             <div className="h-12 w-12 sm:h-16 sm:w-16 lg:h-20 lg:w-20 flex-shrink-0 relative group">
@@ -714,6 +795,7 @@ export default function ProductosAdminPage() {
                       </div>
                     </td>
                   </tr>
+                  </Fragment>
                 ))}
               </tbody>
             </table>

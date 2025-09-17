@@ -52,6 +52,47 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [productData, setProductData] = useState<Product>(product)
 
+  // Mapear conditionTag a etiquetas visuales
+  const getConditionLabel = (conditionTag?: string) => {
+    const conditionLabels: Record<string, string> = {
+      'LIKE_NEW': 'Like New',
+      'PRE_LOVED': 'Pre Loved',
+      'GENTLY_USED': 'Gently Used',
+      'VINTAGE': 'Vintage',
+      'RETRO': 'Retro',
+      'UPCYCLED': 'Upcycled',
+      'REWORKED': 'Reworked',
+      'DEADSTOCK': 'Deadstock',
+      'OUTLET_OVERSTOCK': 'Outlet',
+      'REPURPOSED': 'Repurposed',
+      'NEARLY_NEW': 'Nearly New',
+      'DESIGNER_RESALE': 'Designer',
+      'SUSTAINABLE_FASHION': 'Sustainable',
+      'THRIFTED': 'Thrifted',
+      'CIRCULAR_FASHION': 'Circular'
+    }
+    return conditionLabels[conditionTag || ''] || null
+  }
+
+  // Determinar qué etiquetas mostrar basado en conditionTag
+  const getConditionInfo = (conditionTag?: string) => {
+    if (!conditionTag) return null
+    
+    const label = getConditionLabel(conditionTag)
+    if (!label) return null
+
+    // Determinar color y posición basado en el tipo de condición
+    if (conditionTag === 'LIKE_NEW' || conditionTag === 'NEARLY_NEW') {
+      return { label, color: 'bg-blue-600', position: 'top-left' as const }
+    } else if (conditionTag === 'VINTAGE' || conditionTag === 'RETRO') {
+      return { label, color: 'bg-purple-600', position: 'top-right' as const }
+    } else if (conditionTag === 'DEADSTOCK' || conditionTag === 'OUTLET_OVERSTOCK') {
+      return { label, color: 'bg-red-600', position: 'top-right' as const }
+    } else {
+      return { label, color: 'bg-green-600', position: 'bottom-left' as const }
+    }
+  }
+
   // Función para actualizar la información del producto desde el servidor
   const refreshProductData = async () => {
     try {
@@ -317,8 +358,8 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
     if (isLowStock) {
       return {
         text: `Solo ${stock} disponibles`,
-        color: 'text-yellow-700',
-        bgColor: 'bg-yellow-100',
+        color: 'text-blue-700',
+        bgColor: 'bg-blue-100',
         icon: <AlertTriangle className="h-4 w-4" />
       }
     }
@@ -345,21 +386,49 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
             className="w-full h-full object-cover rounded-lg group-hover:opacity-90 transition-opacity"
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/img/placeholder.png'; }}
           />
-          {product.isNew && (
-            <span className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Nuevo
-            </span>
-          )}
-          {product.isSale && (
-            <span className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-              Oferta
-            </span>
-          )}
-          {product.isSecondHand && (
-            <span className="absolute bottom-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-              Segunda mano
-            </span>
-          )}
+          {/* Etiqueta de condición basada en conditionTag */}
+          {(() => {
+            const conditionInfo = getConditionInfo(product.conditionTag)
+            
+            // Si hay conditionTag, mostrar etiqueta de condición
+            if (conditionInfo) {
+              const positionClasses = {
+                'top-left': 'absolute top-2 left-2',
+                'top-right': 'absolute top-2 right-2',
+                'bottom-left': 'absolute bottom-2 left-2',
+                'bottom-right': 'absolute bottom-2 right-2'
+              }
+              
+              return (
+                <div className={positionClasses[conditionInfo.position]}>
+                  <span className={`${conditionInfo.color} text-white text-xs px-2 py-1 rounded-full`}>
+                    {conditionInfo.label}
+                  </span>
+                  {/* Etiqueta de oferta debajo de la condición */}
+                  {product.isSale && (
+                    <div className="mt-1">
+                      <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                        Oferta
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            }
+            
+            // Si no hay conditionTag pero hay oferta, mostrar solo oferta en posición por defecto
+            if (!conditionInfo && product.isSale) {
+              return (
+                <div className="absolute top-2 left-2">
+                  <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                    Oferta
+                  </span>
+                </div>
+              )
+            }
+            
+            return null
+          })()}
         </Link>
 
         {/* Product Info */}
@@ -420,7 +489,7 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
             className="w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium btn-primary transition-colors"
           >
             <Eye size={16} className="mr-2" />
-            Ver Producto
+            Ver Productoo
           </Link>
         </div>
       </div>
@@ -439,24 +508,49 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
           onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/img/placeholder.png'; }}
         />
         
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
-          {product.isNew && (
-            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              Nuevo
-            </span>
-          )}
-          {product.isSale && (
-            <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-              Oferta
-            </span>
-          )}
-          {product.isSecondHand && (
-            <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-              Segunda mano
-            </span>
-          )}
-        </div>
+        {/* Etiqueta de condición basada en conditionTag */}
+        {(() => {
+          const conditionInfo = getConditionInfo(product.conditionTag)
+          
+          // Si hay conditionTag, mostrar etiqueta de condición
+          if (conditionInfo) {
+            const positionClasses = {
+              'top-left': 'absolute top-3 left-3',
+              'top-right': 'absolute top-3 right-3',
+              'bottom-left': 'absolute bottom-3 left-3',
+              'bottom-right': 'absolute bottom-3 right-3'
+            }
+            
+            return (
+              <div className={positionClasses[conditionInfo.position]}>
+                <span className={`${conditionInfo.color} text-white text-xs px-2 py-1 rounded-full`}>
+                  {conditionInfo.label}
+                </span>
+                {/* Etiqueta de oferta debajo de la condición */}
+                {product.isSale && (
+                  <div className="mt-1">
+                    <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                      Oferta
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          }
+          
+          // Si no hay conditionTag pero hay oferta, mostrar solo oferta en posición por defecto
+          if (!conditionInfo && product.isSale) {
+            return (
+              <div className="absolute top-3 left-3">
+                <span className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+                  Oferta
+                </span>
+              </div>
+            )
+          }
+          
+          return null
+        })()}
 
         {/* Action Buttons */}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -479,7 +573,7 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <div className="bg-white text-primary-600 px-4 py-2 rounded-lg font-medium flex items-center gap-2">
             <Eye size={16} />
-            Ver Producto
+            Ver Productoo
           </div>
         </div>
       </Link>
@@ -491,7 +585,7 @@ function ProductCardContent({ product, layout = 'grid', subcategoria }: ProductC
             {product.category}
           </span>
           <div className="flex items-center">
-            <Star size={14} className="text-yellow-400 fill-current" />
+          
             <span className="text-sm text-body ml-1">
               {product.rating} ({product.reviewCount})
             </span>

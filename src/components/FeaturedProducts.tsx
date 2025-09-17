@@ -34,6 +34,10 @@ export default function FeaturedProducts() {
           isAvailable: p.isAvailable ?? true,
           totalStock: p.totalStock ?? p.stock ?? 0,
           variants: p.variants ?? [],
+          // Mapear conditionTag a propiedades booleanas para compatibilidad
+          isNew: p.conditionTag === 'LIKE_NEW' || p.conditionTag === 'NEARLY_NEW',
+          isSale: p.isOnSale || p.conditionTag === 'DEADSTOCK' || p.conditionTag === 'OUTLET_OVERSTOCK',
+          isSecondHand: p.conditionTag === 'PRE_LOVED' || p.conditionTag === 'GENTLY_USED' || p.conditionTag === 'VINTAGE' || p.conditionTag === 'RETRO'
         }));
         
         setProducts(mappedProducts);

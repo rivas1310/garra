@@ -9,7 +9,9 @@ import {
   Download,
   Filter,
   ArrowLeft,
-  Eye
+  Eye,
+  FileText,
+  CalendarDays
 } from 'lucide-react'
 import VentaFisicaDetailsModal from '@/components/VentaFisicaDetailsModal'
 import Link from 'next/link'
@@ -45,6 +47,11 @@ export default function VentasFisicasPage() {
   const [dateFilter, setDateFilter] = useState<string>('') // YYYY-MM-DD
   const [selectedVentaId, setSelectedVentaId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportType, setReportType] = useState<'dia' | 'semana' | 'mes'>('dia')
+  const [reportDate, setReportDate] = useState<string>('')
+  const [reportFormat] = useState<'pdf'>('pdf')
+  const [downloadingReport, setDownloadingReport] = useState(false)
 
   useEffect(() => {
     fetchVentasFisicas()
@@ -104,6 +111,97 @@ export default function VentasFisicasPage() {
     setDateFilter('')
   }
 
+  const downloadReport = async () => {
+    if (!reportDate) {
+      toast.error('Por favor selecciona una fecha')
+      return
+    }
+
+    try {
+      setDownloadingReport(true)
+      
+      let fechaParam = reportDate
+      
+      // Formatear fecha según el tipo de reporte
+      if (reportType === 'semana') {
+        const date = new Date(reportDate)
+        const year = date.getFullYear()
+        const week = getWeekNumber(date)
+        fechaParam = `${year}-W${week.toString().padStart(2, '0')}`
+      } else if (reportType === 'mes') {
+        const date = new Date(reportDate)
+        const year = date.getFullYear()
+        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+        fechaParam = `${year}-${month}`
+      }
+      
+      const url = `/api/ventas-fisicas/reportes?tipo=${reportType}&fecha=${fechaParam}`
+      
+      console.log('🔗 Descargando desde:', url)
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        }
+      })
+      
+      console.log('📡 Respuesta recibida:', response.status, response.headers.get('content-type'))
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al generar el reporte')
+      }
+      
+      // Verificar que sea PDF
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/pdf')) {
+        console.error('❌ Tipo de contenido incorrecto:', contentType)
+        throw new Error('El servidor no devolvió un PDF válido')
+      }
+      
+      // Crear blob y descargar archivo
+      const blob = await response.blob()
+      console.log('📦 Blob creado:', blob.size, 'bytes, tipo:', blob.type)
+      
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      
+      // Generar nombre de archivo
+      const fechaFormateada = reportType === 'dia' ? reportDate : fechaParam
+      link.download = `ventas-fisicas-${reportType}-${fechaFormateada}.pdf`
+      
+      console.log('💾 Descargando archivo:', link.download)
+      
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+      
+      toast.success('Reporte PDF descargado exitosamente')
+      setShowReportModal(false)
+      
+    } catch (error) {
+      console.error('❌ Error en descarga:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error al descargar el reporte'
+      toast.error(errorMessage)
+    } finally {
+      setDownloadingReport(false)
+    }
+  }
+
+  const getWeekNumber = (date: Date) => {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1)
+    const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
+  }
+
+  const getDefaultDate = () => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-elegant flex items-center justify-center">
@@ -130,6 +228,16 @@ export default function VentasFisicasPage() {
                 <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
                 Nueva Venta
               </Link>
+              <button 
+                onClick={() => {
+                  setReportDate(getDefaultDate())
+                  setShowReportModal(true)
+                }}
+                className="bg-green-600 text-white hover:bg-green-700 hover:shadow-lg transition-all duration-200 inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 sm:py-3 sm:px-6 rounded-lg font-semibold"
+              >
+                <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                Descargar Reporte
+              </button>
               <button 
                 onClick={fetchVentasFisicas}
                 className="bg-primary-500 text-white hover:bg-primary-400 hover:shadow-lg transition-all duration-200 inline-flex items-center gap-1 sm:gap-2 text-xs sm:text-sm py-2 px-3 sm:py-3 sm:px-6 rounded-lg font-semibold disabled:opacity-50"
@@ -431,14 +539,14 @@ export default function VentasFisicasPage() {
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap text-center">
                         <button 
-                          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 inline-flex items-center gap-2 hover:shadow-md transform hover:scale-105"
+                          className="bg-primary-600 hover:bg-primary-700 text-blue-500 font-semibold py-2 px-4 rounded-lg transition-all duration-200 inline-flex items-center gap-2 hover:shadow-md transform hover:scale-105"
                           onClick={() => {
                             setSelectedVentaId(venta.id)
                             setIsModalOpen(true)
                           }}
                         >
                           <Eye className="h-4 w-4" />
-                          <span className="hidden lg:inline">Ver detalles</span>
+                          <span className="hidden lg:inline ">Ver detalles</span>
                           <span className="lg:hidden">Ver</span>
                         </button>
                       </td>
@@ -458,6 +566,111 @@ export default function VentasFisicasPage() {
         onClose={() => setIsModalOpen(false)}
         ventaId={selectedVentaId}
       />
+
+      {/* Modal de descarga de reportes */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+            <div className="bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold">Descargar Reporte</h3>
+                    <p className="text-green-100 text-sm">Selecciona el período y formato</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="text-green-200 hover:text-white transition-colors"
+                >
+                  <span className="text-2xl">&times;</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Tipo de reporte */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-neutral-700">Tipo de reporte</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: 'dia', label: 'Día', icon: Calendar },
+                    { value: 'semana', label: 'Semana', icon: CalendarDays },
+                    { value: 'mes', label: 'Mes', icon: Calendar }
+                  ].map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      onClick={() => setReportType(value as 'dia' | 'semana' | 'mes')}
+                      className={`p-3 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                        reportType === value
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-neutral-200 hover:border-green-300 text-neutral-600'
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="text-xs font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Fecha */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-neutral-700">
+                  {reportType === 'dia' ? 'Fecha específica' : 
+                   reportType === 'semana' ? 'Fecha de inicio de semana' : 
+                   'Fecha de inicio de mes'}
+                </label>
+                <input
+                  type="date"
+                  value={reportDate}
+                  onChange={(e) => setReportDate(e.target.value)}
+                  className="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                />
+              </div>
+
+              {/* Formato PDF - Solo informativo */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-neutral-700">Formato de archivo</label>
+                <div className="p-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  <span className="text-sm font-medium">PDF</span>
+                </div>
+              </div>
+
+              {/* Botones */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="flex-1 px-4 py-3 text-neutral-600 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-all duration-200 font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={downloadReport}
+                  disabled={downloadingReport || !reportDate}
+                  className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center gap-2"
+                >
+                  {downloadingReport ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4" />
+                      Descargar
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
