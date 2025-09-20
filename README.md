@@ -1,199 +1,107 @@
-# Bazar Fashion - Ecommerce de Ropa
+# Garras Felinas - Panel de Administración Desktop
 
-Un ecommerce moderno y vistoso para venta de ropa construido con Next.js, TypeScript, Tailwind CSS y Prisma.
+Aplicación de escritorio para administrar la tienda **Garras Felinas**.
 
 ## 🚀 Características
 
-- **Diseño Moderno**: Interfaz atractiva y responsive con Tailwind CSS
-- **Carrito de Compras**: Gestión completa del carrito con Zustand
-- **Base de Datos**: PostgreSQL con Prisma ORM
-- **Autenticación**: Sistema de usuarios con NextAuth.js
-- **Pagos**: Integración con Stripe
-- **Productos**: Gestión completa de productos, categorías y variantes
-- **Cupones**: Sistema de descuentos con validación de fechas y límites de uso
-- **Reseñas**: Sistema de calificaciones y comentarios
-- **Favoritos**: Lista de productos favoritos
-- **Newsletter**: Suscripción a newsletter
-- **Responsive**: Diseño adaptativo para móviles y desktop
-- **Seguridad**: Generación de contraseñas seguras y normalización de datos
-- **Ventas Físicas**: Sistema para registrar ventas presenciales con acceso para vendedores
-- **Control de Acceso**: Roles de usuario (USER, ADMIN, VENDEDOR) con permisos específicos
-- **Envíos**: Integración con múltiples servicios de paquetería (EnvíoClick, EnvíosPerros)
+- ✅ **Aplicación de escritorio** nativa para Windows
+- ✅ **Conexión automática** a tu admin de desarrollo o producción
+- ✅ **Instalador único** - no requiere Node.js en el PC de destino
+- ✅ **Detección automática** de servidor local o remoto
+- ✅ **Interfaz optimizada** para uso en desktop
 
-## 🛠️ Tecnologías Utilizadas
+## 📦 Instalación Rápida
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS
-- **Base de Datos**: PostgreSQL
-- **ORM**: Prisma
-- **Estado**: Zustand
-- **Autenticación**: NextAuth.js
-- **Pagos**: Stripe
-- **Iconos**: Lucide React
-- **Notificaciones**: React Hot Toast
+### Opción 1: Ejecutar desde código fuente
+```bash
+# 1. Instalar dependencias
+ejecutar install.bat
 
-## 📦 Instalación
+# 2. Ejecutar aplicación
+ejecutar ejecutar.bat
+```
 
-### Prerrequisitos
+### Opción 2: Crear instalador
+```bash
+# Crear instalador .exe
+ejecutar build.bat
+```
 
+## 🛠️ Configuración
+
+La aplicación intentará conectarse automáticamente a:
+
+1. **Desarrollo**: `http://localhost:3000/admin`
+2. **Producción**: `https://www.garrasfelinas.com/admin`
+
+### Cambiar URL manualmente:
+- Ve a **Archivo > Configurar URL** en el menú de la aplicación
+
+## 📋 Requisitos
+
+### Para desarrollo:
 - Node.js 18+ 
-- PostgreSQL
-- npm o yarn
+- npm
 
-### Pasos de Instalación
+### Para usuarios finales:
+- Windows 10/11
+- **No requiere** Node.js ni dependencias adicionales
 
-1. **Clonar el repositorio**
-   ```bash
-   git clone <tu-repositorio>
-   cd bazar-ecommerce
-   ```
+## 🔧 Comandos disponibles
 
-2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+```bash
+# Desarrollo
+npm start                # Ejecutar aplicación
+npm run dev             # Ejecutar con DevTools
 
-3. **Configurar variables de entorno**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Edita el archivo `.env.local` con tus credenciales:
-   ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/bazar_ecommerce"
-   NEXTAUTH_URL="http://localhost:3000"
-   NEXTAUTH_SECRET="tu-secret-key"
-   STRIPE_PUBLISHABLE_KEY="pk_test_..."
-   STRIPE_SECRET_KEY="sk_test_..."
-   ```
+# Construcción
+npm run build:win       # Crear instalador para Windows
+npm run pack           # Crear aplicación portable
+```
 
-4. **Configurar la base de datos**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
+## 📁 Estructura del proyecto
 
-5. **Crear usuarios del sistema**
-   
-   **Crear administrador:**
-   ```bash
-   node scripts/create-admin.js
-   ```
-   
-   **Crear vendedor:**
-   ```bash
-   node scripts/create-vendedor.js [email] [nombre]
-   ```
-   Ejemplo: `node scripts/create-vendedor.js vendedor@bazar.com "Juan Pérez"`
-   
-   > **Importante**: Estos scripts generarán contraseñas seguras aleatorias. Guarde esta información en un lugar seguro, ya que no podrá recuperarla después. Consulte `SECURITY_README.md` para más información.
+```
+garras-admin-desktop/
+├── main.js           # Proceso principal de Electron
+├── preload.js        # Script de seguridad
+├── package.json      # Configuración y dependencias
+├── assets/           # Iconos y recursos
+├── dist/            # Instaladores generados
+└── *.bat            # Scripts de Windows
+```
 
-6. **Ejecutar el servidor de desarrollo**
-   ```bash
-   npm run dev
-   ```
+## 🌐 URLs soportadas
 
-7. **Abrir en el navegador**
-   ```
-   http://localhost:3000
-   ```
-
-## 🗄️ Estructura de la Base de Datos
-
-### Modelos Principales
-
-- **User**: Usuarios del sistema con roles (USER, ADMIN, VENDEDOR)
-- **Product**: Productos con variantes
-- **Category**: Categorías de productos
-- **Order**: Pedidos con items
-- **DiscountCoupon**: Cupones de descuento
-- **Review**: Reseñas de productos
-- **Address**: Direcciones de envío/facturación
+- `http://localhost:3000/admin` - Desarrollo local
+- `https://www.garrasfelinas.com/admin` - Producción
+- Cualquier URL personalizada via menú
 
 ## 🔒 Seguridad
 
-El proyecto implementa varias medidas de seguridad:
+- ✅ Context isolation habilitado
+- ✅ Node integration deshabilitado  
+- ✅ Remote module deshabilitado
+- ✅ Enlaces externos se abren en navegador
 
-- **Contraseñas**: Generación automática de contraseñas seguras para administradores
-- **Hashing**: Almacenamiento seguro de contraseñas con bcryptjs
-- **Validación**: Verificación de datos en todos los formularios
-- **Normalización**: Estandarización de datos para prevenir duplicados y errores
-- **Fechas**: Manejo seguro de fechas para cupones y otras entidades
-- **Scripts de verificación de seguridad**: Conjunto de herramientas para verificar y mantener la seguridad del sistema:
-  - `check-password-security.js`: Verifica la seguridad de las contraseñas de usuarios.
-  - `reset-admin-password.js`: Permite resetear la contraseña de un administrador de forma segura.
-  - `verify-coupon-security.js`: Verifica y normaliza la seguridad de los cupones.
-  - `verify-system-security.js`: Realiza una verificación completa de la seguridad del sistema.
-  - `backup-database.js`: Realiza una copia de seguridad completa de la base de datos.
-  - `schedule-backups.js`: Programa copias de seguridad automáticas a intervalos regulares.
+## 🚨 Solución de problemas
 
-Consulte `SECURITY_README.md` para obtener información detallada sobre las prácticas de seguridad implementadas.
+### La aplicación no se conecta:
+1. Verifica que tu servidor Next.js esté ejecutándose en `localhost:3000`
+2. Usa **Archivo > Configurar URL** para cambiar la dirección
+3. Presiona **F5** para recargar
 
-## 📚 Documentación Adicional
+### Error al crear instalador:
+1. Ejecuta `npm install` primero
+2. Verifica que tengas permisos de escritura
+3. Revisa que no haya procesos de Electron ejecutándose
 
-- **SECURITY_README.md**: Guía de seguridad y recomendaciones
-- **CUPONES_README.md**: Documentación sobre el sistema de cupones
-- **CODE_QUALITY_RECOMMENDATIONS.md**: Recomendaciones para mantener la calidad del código
-- **ROLES_README.md**: Documentación sobre el sistema de roles y permisos
+## 📞 Soporte
 
-## 🎨 Características del Diseño
-
-- **Paleta de Colores**: Naranja como color principal
-- **Tipografía**: Inter font family
-- **Componentes**: Reutilizables y modulares
-- **Animaciones**: Transiciones suaves y hover effects
-- **Responsive**: Mobile-first approach
-
-## 📱 Páginas Principales
-
-- **Home**: Hero section, categorías, productos destacados
-- **Productos**: Grid de productos con filtros
-- **Detalle de Producto**: Información completa, variantes, reseñas
-- **Carrito**: Gestión de items y checkout
-- **Perfil**: Información del usuario y pedidos
-- **Categorías**: Navegación por categorías
-- **Admin**: Panel de administración completo
-- **Venta Física**: Registro de ventas presenciales (accesible para ADMIN y VENDEDOR)
-
-## 🔧 Scripts Disponibles
-
-```bash
-npm run dev          # Servidor de desarrollo
-npm run build        # Build de producción
-npm run start        # Servidor de producción
-npm run lint         # Linting
-```
-
-## 🚀 Despliegue
-
-### Vercel (Recomendado)
-
-1. Conecta tu repositorio a Vercel
-2. Configura las variables de entorno en Vercel
-3. Deploy automático en cada push
-
-### Otros Proveedores
-
-- **Netlify**: Compatible con Next.js
-- **Railway**: Incluye PostgreSQL
-- **Heroku**: Con addon de PostgreSQL
-
-## 📝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
-
-## 🤝 Soporte
-
-Si tienes alguna pregunta o necesitas ayuda, no dudes en abrir un issue en el repositorio.
+Para problemas técnicos, revisa los logs en:
+- **Ver > Herramientas de Desarrollador** (F12)
+- Consola de la aplicación
 
 ---
 
-¡Disfruta construyendo tu ecommerce de moda! 🛍️
+**Garras Felinas** - Panel de Administración Desktop v1.0.0
