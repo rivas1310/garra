@@ -138,6 +138,39 @@ export default function Header() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const searchDebounceRef = useRef<NodeJS.Timeout>();
+
+  // Función de búsqueda con debounce
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    
+    // Limpiar timeout anterior
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    
+    // Si el campo está vacío, no hacer nada
+    if (!value.trim()) {
+      return;
+    }
+    
+    // Crear nuevo timeout para debounce
+    searchDebounceRef.current = setTimeout(() => {
+      console.log('🔍 Navegando a búsqueda con debounce:', value);
+      router.push(`/buscar?q=${encodeURIComponent(value)}`);
+      setIsSearchOpen(false);
+      setSearchValue("");
+    }, 500); // Debounce de 500ms para navegación
+  };
+
+  // Cleanup del debounce al desmontar
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, []);
 
   // Cerrar el menú si se hace clic fuera
   useEffect(() => {
@@ -294,6 +327,10 @@ export default function Header() {
               onSubmit={e => {
                 e.preventDefault();
                 if (searchValue.trim()) {
+                  // Limpiar debounce y navegar inmediatamente
+                  if (searchDebounceRef.current) {
+                    clearTimeout(searchDebounceRef.current);
+                  }
                   router.push(`/buscar?q=${encodeURIComponent(searchValue)}`);
                   setIsSearchOpen(false);
                   setSearchValue("");
@@ -305,7 +342,7 @@ export default function Header() {
                 type="text"
                 placeholder="Buscar productos..."
                 value={searchValue}
-                onChange={e => setSearchValue(e.target.value)}
+                onChange={e => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
               />
             </form>

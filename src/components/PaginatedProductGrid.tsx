@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import ProductCard from './ProductCard'
 
@@ -50,6 +50,7 @@ export default function PaginatedProductGrid({
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [error, setError] = useState<string | null>(null)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
 
   // Función para cargar productos
   const loadProducts = useCallback(async (page: number, append: boolean = false) => {
@@ -105,7 +106,20 @@ export default function PaginatedProductGrid({
     }
   }, [categorySlug, subcategoria, pageSize])
 
-  // Cargar productos iniciales
+  // Función para cargar productos con debounce
+  const loadProductsDebounced = useCallback((page: number, append: boolean = false) => {
+    // Limpiar timeout anterior
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Crear nuevo timeout para debounce
+    debounceTimeoutRef.current = setTimeout(() => {
+      loadProducts(page, append)
+    }, 300) // Debounce de 300ms
+  }, [loadProducts])
+
+  // Cargar productos iniciales (sin debounce para carga inicial)
   useEffect(() => {
     if (initialProducts.length === 0) {
       loadProducts(1)
@@ -115,11 +129,20 @@ export default function PaginatedProductGrid({
     }
   }, [loadProducts, initialProducts.length])
 
-  // Recargar cuando cambie la subcategoría
+  // Recargar cuando cambie la subcategoría (con debounce)
   useEffect(() => {
     setCurrentPage(1)
-    loadProducts(1)
-  }, [subcategoria, loadProducts])
+    loadProductsDebounced(1)
+  }, [subcategoria, loadProductsDebounced])
+
+  // Cleanup del debounce al desmontar
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Función para cargar más productos
   const loadMore = () => {

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { log } from '@/lib/secureLogger'
-import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense, useRef } from 'react'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -25,24 +25,34 @@ function BuscarContent() {
   const query = searchParams.get('q')?.toLowerCase() || ''
   const [productos, setProductos] = useState<Producto[]>([])
   const [loading, setLoading] = useState(true)
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>()
 
   useEffect(() => {
-    const fetchProductos = async () => {
+    // Limpiar timeout anterior si existe
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+
+    // Si no hay query, mostrar estado vacío inmediatamente
+    if (!query.trim()) {
+      setProductos([])
+      setLoading(false)
+      return
+    }
+
+    // Configurar loading inmediatamente para UX
+    setLoading(true)
+
+    // Crear nuevo timeout para debounce
+    debounceTimeoutRef.current = setTimeout(async () => {
       try {
-        setLoading(true);
-        
         // Construir URL con parámetros de búsqueda
         const params = new URLSearchParams();
-        if (query.trim()) {
-          params.append('search', query.trim());
-          params.append('limit', '100'); // Limitar resultados para búsquedas
-        } else {
-          params.append('limit', '50'); // Menos productos si no hay búsqueda
-        }
+        params.append('search', query.trim());
+        params.append('limit', '100'); // Limitar resultados para búsquedas
         params.append('t', Date.now().toString());
         
-
-        
+        console.log('🔍 Búsqueda con debounce:', query)
         const response = await fetch(`/api/productos?${params}`);
         if (!response.ok) {
           throw new Error('Error al cargar productos');
@@ -53,18 +63,21 @@ function BuscarContent() {
         const productsArray = Array.isArray(data) ? data : (data.productos || []);
         setProductos(productsArray);
         
-
-        
       } catch (error) {
         log.error('Error al cargar productos:', error)
         toast.error('Error al cargar productos')
       } finally {
         setLoading(false)
       }
-    }
+    }, 300) // Debounce de 300ms
 
-    fetchProductos();
-  }, [query]) // Ahora se ejecuta cuando cambia la query
+    // Cleanup function
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [query]) // Se ejecuta cuando cambia la query
 
   const resultados = useMemo(() => {
     // Si no hay query, no mostrar nada

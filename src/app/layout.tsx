@@ -9,7 +9,9 @@ import CartNotification from '@/components/CartNotification'
 import CookieConsent from '@/components/CookieConsent'
 import PWAInstaller from '@/components/PWAInstaller'
 import PerformanceMonitor from '@/components/PerformanceMonitor'
-import ErrorBoundary from '@/components/ErrorBoundary'
+// import SimpleErrorBoundary from '@/components/SimpleErrorBoundary' // Removido temporalmente
+import ChatWidgetAbly from '@/components/Chat/ChatWidgetAbly'
+import CustomAblyProvider from '@/components/AblyProvider'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -100,7 +102,7 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <SessionProviderWrapper>
-          <ErrorBoundary>
+          <CustomAblyProvider>
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">
@@ -112,8 +114,9 @@ export default function RootLayout({
             <CookieConsent />
             <PWAInstaller />
             <PerformanceMonitor />
+            <ChatWidgetAbly />
             <Toaster position="top-right" />
-          </ErrorBoundary>
+          </CustomAblyProvider>
         </SessionProviderWrapper>
       </body>
     </html>

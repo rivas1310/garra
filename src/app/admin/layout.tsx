@@ -3,6 +3,7 @@
 import AdminNav from '@/components/AdminNav'
 import { Toaster } from 'react-hot-toast'
 import AdminProtectedRoute from '@/components/AdminProtectedRoute'
+import AdminAblyProvider from '@/components/AdminAblyProvider'
 import { useState } from 'react'
 import { Menu } from 'lucide-react'
 
@@ -15,7 +16,8 @@ export default function AdminLayout({
 
   return (
     <AdminProtectedRoute>
-      <div className="min-h-screen bg-gradient-elegant">
+      <AdminAblyProvider>
+        <div className="min-h-screen bg-gradient-elegant">
         {/* Mobile menu button */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-md p-3 sm:p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -81,7 +83,8 @@ export default function AdminLayout({
             },
           }}
         />
-      </div>
+        </div>
+      </AdminAblyProvider>
     </AdminProtectedRoute>
   )
 }

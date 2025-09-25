@@ -17,7 +17,8 @@ import {
   ClipboardList,
   X,
   Upload,
-  QrCode
+  QrCode,
+  MessageCircle
 } from 'lucide-react'
 
 // Navegación completa para administradores
@@ -31,6 +32,8 @@ const adminNavigation = [
   { name: 'Venta Física', href: '/admin/venta-fisica', icon: ShoppingBag },
   { name: 'Historial Ventas Físicas', href: '/admin/ventas-fisicas', icon: ClipboardList },
   { name: 'Clientes', href: '/admin/clientes', icon: Users },
+  { name: 'Chat de Soporte', href: '/admin/chat', icon: MessageCircle },
+  { name: 'Mensajes', href: '/admin/mensajes', icon: FileText },
   { name: 'Cupones', href: '/admin/cupones', icon: Ticket },
   { name: 'Reportes', href: '/admin/reportes', icon: BarChart3 },
   { name: 'Configuración', href: '/admin/configuracion', icon: Settings },
@@ -39,6 +42,7 @@ const adminNavigation = [
 // Navegación restringida para vendedores
 const vendedorNavigation = [
   { name: 'Venta Física', href: '/admin/venta-fisica', icon: ShoppingBag },
+  { name: 'Chat de Soporte', href: '/admin/chat', icon: MessageCircle },
 ]
 
 interface AdminNavProps {

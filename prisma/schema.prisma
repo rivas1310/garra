@@ -41,6 +41,8 @@ model User {
   reviews        Review[]
   favorites      Product[] @relation("UserFavorites")
   passwordResetTokens PasswordResetToken[] @relation("PasswordResetTokens")
+  chatConversations ChatConversation[] @relation("UserChats")
+  chatMessages   ChatMessage[] @relation("UserMessages")
 }
 
 model Category {
@@ -240,4 +242,68 @@ model PasswordResetToken {
   expires   DateTime
   createdAt DateTime @default(now())
   user      User     @relation("PasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Modelos para el sistema de chat en vivo
+model ChatConversation {
+  id          String        @id @default(cuid())
+  userId      String?       // null para usuarios anónimos
+  guestEmail  String?       // email para usuarios no registrados
+  guestName   String?       // nombre para usuarios no registrados
+  status      ChatStatus    @default(ACTIVE)
+  isRead      Boolean       @default(false) // leído por admin
+  priority    ChatPriority  @default(NORMAL)
+  subject     String?       // asunto de la conversación
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  lastMessageAt DateTime?   // timestamp del último mensaje
+  user        User?         @relation("UserChats", fields: [userId], references: [id], onDelete: Cascade)
+  messages    ChatMessage[]
+  
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id             String           @id @default(cuid())
+  conversationId String
+  senderId       String?          // null para mensajes del sistema
+  senderType     ChatSenderType   @default(USER)
+  content        String
+  messageType    ChatMessageType  @default(TEXT)
+  attachmentUrl  String?          // para imágenes u otros archivos
+  isRead         Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User?            @relation("UserMessages", fields: [senderId], references: [id], onDelete: SetNull)
+  
+  @@index([conversationId, createdAt])
+}
+
+enum ChatStatus {
+  ACTIVE      // Conversación activa
+  RESOLVED    // Resuelta
+  CLOSED      // Cerrada
+  PENDING     // Esperando respuesta del admin
+}
+
+enum ChatPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum ChatSenderType {
+  USER        // Usuario/cliente
+  ADMIN       // Administrador
+  SYSTEM      // Mensaje del sistema
+}
+
+enum ChatMessageType {
+  TEXT        // Mensaje de texto
+  IMAGE       // Imagen
+  FILE        // Archivo
+  SYSTEM      // Mensaje del sistema (ej: "Usuario se conectó")
 }
