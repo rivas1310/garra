@@ -1,8 +1,53 @@
 {
-  "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
-    "id": "..\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+  "..\\node_modules\\jspdf\\dist\\jspdf.es.min.js -> canvg": {
+    "id": 34137,
     "files": [
-      "static/chunks/_app-pages-browser_node_modules_next_dist_client_dev_noop-turbopack-hmr_js.js"
+      "static/chunks/bc98253f.abbaed159391feea.js",
+      "static/chunks/2121.3aa4b63e21335e3b.js"
+    ]
+  },
+  "..\\node_modules\\jspdf\\dist\\jspdf.es.min.js -> dompurify": {
+    "id": 10822,
+    "files": [
+      "static/chunks/822.32e955d3205007f3.js"
+    ]
+  },
+  "..\\node_modules\\jspdf\\dist\\jspdf.es.min.js -> html2canvas": {
+    "id": 52699,
+    "files": [
+      "static/chunks/ad2866b8.bd41fcca20880bc0.js"
+    ]
+  },
+  "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": 90472,
+    "files": [
+      "static/chunks/472.d3306bfe5be34ce7.js"
+    ]
+  },
+  "..\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": 99341,
+    "files": [
+      "static/chunks/9341.871d58741b57824f.js"
+    ]
+  },
+  "app\\admin\\venta-fisica\\page.tsx -> @/components/BarcodeScanner": {
+    "id": 58138,
+    "files": [
+      "static/chunks/7cb1fa1f.5cd38d7cec603371.js",
+      "static/chunks/5734.c03c1d9bb338d65a.js",
+      "static/chunks/8138.6f3dd7a198ec3c14.js"
+    ]
+  },
+  "app\\admin\\venta-fisica\\page.tsx -> @/components/ExternalScanner": {
+    "id": 10913,
+    "files": [
+      "static/chunks/913.c47df4721db6e130.js"
+    ]
+  },
+  "components\\ExternalScanner.tsx -> ./ScannerConfig": {
+    "id": 91028,
+    "files": [
+      "static/chunks/1028.7b254dc00a209604.js"
     ]
   }
 }

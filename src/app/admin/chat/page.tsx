@@ -14,6 +14,7 @@ import {
   Search
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useNotificationSound } from '@/hooks/useNotificationSound'
 
 interface Message {
   id: string
@@ -51,6 +52,10 @@ export default function AdminChatPage() {
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
+
+  // Hook para sonidos de notificación
+  const { playSound } = useNotificationSound({ volume: 0.7, enabled: soundEnabled })
 
   // Configuración de Ably
   const { channel } = useChannel('chat-admin')
@@ -92,10 +97,12 @@ export default function AdminChatPage() {
             return conv
           }))
 
-          // Mostrar notificación si es mensaje de usuario
-          if (newMessage.senderType === 'USER') {
-            toast.success(`Nuevo mensaje de ${newMessage.sender?.name || 'Usuario'}`)
-          }
+                 // Mostrar notificación si es mensaje de usuario
+                 if (newMessage.senderType === 'USER') {
+                   toast.success(`Nuevo mensaje de ${newMessage.sender?.name || 'Usuario'}`)
+                   // Reproducir sonido de alerta para admin
+                   playSound('alert')
+                 }
         }
       }
 
@@ -166,6 +173,30 @@ export default function AdminChatPage() {
       if (response.ok) {
         const savedMessage = await response.json()
         
+        // Agregar el mensaje inmediatamente al estado local
+        setConversations(prev => prev.map(conv => {
+          if (conv.id === activeConversation.id) {
+            // Verificar si ya existe para evitar duplicados
+            const messageExists = conv.messages.some(msg => msg.id === savedMessage.id)
+            if (!messageExists) {
+              console.log('✅ Mensaje de admin agregado inmediatamente al estado local')
+              const updatedConv = {
+                ...conv,
+                messages: [...conv.messages, {
+                  ...savedMessage,
+                  senderType: 'ADMIN' as const
+                }],
+                updatedAt: savedMessage.createdAt
+              }
+              
+              // Actualizar también la conversación activa
+              setActiveConversation(updatedConv)
+              return updatedConv
+            }
+          }
+          return conv
+        }))
+        
         // Publicar en Ably para notificar al widget
         if (channel) {
           console.log('📤 Admin publicando mensaje en Ably:', savedMessage)
@@ -187,6 +218,8 @@ export default function AdminChatPage() {
         }
         
         toast.success('Mensaje enviado')
+        // Reproducir sonido de confirmación
+        playSound('message')
       } else {
         toast.error('Error enviando mensaje')
         setNewMessage(messageContent) // Restaurar el mensaje
@@ -253,7 +286,20 @@ export default function AdminChatPage() {
                 <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
                 {isConnected ? 'Conectado' : 'Desconectado'}
               </div>
-              
+
+              <button
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  soundEnabled 
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+                title={soundEnabled ? 'Sonidos habilitados' : 'Sonidos deshabilitados'}
+              >
+                {soundEnabled ? '🔊' : '🔇'}
+                {soundEnabled ? 'Sonido ON' : 'Sonido OFF'}
+              </button>
+
               <button
                 onClick={loadConversations}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"

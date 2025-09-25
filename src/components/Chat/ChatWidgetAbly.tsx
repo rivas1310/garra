@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useChannel } from 'ably/react'
 import ably from '@/lib/ably'
 import toast from 'react-hot-toast'
+import { useNotificationSound } from '@/hooks/useNotificationSound'
 
 interface Message {
   id: string
@@ -27,7 +28,11 @@ export default function ChatWidgetAbly() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false)
   const [hasShownWelcomeMessage, setHasShownWelcomeMessage] = useState(false)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Hook para sonidos de notificación
+  const { playSound } = useNotificationSound({ volume: 0.5, enabled: soundEnabled })
 
   // Configuración de Ably
   const { channel } = useChannel('chat-widget')
@@ -41,9 +46,11 @@ export default function ChatWidgetAbly() {
         
         if (message.name === 'new-message') {
           const newMessage = message.data as Message
+          console.log('📨 Procesando mensaje:', newMessage)
           
-          if (conversationId && newMessage.conversationId === conversationId) {
-            // Evitar duplicar nuestros propios mensajes
+          // Verificar si es para nuestra conversación actual o si no tenemos conversación aún
+          if (!conversationId || newMessage.conversationId === conversationId) {
+            // Evitar duplicar mensajes
             setMessages(prev => {
               const exists = prev.some(msg => msg.id === newMessage.id)
               if (exists) {
@@ -60,10 +67,15 @@ export default function ChatWidgetAbly() {
               setHasShownWelcomeMessage(true)
             }
             
+            // Mostrar notificación si el chat no está abierto y es un mensaje de admin/sistema
             if (!isOpen && newMessage.senderType !== 'USER') {
               setHasUnreadMessages(true)
               toast.success('Nuevo mensaje recibido')
+              // Reproducir sonido de notificación
+              playSound('notification')
             }
+          } else {
+            console.log('⚠️ Mensaje ignorado - conversación diferente:', newMessage.conversationId, 'vs', conversationId)
           }
         }
       }
@@ -163,6 +175,21 @@ export default function ChatWidgetAbly() {
       if (response.ok) {
         const savedMessage = await response.json()
         
+        // Agregar el mensaje inmediatamente al estado local para feedback instantáneo
+        setMessages(prev => {
+          // Verificar si ya existe para evitar duplicados
+          const exists = prev.some(msg => msg.id === savedMessage.id)
+          if (!exists) {
+            console.log('✅ Mensaje agregado inmediatamente al estado local')
+            return [...prev, {
+              ...savedMessage,
+              conversationId,
+              senderType: 'USER' as const
+            }]
+          }
+          return prev
+        })
+        
         // Publicar en Ably para notificar a admins
         console.log('📤 Publicando mensaje en Ably:', savedMessage)
         await channel.publish('new-message', {
@@ -182,6 +209,8 @@ export default function ChatWidgetAbly() {
         console.log('✅ Mensaje publicado en canal admin también')
         
         toast.success('Mensaje enviado')
+        // Reproducir sonido de confirmación
+        playSound('message')
         
         // Simular respuesta automática solo si no se ha mostrado antes
         if (!hasShownWelcomeMessage) {
@@ -253,12 +282,21 @@ export default function ChatWidgetAbly() {
       {/* Header */}
       <div className="bg-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center">
         <h3 className="font-semibold">Chat de Soporte</h3>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-white hover:text-gray-200"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="text-white hover:text-gray-200 transition-colors"
+            title={soundEnabled ? 'Sonidos habilitados' : 'Sonidos deshabilitados'}
+          >
+            {soundEnabled ? '🔊' : '🔇'}
+          </button>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:text-gray-200"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
