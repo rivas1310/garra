@@ -463,6 +463,12 @@
       "regex": "^/test\\-debug(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/test\\-debug(?:/)?$"
+    },
+    {
+      "page": "/verify-2fa",
+      "regex": "^/verify\\-2fa(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/verify\\-2fa(?:/)?$"
     }
   ],
   "dataRoutes": [],

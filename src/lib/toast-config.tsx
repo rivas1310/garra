@@ -1,5 +1,6 @@
 // Configuración personalizada para React Hot Toast
-import { toast, Toaster } from 'react-hot-toast'
+import { toast, Toaster as HotToaster } from 'react-hot-toast'
+import React from 'react'
 
 // Configuración personalizada para el Toaster
 export const toastConfig = {
@@ -116,9 +117,9 @@ export const customToast = {
 }
 
 // Componente Toaster personalizado
-export function CustomToaster() {
+export function CustomToaster(): JSX.Element {
   return (
-    <Toaster
+    <HotToaster
       position={toastConfig.position}
       toastOptions={{
         duration: toastConfig.duration,

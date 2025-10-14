@@ -8,7 +8,7 @@ import type { JWT } from 'next-auth/jwt'
 // Extender los tipos de NextAuth para 2FA
 declare module 'next-auth' {
   interface User {
-    role?: 'USER' | 'ADMIN' | 'ADMIN' | 'VENDOR'
+    role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
     requires2FA?: boolean
     tempUserData?: {
       id: string
@@ -20,14 +20,14 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id?: string
-      role?: 'USER' | 'ADMIN' | 'VENDOR'
+      role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
     } & DefaultSession['user']
   }
 }
 
 declare module 'next-auth/jwt' {
   interface JWT {
-    role?: 'USER' | 'ADMIN' | 'VENDOR'
+    role?: 'USER' | 'ADMIN' | 'VENDEDOR' | 'VENDOR'
     requires2FA?: boolean
     tempUserData?: {
       id: string

@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
 
-export default function Verify2FAPage() {
+function Verify2FAContent() {
   const [loading, setLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
   const [code, setCode] = useState('')
@@ -262,5 +262,20 @@ export default function Verify2FAPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function Verify2FAPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-2 text-neutral-600">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <Verify2FAContent />
+    </Suspense>
   )
 }
