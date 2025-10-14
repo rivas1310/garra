@@ -28,20 +28,32 @@ function LoginContent() {
     e.preventDefault()
     setLoading(true)
     
-    // Obtener la URL de retorno si existe
-    const returnUrl = searchParams.get('returnUrl') || '/perfil'
-    
-    const res = await signIn('credentials', {
-      redirect: false,
-      email: form.email,
-      password: form.password,
-    })
-    setLoading(false)
-    if (res?.ok) {
-      toast.success('¡Bienvenido!')
-      router.push(returnUrl)
-    } else {
-      toast.error('Credenciales incorrectas')
+    try {
+      // Solicitar código 2FA
+      const response = await fetch('/api/auth/request-2fa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success('Código de verificación enviado a tu correo')
+        // Redirigir a página de verificación 2FA
+        router.push(`/verify-2fa?email=${encodeURIComponent(form.email)}`)
+      } else {
+        toast.error(data.error || 'Credenciales incorrectas')
+      }
+    } catch (error) {
+      toast.error('Error de conexión. Intenta de nuevo.')
+    } finally {
+      setLoading(false)
     }
   }
 

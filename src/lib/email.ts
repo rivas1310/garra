@@ -466,3 +466,156 @@ export const testEmailConfiguration = async (): Promise<boolean> => {
     return false
   }
 }
+
+// Plantilla HTML para código 2FA
+const generate2FAEmailTemplate = (code: string, userName?: string): string => {
+  return `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Código de Verificación - Garras Felinas</title>
+      <style>
+        body { 
+          margin: 0; 
+          padding: 0; 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          background-color: #f8fafc;
+        }
+        .container { 
+          max-width: 600px; 
+          margin: 0 auto; 
+          background-color: white; 
+          border-radius: 12px; 
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header { 
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+          color: white; 
+          padding: 30px; 
+          text-align: center; 
+        }
+        .header h1 { 
+          margin: 0; 
+          font-size: 28px; 
+          font-weight: bold; 
+        }
+        .content { 
+          padding: 40px 30px; 
+        }
+        .code-container { 
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); 
+          color: white; 
+          padding: 30px; 
+          border-radius: 12px; 
+          text-align: center; 
+          margin: 30px 0; 
+        }
+        .code { 
+          font-size: 36px; 
+          font-weight: bold; 
+          letter-spacing: 8px; 
+          margin: 10px 0; 
+          font-family: 'Courier New', monospace;
+        }
+        .warning { 
+          background-color: #fef3c7; 
+          border: 1px solid #f59e0b; 
+          border-radius: 8px; 
+          padding: 15px; 
+          margin: 20px 0; 
+          color: #92400e; 
+        }
+        .footer { 
+          background-color: #f8fafc; 
+          padding: 20px; 
+          text-align: center; 
+          color: #6b7280; 
+          font-size: 14px; 
+        }
+        .btn {
+          display: inline-block;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 12px 24px;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          margin: 10px 0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🦁 Garras Felinas</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px;">Código de Verificación</p>
+        </div>
+        
+        <div class="content">
+          <h2 style="color: #374151; margin-top: 0;">¡Hola${userName ? ` ${userName}` : ''}!</h2>
+          
+          <p style="color: #6b7280; font-size: 16px; line-height: 1.6;">
+            Has solicitado iniciar sesión en tu cuenta. Para completar el proceso, 
+            utiliza el siguiente código de verificación:
+          </p>
+          
+          <div class="code-container">
+            <p style="margin: 0 0 10px 0; font-size: 16px;">Tu código de verificación es:</p>
+            <div class="code">${code}</div>
+            <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Válido por 3 minutos</p>
+          </div>
+          
+          <div class="warning">
+            <strong>⚠️ Información importante:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+              <li>Este código expira en 3 minutos</li>
+              <li>No compartas este código con nadie</li>
+              <li>Si no solicitaste este código, ignora este correo</li>
+              <li>Garras Felinas nunca te pedirá tu código por teléfono o email</li>
+            </ul>
+          </div>
+          
+          <p style="color: #6b7280; font-size: 14px;">
+            Si tienes problemas para acceder, puedes 
+            <a href="mailto:info@garrasfelinas.com" style="color: #667eea;">contactar nuestro soporte</a>.
+          </p>
+        </div>
+        
+        <div class="footer">
+          <p style="margin: 0;">
+            © 2024 Garras Felinas - Todos los derechos reservados<br>
+            <a href="mailto:info@garrasfelinas.com" style="color: #667eea;">info@garrasfelinas.com</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// Función para enviar código 2FA por email
+export const send2FACode = async (email: string, code: string, userName?: string): Promise<boolean> => {
+  try {
+    const html = generate2FAEmailTemplate(code, userName)
+    
+    const success = await sendEmail({
+      to: email,
+      subject: '🔐 Código de Verificación - Garras Felinas',
+      html: html,
+    })
+    
+    if (success) {
+      log.info(`✅ Código 2FA enviado a: ${email}`)
+    } else {
+      log.error(`❌ Error al enviar código 2FA a: ${email}`)
+    }
+    
+    return success
+  } catch (error) {
+    log.error('❌ Error al generar/enviar código 2FA:', error)
+    return false
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { log } from '@/lib/secureLogger';
 import { useParams, useSearchParams } from "next/navigation";
 import { ShoppingCart, Star, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
@@ -29,6 +29,9 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
   const [error, setError] = useState<string>("");
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [addToCartMessage, setAddToCartMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  
+  // Ref para debounce de actualización de stock
+  const stockUpdateDebounceRef = useRef<NodeJS.Timeout>();
   const { addToCart, getItemQuantity } = useCart();
 
   // Efecto para manejar parámetros de navegación desde URL
@@ -136,11 +139,26 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
       loadProduct();
     }
     
-    // Configurar un intervalo para actualizar el stock cada 10 segundos
-    const intervalId = setInterval(loadProduct, 10000);
+    // Configurar un intervalo para actualizar el stock cada 30 segundos (reducido para evitar saturación)
+    const intervalId = setInterval(() => {
+      // Limpiar timeout anterior
+      if (stockUpdateDebounceRef.current) {
+        clearTimeout(stockUpdateDebounceRef.current);
+      }
+
+      // Crear nuevo timeout para debounce
+      stockUpdateDebounceRef.current = setTimeout(() => {
+        loadProduct();
+      }, 2000); // Debounce de 2 segundos para actualizaciones de stock
+    }, 30000); // Intervalo aumentado a 30 segundos
     
-    // Limpiar el intervalo cuando el componente se desmonte
-    return () => clearInterval(intervalId);
+    // Limpiar el intervalo y timeout cuando el componente se desmonte
+    return () => {
+      clearInterval(intervalId);
+      if (stockUpdateDebounceRef.current) {
+        clearTimeout(stockUpdateDebounceRef.current);
+      }
+    };
   }, [id, initialProduct]);
 
   // Actualizar estado cuando cambie initialProduct

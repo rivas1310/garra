@@ -31,10 +31,16 @@ export const authOptions: NextAuthOptions = {
       name: 'Email y Contraseña',
       credentials: {
         email: { label: 'Email', type: 'email', placeholder: 'tucorreo@ejemplo.com' },
-        password: { label: 'Contraseña', type: 'password' }
+        password: { label: 'Contraseña', type: 'password' },
+        twoFactorCode: { label: 'Código 2FA', type: 'text', placeholder: '12345678' }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
+        
+        // Si el password es '2FA_VERIFIED' y hay código 2FA, verificar el código directamente
+        if (credentials.password === '2FA_VERIFIED' && credentials.twoFactorCode) {
+          return await verify2FACodeDirect(credentials.email, credentials.twoFactorCode)
+        }
         
         const user = await prisma.user.findUnique({ 
           where: { email: credentials.email } 
@@ -131,5 +137,60 @@ export const authOptions: NextAuthOptions = {
       // Por defecto, redirigir al perfil
       return `${baseUrl}/perfil`
     }
+  }
+}
+
+// Función para verificar código 2FA directamente (usado en el flujo de autenticación)
+async function verify2FACodeDirect(email: string, code: string) {
+  try {
+    // Validar formato del código
+    if (!/^\d{8}$/.test(code)) {
+      return null
+    }
+
+    // Buscar código válido
+    const twoFactorCode = await prisma.twoFactorCode.findFirst({
+      where: {
+        email: email.toLowerCase(),
+        code,
+        isUsed: false,
+        expiresAt: { gt: new Date() }
+      },
+      include: { user: true }
+    })
+
+    if (!twoFactorCode) {
+      return null
+    }
+
+    // Verificar intentos
+    if (twoFactorCode.attempts >= 3) {
+      return null
+    }
+
+    // Marcar código como usado DESPUÉS de verificar que todo está correcto
+    await prisma.twoFactorCode.update({
+      where: { id: twoFactorCode.id },
+      data: { isUsed: true }
+    })
+
+    // Limpiar códigos antiguos
+    await prisma.twoFactorCode.deleteMany({
+      where: { userId: twoFactorCode.userId, isUsed: true }
+    })
+
+    // Log de seguridad
+    log.info(`✅ Login 2FA exitoso para usuario: ${email}`)
+
+    // Retornar usuario autenticado
+    return {
+      id: twoFactorCode.user.id,
+      email: twoFactorCode.user.email,
+      name: twoFactorCode.user.name,
+      role: twoFactorCode.user.role
+    }
+  } catch (error) {
+    log.error('Error in verify2FACodeDirect:', error)
+    return null
   }
 }

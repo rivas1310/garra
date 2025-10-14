@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { log } from '@/lib/secureLogger'
 import { X, Search, Camera, Keyboard, ShoppingCart } from 'lucide-react'
 import BarcodeScanner from './BarcodeScanner'
@@ -45,9 +45,13 @@ export default function VentaFisicaModal({ isOpen, onClose, onSaleCompleted }: V
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [showVariantSelector, setShowVariantSelector] = useState(false)
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null)
+  
+  // Refs para debounce
+  const barcodeDebounceRef = useRef<NodeJS.Timeout>()
+  const searchDebounceRef = useRef<NodeJS.Timeout>()
 
-  // Buscar producto por código de barras
-  const searchProductByBarcode = async (barcode: string) => {
+  // Función interna para buscar producto por código de barras (sin debounce)
+  const searchProductByBarcodeInternal = async (barcode: string) => {
     log.error('🚀 Iniciando búsqueda de producto por código de barras')
     
     if (!barcode.trim()) {
@@ -152,8 +156,21 @@ export default function VentaFisicaModal({ isOpen, onClose, onSaleCompleted }: V
     }
   }
 
-  // Buscar productos por nombre
-  const searchProducts = async (term: string) => {
+  // Función con debounce para buscar producto por código de barras
+  const searchProductByBarcode = useCallback((barcode: string) => {
+    // Limpiar timeout anterior
+    if (barcodeDebounceRef.current) {
+      clearTimeout(barcodeDebounceRef.current)
+    }
+
+    // Crear nuevo timeout para debounce
+    barcodeDebounceRef.current = setTimeout(() => {
+      searchProductByBarcodeInternal(barcode)
+    }, 500) // Debounce de 500ms para códigos de barras
+  }, [])
+
+  // Función interna para buscar productos por nombre (sin debounce)
+  const searchProductsInternal = async (term: string) => {
     if (!term.trim()) {
       setProducts([])
       return
@@ -189,6 +206,19 @@ export default function VentaFisicaModal({ isOpen, onClose, onSaleCompleted }: V
       setLoading(false)
     }
   }
+
+  // Función con debounce para buscar productos por nombre
+  const searchProducts = useCallback((term: string) => {
+    // Limpiar timeout anterior
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+
+    // Crear nuevo timeout para debounce
+    searchDebounceRef.current = setTimeout(() => {
+      searchProductsInternal(term)
+    }, 300) // Debounce de 300ms para búsqueda de productos
+  }, [])
 
   // Mostrar selector de variantes o agregar directamente
   const handleProductSelect = (product: Product) => {
@@ -357,12 +387,20 @@ export default function VentaFisicaModal({ isOpen, onClose, onSaleCompleted }: V
 
   // Buscar productos cuando cambie el término de búsqueda
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      searchProducts(searchTerm)
-    }, 300)
+    searchProducts(searchTerm)
+  }, [searchTerm, searchProducts])
 
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm])
+  // Cleanup de timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (barcodeDebounceRef.current) {
+        clearTimeout(barcodeDebounceRef.current)
+      }
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
+  }, [])
 
   if (!isOpen) return null
 

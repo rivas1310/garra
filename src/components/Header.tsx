@@ -68,18 +68,34 @@ function DrawerLogin({ onSuccess }: { onSuccess?: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    const res = await signIn('credentials', {
-      redirect: false,
-      email: form.email,
-      password: form.password,
-    })
-    setLoading(false)
-    if (res?.ok) {
-      toast.success('¡Bienvenido!')
-      onSuccess && onSuccess()
-      router.push('/perfil')
-    } else {
-      toast.error('Credenciales incorrectas')
+    
+    try {
+      // Solicitar código 2FA
+      const response = await fetch('/api/auth/request-2fa', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success('Código de verificación enviado a tu correo')
+        onSuccess && onSuccess()
+        // Redirigir a página de verificación 2FA
+        router.push(`/verify-2fa?email=${encodeURIComponent(form.email)}`)
+      } else {
+        toast.error(data.error || 'Credenciales incorrectas')
+      }
+    } catch (error) {
+      toast.error('Error de conexión. Intenta de nuevo.')
+    } finally {
+      setLoading(false)
     }
   }
   return (
@@ -383,62 +399,6 @@ export default function Header() {
                   <CartBadge />
                 </Link>
               </div>
-              
-              {/* Menú de usuario en móvil */}
-              {session ? (
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
-                    <p className="font-medium">{session.user?.name || userProfile?.name}</p>
-                    <p className="text-gray-500">{session.user?.email || userProfile?.email}</p>
-                  </div>
-                  <Link 
-                    href="/perfil" 
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Mi Perfil
-                  </Link>
-                  {session.user?.role === 'ADMIN' || session.user?.role === 'VENDEDOR' ? (
-                    <Link 
-                      href="/admin" 
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Panel Admin
-                    </Link>
-                  ) : null}
-                  <button 
-                    onClick={() => {
-                      signOut()
-                      setIsMenuOpen(false)
-                    }} 
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    Cerrar Sesión
-                  </button>
-                </div>
-              ) : (
-                <div className="pt-4 border-t border-gray-200">
-                  <button 
-                    onClick={() => {
-                      signIn()
-                      setIsMenuOpen(false)
-                    }} 
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Iniciar Sesión
-                  </button>
-                  <button 
-                    onClick={() => {
-                      router.push('/registro')
-                      setIsMenuOpen(false)
-                    }} 
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Registrarse
-                  </button>
-                </div>
-              )}
             </nav>
           </div>
         )}

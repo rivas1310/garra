@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { log } from '@/lib/secureLogger'
 import { X, Truck, Loader2, CheckCircle, AlertCircle, FileText, Info } from "lucide-react";
 import toast from "react-hot-toast";
@@ -32,6 +32,9 @@ export default function ShippingLabelModal({
   const [packageDescription, setPackageDescription] = useState<'ropa' | 'calzado'>('ropa');
   // Estado para guardar los datos exactos de cotización
   const [cotizacionPayload, setCotizacionPayload] = useState<any>(null);
+  
+  // Ref para debounce de cotizaciones
+  const cotizacionDebounceRef = useRef<NodeJS.Timeout>();
   const [guiaPdfUrl, setGuiaPdfUrl] = useState<string | null>(null);
   // Estado para seleccionar el proveedor de envío
   const [shippingProvider, setShippingProvider] = useState<'envioclick' | 'enviosperros'>('envioclick');
@@ -62,8 +65,8 @@ export default function ShippingLabelModal({
 
   if (!isOpen) return null;
 
-  // Función para cotizar envío según el proveedor seleccionado
-  const cotizarEnvio = async () => {
+  // Función interna para cotizar envío (sin debounce)
+  const cotizarEnvioInternal = async () => {
     setIsGenerating(true);
     setError(null);
     setCotizacion(null);
@@ -461,6 +464,28 @@ export default function ShippingLabelModal({
       setIsGenerating(false);
     }
   };
+
+  // Función con debounce para cotizar envío
+  const cotizarEnvio = useCallback(() => {
+    // Limpiar timeout anterior
+    if (cotizacionDebounceRef.current) {
+      clearTimeout(cotizacionDebounceRef.current);
+    }
+
+    // Crear nuevo timeout para debounce
+    cotizacionDebounceRef.current = setTimeout(() => {
+      cotizarEnvioInternal();
+    }, 500); // Debounce de 500ms para cotizaciones (más tiempo por ser operación pesada)
+  }, []);
+
+  // Cleanup de timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (cotizacionDebounceRef.current) {
+        clearTimeout(cotizacionDebounceRef.current);
+      }
+    };
+  }, []);
 
   // Esta sección se ha movido arriba del condicional return
 

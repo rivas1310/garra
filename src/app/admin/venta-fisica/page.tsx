@@ -285,11 +285,11 @@ export default function VentaFisicaPage() {
       const updatedItems = cartItems.map(item => {
         if (variant) {
           return item.id === product.id && item.variantId === variant.id
-          ? { ...item, quantity: item.quantity + 1 } 
+          ? { ...item, quantity: item.quantity + 1, cartKey: cartKey } 
           : item
         }
         return item.id === product.id && !item.variantId
-          ? { ...item, quantity: item.quantity + 1 }
+          ? { ...item, quantity: item.quantity + 1, cartKey: cartKey }
           : item
       })
       setCartItems(updatedItems)
@@ -302,6 +302,7 @@ export default function VentaFisicaPage() {
           image: product.images && product.images[0] ? product.images[0] : '/img/placeholder.png',
           quantity: 1,
         stock: availableStock,
+        cartKey: cartKey, // Agregar la clave única del carrito
         ...(variant && {
           variantId: variant.id,
           variantInfo: {

@@ -43,6 +43,7 @@ model User {
   passwordResetTokens PasswordResetToken[] @relation("PasswordResetTokens")
   chatConversations ChatConversation[] @relation("UserChats")
   chatMessages   ChatMessage[] @relation("UserMessages")
+  twoFactorCodes TwoFactorCode[] @relation("TwoFactorCodes")
 }
 
 model Category {
@@ -306,4 +307,20 @@ enum ChatMessageType {
   IMAGE       // Imagen
   FILE        // Archivo
   SYSTEM      // Mensaje del sistema (ej: "Usuario se conectó")
+}
+
+// Modelo para códigos de autenticación de dos factores
+model TwoFactorCode {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  code      String   // Código de 8 dígitos
+  expiresAt DateTime // Expira en 3 minutos
+  isUsed    Boolean  @default(false)
+  attempts  Int      @default(0) // Intentos de verificación
+  createdAt DateTime @default(now())
+  user      User     @relation("TwoFactorCodes", fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, code])
+  @@index([email, createdAt])
 }
