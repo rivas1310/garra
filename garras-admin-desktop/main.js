@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog, shell } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain, session } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 
@@ -14,6 +14,7 @@ function createWindow() {
         height: 900,
         minWidth: 1200,
         minHeight: 800,
+        autoHideMenuBar: true,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -27,7 +28,6 @@ function createWindow() {
 
     // URL del admin (puede ser localhost o producción)
     const adminUrl = store.get('adminUrl', 'http://localhost:3000/admin');
-    
     console.log('Cargando admin desde:', adminUrl);
     
     // Cargar la URL del admin
@@ -37,7 +37,6 @@ function createWindow() {
         if (adminUrl.includes('localhost')) {
             const productionUrl = 'https://www.garrasfelinas.com/admin';
             console.log('Intentando con producción:', productionUrl);
-            store.set('adminUrl', productionUrl);
             mainWindow.loadURL(productionUrl);
         } else {
             // Mostrar página de error
@@ -71,6 +70,12 @@ function createWindow() {
         console.error('Error de carga:', errorCode, errorDescription, validatedURL);
         showErrorPage();
     });
+}
+
+// Forzar URL localhost desde CLI
+const forceLocalhost = process.argv.includes('--localhost') || process.env.ELECTRON_ADMIN_LOCALHOST === '1'
+if (forceLocalhost) {
+    store.set('adminUrl', 'http://localhost:3000/admin')
 }
 
 function showErrorPage() {
@@ -122,6 +127,19 @@ function showErrorPage() {
                 .retry-btn:hover {
                     background: #005a87;
                 }
+                .pos-btn {
+                    background: #16a34a;
+                    color: white;
+                    border: none;
+                    padding: 0.75rem 1.5rem;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    margin-top: 1rem;
+                }
+                .pos-btn:hover {
+                    background: #15803d;
+                }
             </style>
         </head>
         <body>
@@ -138,6 +156,9 @@ function showErrorPage() {
                 <button class="retry-btn" onclick="location.reload()">
                     🔄 Reintentar
                 </button>
+                <button class="pos-btn" onclick="window.electronAPI.openOfflinePOS()">
+                    🛒 Abrir Punto de Venta Offline
+                </button>
             </div>
         </body>
         </html>
@@ -147,7 +168,18 @@ function showErrorPage() {
 }
 
 // Configuración de la aplicación
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+    // Limpiar completamente todos los datos para asegurar que no haya Service Workers activos
+    try {
+        await session.defaultSession.clearCache()
+        await session.defaultSession.clearStorageData({
+            storages: ['serviceworkers', 'cachestorage', 'websql', 'indexdb']
+        })
+        console.log('✅ Caché y Service Workers limpiados')
+    } catch (error) {
+        console.error('Error limpiando caché:', error)
+    }
+    
     createWindow();
     
     app.on('activate', () => {
@@ -175,22 +207,56 @@ const template = [
                 accelerator: 'F5',
                 click: () => {
                     if (mainWindow) {
-                        mainWindow.reload();
+                        mainWindow.webContents.reloadIgnoringCache();
                     }
                 }
             },
             {
                 label: 'Configurar URL',
                 click: async () => {
-                    const result = await dialog.showInputBox(mainWindow, {
+                    const current = store.get('adminUrl', 'http://localhost:3000/admin')
+                    const buttons = ['Usar localhost', 'Usar producción', 'Cancelar']
+                    const choice = await dialog.showMessageBox(mainWindow, {
+                        type: 'question',
                         title: 'Configurar URL del Admin',
-                        label: 'URL del Panel de Administración:',
-                        value: store.get('adminUrl', 'http://localhost:3000/admin')
-                    });
-                    
-                    if (result && result.trim()) {
-                        store.set('adminUrl', result.trim());
-                        mainWindow.loadURL(result.trim());
+                        message: `URL actual: ${current}`,
+                        detail: 'Selecciona una opción rápida. Puedes cambiar manualmente más tarde.',
+                        buttons,
+                        cancelId: 2,
+                        defaultId: 0
+                    })
+                    if (choice.response === 0) {
+                        store.set('adminUrl', 'http://localhost:3000/admin')
+                        mainWindow.loadURL('http://localhost:3000/admin')
+                    } else if (choice.response === 1) {
+                        const productionUrl = 'https://www.garrasfelinas.com/admin'
+                        store.set('adminUrl', productionUrl)
+                        mainWindow.loadURL(productionUrl)
+                    }
+                }
+            },
+            {
+                label: 'Abrir Punto de Venta Offline',
+                accelerator: 'Ctrl+O',
+                click: () => {
+                    if (mainWindow) {
+                        mainWindow.loadFile(path.join(__dirname, 'assets', 'offline-pos.html'))
+                        mainWindow.setFullScreen(true)
+                    }
+                }
+            },
+            {
+                label: 'Exportar Ventas Offline',
+                click: async () => {
+                    const sales = store.get('offline.sales.history', [])
+                    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+                        title: 'Exportar Ventas Offline',
+                        filters: [{ name: 'JSON', extensions: ['json'] }],
+                        defaultPath: `ventas-offline-${Date.now()}.json`
+                    })
+                    if (!canceled && filePath) {
+                        const fs = require('fs')
+                        fs.writeFileSync(filePath, JSON.stringify(sales, null, 2), 'utf-8')
                     }
                 }
             },
@@ -257,3 +323,71 @@ const template = [
 
 const menu = Menu.buildFromTemplate(template);
 Menu.setApplicationMenu(menu);
+
+ipcMain.handle('get-config', (event, key) => {
+    return store.get(key)
+})
+
+ipcMain.handle('set-config', (event, key, value) => {
+    store.set(key, value)
+    return true
+})
+
+ipcMain.handle('offline-get', (event, key) => {
+    return store.get(`offline.${key}`)
+})
+
+ipcMain.handle('offline-set', (event, key, value) => {
+    store.set(`offline.${key}`, value)
+    return true
+})
+
+ipcMain.handle('open-offline-pos', () => {
+    if (mainWindow) {
+        mainWindow.loadFile(path.join(__dirname, 'assets', 'offline-pos.html'))
+    }
+    return true
+})
+
+ipcMain.handle('import-products', async () => {
+    if (!mainWindow) return []
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+        title: 'Importar catálogo',
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        properties: ['openFile']
+    })
+    if (canceled || !filePaths || filePaths.length === 0) return []
+    const fs = require('fs')
+    const content = fs.readFileSync(filePaths[0], 'utf-8')
+    let products = []
+    try {
+        products = JSON.parse(content)
+    } catch (e) {
+        products = []
+    }
+    store.set('offline.products', products)
+    return products
+})
+
+ipcMain.handle('export-offline-sales', async () => {
+    if (!mainWindow) return false
+    const sales = store.get('offline.sales.history', [])
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Exportar Ventas Offline',
+        filters: [{ name: 'JSON', extensions: ['json'] }],
+        defaultPath: `ventas-offline-${Date.now()}.json`
+    })
+    if (canceled || !filePath) return false
+    const fs = require('fs')
+    fs.writeFileSync(filePath, JSON.stringify(sales, null, 2), 'utf-8')
+    return true
+})
+app.commandLine.appendSwitch('disable-http-cache')
+// Siempre deshabilitar Service Workers en Electron
+app.commandLine.appendSwitch('disable-features', 'ServiceWorker,BackgroundSync')
+// Deshabilitar site isolation para mejor compatibilidad
+app.commandLine.appendSwitch('disable-site-isolation-trials')
+if (process.argv.includes('--dev')) {
+    // Más opciones de depuración en modo dev
+    app.commandLine.appendSwitch('enable-logging')
+}
