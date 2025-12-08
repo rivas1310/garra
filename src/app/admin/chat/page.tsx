@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useChannel } from 'ably/react'
-import ably from '@/lib/ably'
+import { Realtime } from 'ably'
+
+const ablyKey = process.env.NEXT_PUBLIC_ABLY_API_KEY || 'WmvC8Q.fk9jIg:QTbhux1HYhgCpAqW3_3TKiIvcLBNbOEVxybCyT8k0oY'
 import { 
   MessageCircle, 
   Users, 
@@ -56,6 +58,24 @@ export default function AdminChatPage() {
 
   // Hook para sonidos de notificación
   const { playSound } = useNotificationSound({ volume: 0.7, enabled: soundEnabled })
+
+  // Crear cliente de Ably para uso directo
+  const ablyClient = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+    
+    try {
+      return new Realtime({
+        key: ablyKey,
+        clientId: 'admin-client',
+        logLevel: 1
+      })
+    } catch (error) {
+      console.error('Error inicializando Ably:', error)
+      return null
+    }
+  }, [])
 
   // Configuración de Ably
   const { channel } = useChannel('chat-admin')
@@ -208,13 +228,15 @@ export default function AdminChatPage() {
           console.log('✅ Mensaje de admin publicado en Ably correctamente')
           
           // También publicar en el canal del widget
-          const widgetChannel = ably.channels.get('chat-widget')
-          await widgetChannel.publish('new-message', {
-            ...savedMessage,
-            conversationId: activeConversation.id,
-            senderType: 'ADMIN'
-          })
-          console.log('✅ Mensaje de admin publicado en canal widget también')
+          if (ablyClient) {
+            const widgetChannel = ablyClient.channels.get('chat-widget')
+            await widgetChannel.publish('new-message', {
+              ...savedMessage,
+              conversationId: activeConversation.id,
+              senderType: 'ADMIN'
+            })
+            console.log('✅ Mensaje de admin publicado en canal widget también')
+          }
         }
         
         toast.success('Mensaje enviado')

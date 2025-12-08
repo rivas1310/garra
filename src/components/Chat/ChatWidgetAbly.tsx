@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
-import { useChannel } from 'ably/react'
-import ably from '@/lib/ably'
+import { AblyProvider, ChannelProvider, useChannel } from 'ably/react'
+import { Realtime } from 'ably'
 import toast from 'react-hot-toast'
 import { useNotificationSound } from '@/hooks/useNotificationSound'
+
+const ablyKey = process.env.NEXT_PUBLIC_ABLY_API_KEY || 'WmvC8Q.fk9jIg:QTbhux1HYhgCpAqW3_3TKiIvcLBNbOEVxybCyT8k0oY'
 
 interface Message {
   id: string
@@ -357,5 +359,53 @@ export default function ChatWidgetAbly() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Envolver con proveedor para asegurar contexto incluso si no está en RootLayout
+export function ChatWidgetAblyWithProvider() {
+  // Crear cliente de Ably solo en el cliente
+  const ablyClient = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+    
+    try {
+      const client = new Realtime({
+        key: ablyKey,
+        clientId: 'chat-client',
+        logLevel: 1
+      })
+
+      // Verificar conexión
+      client.connection.on('connected', () => {
+        console.log('✅ Ably conectado correctamente')
+      })
+
+      client.connection.on('disconnected', () => {
+        console.log('❌ Ably desconectado')
+      })
+
+      client.connection.on('failed', (error) => {
+        console.error('❌ Error en conexión Ably:', error)
+      })
+
+      return client
+    } catch (error) {
+      console.error('Error inicializando Ably:', error)
+      return null
+    }
+  }, [])
+
+  if (!ablyClient) {
+    return null
+  }
+
+  return (
+    <AblyProvider client={ablyClient}>
+      <ChannelProvider channelName="chat-widget">
+        <ChatWidgetAbly />
+      </ChannelProvider>
+    </AblyProvider>
   )
 }

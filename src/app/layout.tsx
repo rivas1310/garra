@@ -10,8 +10,9 @@ import CookieConsent from '@/components/CookieConsent'
 import PWAInstaller from '@/components/PWAInstaller'
 import PerformanceMonitor from '@/components/PerformanceMonitor'
 // import SimpleErrorBoundary from '@/components/SimpleErrorBoundary' // Removido temporalmente
-import ChatWidgetAbly from '@/components/Chat/ChatWidgetAbly'
-import CustomAblyProvider from '@/components/AblyProvider'
+import { ChatWidgetAblyWithProvider } from '@/components/Chat/ChatWidgetAbly'
+// Eliminado el proveedor global de Ably para evitar errores en RSC
+import ClientOnly from '@/components/ClientOnly'
 
 
 const inter = Inter({ subsets: ['latin'] })
@@ -100,9 +101,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>
+      <body suppressHydrationWarning className={inter.className}>
         <SessionProviderWrapper>
-          <CustomAblyProvider>
+          <ClientOnly>
             <div className="min-h-screen flex flex-col">
               <Header />
               <main className="flex-1">
@@ -114,9 +115,9 @@ export default function RootLayout({
             <CookieConsent />
             <PWAInstaller />
             <PerformanceMonitor />
-            <ChatWidgetAbly />
+            {/* <ChatWidgetAblyWithProvider /> */}
             <Toaster position="top-right" />
-          </CustomAblyProvider>
+          </ClientOnly>
         </SessionProviderWrapper>
       </body>
     </html>
