@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     default: 'Garras Felinas - Tu tienda de moda online',
     template: '%s | Garras Felinas'
   },
+  verification: {
+    other: {
+      'facebook-domain-verification': '22vnwr3irgt6sfq5b9lk4vablejhoh',
+    },
+  },
   description: 'Descubre las últimas tendencias en moda. Ropa, calzado, accesorios y más en Garras Felinas. Envíos a toda la República Mexicana.',
   keywords: 'moda, ropa, calzado, accesorios, tienda online, México, envíos, tendencias, garras felinas',
   authors: [{ name: 'Garras Felinas' }],
